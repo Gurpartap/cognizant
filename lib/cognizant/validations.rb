@@ -29,6 +29,16 @@ module Cognizant
       unless File.owned?(file) or File.grpowned?(file)
         raise ValidationError, "The file \"#{file}\" is not owned by the process user."
       end
+
+      begin
+        unless File.open(file, "w")
+          raise ValidationError, "The file \"#{file}\" is not writable."
+        end  
+      rescue Errno::EACCES
+        raise ValidationError, "The file \"#{file}\" is not accessible due to the lack of privileges."
+      rescue
+        raise ValidationError, "The file \"#{file}\" is not writable."
+      end
     end
 
     # Validations the user/group ownership to the given directory. Attempts to
@@ -53,6 +63,18 @@ module Cognizant
 
       unless File.owned?(directory) or File.grpowned?(directory)
         raise ValidationError, "The directory \"#{directory}\" is not owned by the process user."
+      end
+
+      begin
+        unless File.open(File.join(directory, ".testfile"), "w")
+          raise ValidationError, "The directory \"#{directory}\" is not writable."
+        end  
+      rescue Errno::EACCES
+        raise ValidationError, "The directory \"#{directory}\" is not accessible due to the lack of privileges."
+      rescue
+        raise ValidationError, "The directory \"#{directory}\" is not writable."
+      ensure
+        File.delete(directory, ".testfile") rescue nil
       end
     end
 

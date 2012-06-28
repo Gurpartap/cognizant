@@ -21,9 +21,11 @@ module Cognizant
       # @return [String] Defaults to /var/log/cognizant/cognizantd.log
       attr_accessor :logfile
 
-      # The level of information to log. This does not affect the log level of
-      # managed processes. Possible values include Logger::DEBUG,
-      # Logger::INFO, Logger::WARN, Logger::ERROR and Logger::FATAL.
+      # The level of information to log. This does not affect the log
+      # level of managed processes.
+      # @note The possible values must be one of the following:
+      #   Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR and
+      #   Logger::FATAL or 0, 1, 2, 3, 4 (respectively).
       # @return [Logger::Severity] Defaults to Logger::INFO
       attr_accessor :loglevel
 
@@ -37,7 +39,7 @@ module Cognizant
 
       # Limit the permission modes for files and directories created by the
       # daemon and the managed processes.
-      # @return [Integer] Defaults to 022
+      # @return [Integer] Defaults to 0022
       attr_accessor :umask
 
       # Run the daemon and managed processes as the given user.
@@ -84,7 +86,8 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :server_password
 
-      # Initializes and starts the cognizant daemon with the given options.
+      # Initializes and starts the cognizant daemon with the given options
+      # as instance attributes.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
         validate({
