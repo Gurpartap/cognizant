@@ -16,4 +16,8 @@ Gem::Specification.new do |gem|
   gem.version       = Cognizant::VERSION
 
   gem.add_development_dependency "rake"
+  gem.add_development_dependency "redcarpet"
+  gem.add_development_dependency "yard"
+
+  gem.add_dependency "eventmachine"
 end
