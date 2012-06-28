@@ -1,4 +1,7 @@
+require "logger"
 require "eventmachine"
+
+require "cognizant/validations"
 require "cognizant/server/interface"
 
 module Cognizant
@@ -10,7 +13,7 @@ module Cognizant
 
       # The pid lock file for the daemon.
       # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
-      # @return [String] Defaults to /run/cognizantd.pid
+      # @return [String] Defaults to /var/run/cognizantd.pid
       attr_accessor :pidfile
 
       # The file to log the daemon's operations information into.
@@ -48,7 +51,7 @@ module Cognizant
 
       # Directory to store pid files of managed processes into, when required.
       # e.g. /Users/Gurpartap/.cognizant/pids/
-      # @return [String] Defaults to /run/cognizant/pids/
+      # @return [String] Defaults to /var/run/cognizant/pids/
       attr_accessor :process_pids_dir
 
       # Directory to store the log files of managed processes, when required.
@@ -59,7 +62,7 @@ module Cognizant
       # The socket lock file for the server. This file is ignored if valid
       # bind address and port are given.
       # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
-      # @return [String] Defaults to /run/cognizant/cognizant-server.sock
+      # @return [String] Defaults to /var/run/cognizant/cognizant-server.sock
       attr_accessor :server_socket
 
       # The interface to bind the TCP server to. e.g. "127.0.0.1".
@@ -83,7 +86,7 @@ module Cognizant
       # Initializes and starts the cognizant daemon with the given options.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
-        handle_options!(options)
+        validate(options)
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
@@ -94,9 +97,9 @@ module Cognizant
 
       # Override defaults and validate the given options.
       # @param [Hash] options A hash of instance attributes and their values.
-      def handle_options!(options = {})
+      def validate(options = {})
         @foreground          = options[:foreground]          || false
-        @pidfile             = options[:pidfile]             || "/run/cognizantd.pid"
+        @pidfile             = options[:pidfile]             || "/var/run/cognizantd.pid"
         @logfile             = options[:logfile]             || "/var/log/cognizant.log"
         @loglevel            = options[:loglevel]            || Logger::INFO
         @env                 = options[:env]                 || {}
@@ -104,15 +107,18 @@ module Cognizant
         @umask               = options[:umask]               || 022
         @uid                 = options[:uid]                 || nil
         @gid                 = options[:gid]                 || nil
-        @process_pids_dir    = options[:process_pids_dir]    || "/run/cognizant/pids/"
+        @process_pids_dir    = options[:process_pids_dir]    || "/var/run/cognizant/pids/"
         @process_logs_dir    = options[:process_logs_dir]    || "/var/log/cognizant/logs/"
-        @server_socket       = options[:server_socket]       || "/run/cognizant/cognizant-server.sock"
+        @server_socket       = options[:server_socket]       || "/var/run/cognizant/cognizant-server.sock"
         @server_bind_address = options[:server_bind_address] || nil
         @server_port         = options[:server_port]         || nil
         @server_username     = options[:server_username]     || nil
         @server_password     = options[:server_password]     || nil
 
-        
+        Validations.validate_file_writable(@pidfile)
+        Validations.validate_file_writable(@logfile)
+        Validations.validate_directory_writable(@process_pids_dir)
+        Validations.validate_directory_writable(@process_logs_dir)
       end
 
       def start_interface_server
