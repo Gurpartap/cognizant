@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'cognizant/client/cli'
+
+Cognizant::Client::CLI.new(ARGV)
