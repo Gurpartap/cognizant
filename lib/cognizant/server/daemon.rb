@@ -21,7 +21,8 @@ module Cognizant
       # @return [String] Defaults to /var/log/cognizantd.log
       attr_accessor :logfile
 
-      # The level of information to log. Possible values include Logger::DEBUG,
+      # The level of information to log. This does not affect the log level of
+      # managed processes. Possible values include Logger::DEBUG,
       # Logger::INFO, Logger::WARN, Logger::ERROR and Logger::FATAL.
       # @return [Logger::Severity] Defaults to Logger::INFO
       attr_accessor :loglevel
@@ -99,14 +100,9 @@ module Cognizant
       # @param [Hash] options A hash of instance attributes and their values.
       def validate(options = {})
         @foreground          = options[:foreground]          || false
-        @pidfile             = options[:pidfile]             || "/var/run/cognizantd.pid"
-        @logfile             = options[:logfile]             || "/var/log/cognizant.log"
+        @pidfile             = options[:pidfile]             || "/var/run/cognizant/cognizantd.pid"
+        @logfile             = options[:logfile]             || "/var/log/cognizant/cognizantd.log"
         @loglevel            = options[:loglevel]            || Logger::INFO
-        @env                 = options[:env]                 || {}
-        @chdir               = options[:chdir]               || nil
-        @umask               = options[:umask]               || 022
-        @uid                 = options[:uid]                 || nil
-        @gid                 = options[:gid]                 || nil
         @process_pids_dir    = options[:process_pids_dir]    || "/var/run/cognizant/pids/"
         @process_logs_dir    = options[:process_logs_dir]    || "/var/log/cognizant/logs/"
         @server_socket       = options[:server_socket]       || "/var/run/cognizant/cognizant-server.sock"
@@ -114,6 +110,11 @@ module Cognizant
         @server_port         = options[:server_port]         || nil
         @server_username     = options[:server_username]     || nil
         @server_password     = options[:server_password]     || nil
+        @env                 = options[:env]                 || {}
+        @chdir               = options[:chdir]               || nil
+        @umask               = options[:umask]               || 022
+        @uid                 = options[:uid]                 || nil
+        @gid                 = options[:gid]                 || nil
 
         Validations.validate_file_writable(@pidfile)
         Validations.validate_file_writable(@logfile)
@@ -122,8 +123,8 @@ module Cognizant
       end
 
       def start_interface_server
-        EventMachine.start_unix_domain_server(server_socket)
-        EventMachine.start_server(server_address, server_port, Cognizant::Server::Interface)
+        EventMachine.start_unix_domain_server(server_socket, Cognizant::Server::Interface)
+        # EventMachine.start_server(server_bind_address, server_port, Cognizant::Server::Interface)
       end
 
       def start_periodic_ticks
