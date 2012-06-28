@@ -37,7 +37,7 @@ module Cognizant
 
       # Limit the permission modes for files and directories created by the
       # daemon and the managed processes.
-      # @return [String] Defaults to 022
+      # @return [Integer] Defaults to 022
       attr_accessor :umask
 
       # Run the daemon and managed processes as the given user.
@@ -87,7 +87,13 @@ module Cognizant
       # Initializes and starts the cognizant daemon with the given options.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
-        validate(options)
+        validate({
+          :pidfile          => "~/.cognizant/cognizantd.pid",
+          :logfile          => "~/.cognizant/cognizant.log",
+          :process_pids_dir => "~/.cognizant/pids/",
+          :process_logs_dir => "~/.cognizant/logs/",
+          :server_socket    => "~/.cognizant/cognizant-server.sock"
+        })
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
@@ -112,25 +118,51 @@ module Cognizant
         @server_password     = options[:server_password]     || nil
         @env                 = options[:env]                 || {}
         @chdir               = options[:chdir]               || nil
-        @umask               = options[:umask]               || 022
+        @umask               = options[:umask]               || 0022
         @uid                 = options[:uid]                 || nil
         @gid                 = options[:gid]                 || nil
 
         Validations.validate_file_writable(@pidfile)
         Validations.validate_file_writable(@logfile)
+        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
         Validations.validate_directory_writable(@process_pids_dir)
         Validations.validate_directory_writable(@process_logs_dir)
+        Validations.validate_file_writable(@server_socket)
+
+        if @server_bind_address and not @server_port
+          raise Validations::ValidationError, "Missing server port."
+        end
+
+        if @server_username and not @server_password
+          raise Validations::ValidationError, "Missing password."
+        end
+
+        unless File.directory?(@chdir)
+          raise Validations::ValidationError, %{The chdir "#{@chdir}" is not present.}
+        end
+
+        Validations.validate_env(@env)
+        Validations.validate_umask(@umask)
+        Validations.validate_user(@uid)
+        Validations.validate_user_group(@gid)
       end
 
       def start_interface_server
-        EventMachine.start_unix_domain_server(server_socket, Cognizant::Server::Interface)
-        # EventMachine.start_server(server_bind_address, server_port, Cognizant::Server::Interface)
+        # if @server_bind_address and @server_port
+        #   EventMachine.start_server(server_bind_address || 127.0.0.1, server_port, Cognizant::Server::Interface)
+        # else
+        #   EventMachine.start_unix_domain_server(server_socket, Cognizant::Server::Interface)
+        # end
       end
 
       def start_periodic_ticks
         EventMachine.add_periodic_timer(1) do
           print "."
         end
+      end
+
+      def stop_interface_server
+        EventMachine.stop
       end
     end
   end

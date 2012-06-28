@@ -49,5 +49,45 @@ module Cognizant
         raise ValidationError, "The directory \"#{directory}\" is not owned by the process user."
       end
     end
+
+    def self.validate_includes(variable, types)
+      unless [*types].include?(variable)
+        raise ValidationError, "#{variable} is an invalid option type. It must be one of the following: #{[*types].join(', ')}."
+      end
+    end
+
+    def self.validate_env(@env)
+      if not @env.respond_to?(:is_a?) or @env.is_a?(Hash)
+        raise Validations::ValidationError, %{"env" needs to be a hash. e.g. { "PATH" => "/usr/local/bin" }}
+      end
+    end
+
+    def self.validate_umask(@umask)
+      Float(@umask) rescue raise Validations::ValidationError, %{The umask "#{@umask}" is invalid.}
+    end
+
+    def self.validate_user(@uid)
+      begin
+        if Float(@uid) rescue false
+          Etc.getpwuid(@uid)
+        else
+          Etc.getpwnam(@uid)
+        end
+      rescue ArgumentError
+        raise Validations::ValidationError, %{The uid "#{@uid}" does not exist.}
+      end
+    end
+    
+    def self.validate_user_group(@gid)
+      begin
+        if Float(@gid) rescue false
+          Etc.getgrgid(@gid)
+        else
+          Etc.getgrname(@gid)
+        end
+      rescue ArgumentError
+        raise Validations::ValidationError, %{The gid "#{@gid}" does not exist.}
+      end
+    end
   end
 end
