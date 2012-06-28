@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'cognizant'
+require 'cognizant/server/daemon'
 
 Cognizant::Server::Daemon.new
