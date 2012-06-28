@@ -123,7 +123,7 @@ module Cognizant
 
         Validations.validate_file_writable(@pidfile)
         Validations.validate_file_writable(@logfile)
-        # Validations.validate_includes(@loglevel, Logger::Severity)
+        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
         Validations.validate_directory_writable(@process_pids_dir)
         Validations.validate_directory_writable(@process_logs_dir)
         Validations.validate_file_writable(@server_socket)
@@ -149,7 +149,7 @@ module Cognizant
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
         # if @server_bind_address and @server_port
-        #   EventMachine.start_server(server_bind_address || 127.0.0.1, server_port, Cognizant::Server::Interface)
+        #   EventMachine.start_server(server_bind_address || "127.0.0.1", server_port, Cognizant::Server::Interface)
         # else
         #   EventMachine.start_unix_domain_server(server_socket, Cognizant::Server::Interface)
         # end
