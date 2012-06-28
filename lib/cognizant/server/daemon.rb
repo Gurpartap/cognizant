@@ -13,12 +13,12 @@ module Cognizant
 
       # The pid lock file for the daemon.
       # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
-      # @return [String] Defaults to /var/run/cognizantd.pid
+      # @return [String] Defaults to /var/run/cognizant/cognizantd.pid
       attr_accessor :pidfile
 
       # The file to log the daemon's operations information into.
       # e.g. /Users/Gurpartap/.cognizant/cognizantd.log
-      # @return [String] Defaults to /var/log/cognizantd.log
+      # @return [String] Defaults to /var/log/cognizant/cognizantd.log
       attr_accessor :logfile
 
       # The level of information to log. This does not affect the log level of
@@ -103,7 +103,6 @@ module Cognizant
       private
 
       # Override defaults and validate the given options.
-      # @param [Hash] options A hash of instance attributes and their values.
       def validate(options = {})
         @foreground          = options[:foreground]          || false
         @pidfile             = options[:pidfile]             || "/var/run/cognizant/cognizantd.pid"
@@ -124,7 +123,7 @@ module Cognizant
 
         Validations.validate_file_writable(@pidfile)
         Validations.validate_file_writable(@logfile)
-        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
+        # Validations.validate_includes(@loglevel, Logger::Severity)
         Validations.validate_directory_writable(@process_pids_dir)
         Validations.validate_directory_writable(@process_logs_dir)
         Validations.validate_file_writable(@server_socket)
@@ -137,8 +136,8 @@ module Cognizant
           raise Validations::ValidationError, "Missing password."
         end
 
-        unless File.directory?(@chdir)
-          raise Validations::ValidationError, %{The chdir "#{@chdir}" is not present.}
+        if @chdir and not File.directory?(@chdir)
+          raise Validations::ValidationError, %{The directory "#{@chdir}" is not available.}
         end
 
         Validations.validate_env(@env)
@@ -147,6 +146,7 @@ module Cognizant
         Validations.validate_user_group(@gid)
       end
 
+      # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
         # if @server_bind_address and @server_port
         #   EventMachine.start_server(server_bind_address || 127.0.0.1, server_port, Cognizant::Server::Interface)
@@ -155,13 +155,15 @@ module Cognizant
         # end
       end
 
+      # Starts the loop that defines the time window for determining and acting upon process states.
       def start_periodic_ticks
         EventMachine.add_periodic_timer(1) do
           print "."
         end
       end
 
-      def stop_interface_server
+      # Stops the TCP server and the tick loop.
+      def shutdown
         EventMachine.stop
       end
     end
