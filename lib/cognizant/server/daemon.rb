@@ -112,21 +112,17 @@ module Cognizant
         return validate if options[:validate]
 
         add_log_adapter(File.open(@logfile, "a"))
-
-        if @foreground
-          add_log_adapter($stdout)
-        end
+        add_log_adapter($stdout) if @foreground
 
         log.level = if options[:trace] then Logger::DEBUG else @loglevel end
 
-        # Write to the standard output when in foreground.
-        log.warn "Log file created (warning)"
-        log.info "Log file created (information)"
+        log.info "Booting up the cognizant daemon."
 
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
           unless @foreground
+            log.info "Daemonizing into the background."
             Process.daemon
           end
         end
@@ -139,14 +135,17 @@ module Cognizant
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
         if @bind_address and @port
+          log.info "Starting the TCP server at #{@bind_address}:#{@port}."
           EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
-        else
+        else  
+          log.info "Starting the UNIX domain server with #{@socket}."
           EventMachine.start_unix_domain_server(@socket, Cognizant::Server::Interface)
         end
       end
 
       # Starts the loop that defines the time window for determining and acting upon process states.
       def start_periodic_ticks
+        log.info "Starting the periodic tick."
         EventMachine.add_periodic_timer(1) do
           print "."
         end
@@ -154,7 +153,8 @@ module Cognizant
 
       # Stops the TCP server and the tick loop.
       def shutdown
-        EventMachine.stop
+        log.info "Shutting down cognizant."
+        EventMachine.next_tick { EventMachine.stop }
       end
 
       # Override defaults and validate the given options.
