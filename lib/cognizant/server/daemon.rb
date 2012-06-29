@@ -118,6 +118,8 @@ module Cognizant
 
         log.info "Booting up the cognizant daemon."
 
+        trap_signals
+
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
@@ -126,8 +128,6 @@ module Cognizant
             Process.daemon
           end
         end
-      ensure
-        logger.close
       end
 
       private
@@ -151,9 +151,19 @@ module Cognizant
         end
       end
 
+      def trap_signals
+        terminator = Proc.new do
+          shutdown
+        end
+
+        Signal.trap('TERM', &terminator)
+        Signal.trap('INT', &terminator)
+      end
+
       # Stops the TCP server and the tick loop.
       def shutdown
         log.info "Shutting down cognizant."
+        logger.close
         EventMachine.next_tick { EventMachine.stop }
       end
 
