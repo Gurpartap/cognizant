@@ -116,7 +116,7 @@ module Cognizant
 
         log.level = if options[:trace] then Logger::DEBUG else @loglevel end
 
-        log.info "Booting up the cognizant daemon."
+        log.info "Booting up cognizantd..."
 
         trap_signals
 
@@ -124,8 +124,7 @@ module Cognizant
           start_interface_server
           start_periodic_ticks
           unless @foreground
-            log.info "Daemonizing into the background."
-            Process.daemon
+            daemonize
           end
         end
       end
@@ -135,24 +134,38 @@ module Cognizant
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
         if @bind_address and @port
-          log.info "Starting the TCP server at #{@bind_address}:#{@port}."
+          log.info "Starting the TCP server at #{@bind_address}:#{@port}..."
           EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
         else  
-          log.info "Starting the UNIX domain server with #{@socket}."
+          log.info "Starting the UNIX domain server with #{@socket}..."
           EventMachine.start_unix_domain_server(@socket, Cognizant::Server::Interface)
         end
       end
 
       # Starts the loop that defines the time window for determining and acting upon process states.
       def start_periodic_ticks
-        log.info "Starting the periodic tick."
+        log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
           print "."
         end
       end
 
+      # Daemonize the current process and save it pid in a file.
+      def daemonize
+        log.info "Daemonizing into the background..."
+        Process.daemon
+
+        pid = Process.pid
+
+        if @pidfile
+          log.info "Writing the daemon pid (#{pid}) to the pidfile..."
+          File.open(@pidfile, "w") { |f| f.write(pid) }
+        end
+      end
+
       def trap_signals
         terminator = Proc.new do
+          log.info "Received signal to shutdown."
           shutdown
         end
 
@@ -160,9 +173,9 @@ module Cognizant
         Signal.trap('INT', &terminator)
       end
 
-      # Stops the TCP server and the tick loop.
+      # Stops the TCP server and the tick loop, and performs cleanup.
       def shutdown
-        log.info "Shutting down cognizant."
+        log.info "Shutting down cognizantd..."
         logger.close
         EventMachine.next_tick { EventMachine.stop }
       end
