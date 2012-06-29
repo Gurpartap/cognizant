@@ -1,6 +1,6 @@
-require "logger"
 require "eventmachine"
 
+require "cognizant/logging"
 require "cognizant/system"
 require "cognizant/validations"
 require "cognizant/server/interface"
@@ -8,6 +8,8 @@ require "cognizant/server/interface"
 module Cognizant
   module Server
     class Daemon
+      include Cognizant::Logging
+
       # Run the daemon in the foreground.
       # @return [true, false] Defaults to false
       attr_accessor :foreground
@@ -90,47 +92,77 @@ module Cognizant
       # as instance attributes.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
-        validate(options.merge({
-          # :pidfile  => "~/.cognizant/cognizantd.pid",
-          # :logfile  => "~/.cognizant/cognizant.log",
-          # :pids_dir => "~/.cognizant/pids/",
-          # :logs_dir => "~/.cognizant/logs/",
-          # :socket   => "~/.cognizant/cognizant-server.sock"
-        }))
+        @foreground          = options[:foreground]    || false
+        @pidfile             = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
+        @logfile             = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
+        @loglevel            = options[:loglevel].to_i || Logger::INFO
+        @pids_dir            = options[:pids_dir]      || "/var/run/cognizant/pids/"
+        @logs_dir            = options[:logs_dir]      || "/var/log/cognizant/logs/"
+        @socket              = options[:socket]        || "/var/run/cognizant/cognizant-server.sock"
+        @bind_address        = options[:bind_address]  || nil
+        @port                = options[:port]          || nil
+        @username            = options[:username]      || nil
+        @password            = options[:password]      || nil
+        @env                 = options[:env]           || {}
+        @chdir               = options[:chdir]         || nil
+        @umask               = options[:umask]         || 0022
+        @user                = options[:user]          || nil
+        @group               = options[:group]         || nil
+
+        return validate if options[:validate]
+
+        add_log_adapter(File.open(@logfile, "a"))
+
+        if @foreground
+          add_log_adapter($stdout)
+        end
+
+        log.level = if options[:trace] then Logger::DEBUG else @loglevel end
+
+        # Write to the standard output when in foreground.
+        log.warn "Log file created (warning)"
+        log.info "Log file created (information)"
+
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
+          unless @foreground
+            Process.daemon
+          end
         end
-        unless @foreground
-          # Daemonize.
-        end
+      ensure
+        logger.close
       end
 
       private
 
-      # Override defaults and validate the given options.
-      def validate(options = {})
-        @foreground          = options[:foreground]   || false
-        @pidfile             = options[:pidfile]      || "/var/run/cognizant/cognizantd.pid"
-        @logfile             = options[:logfile]      || "/var/log/cognizant/cognizantd.log"
-        @loglevel            = options[:loglevel]     || Logger::INFO
-        @pids_dir            = options[:pids_dir]     || "/var/run/cognizant/pids/"
-        @logs_dir            = options[:logs_dir]     || "/var/log/cognizant/logs/"
-        @socket              = options[:socket]       || "/var/run/cognizant/cognizant-server.sock"
-        @bind_address        = options[:bind_address] || nil
-        @port                = options[:port]         || nil
-        @username            = options[:username]     || nil
-        @password            = options[:password]     || nil
-        @env                 = options[:env]          || {}
-        @chdir               = options[:chdir]        || nil
-        @umask               = options[:umask]        || 0022
-        @user                = options[:user]         || nil
-        @group               = options[:group]        || nil
+      # Starts the TCP server with the set socket lock file or port.
+      def start_interface_server
+        if @bind_address and @port
+          EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
+        else
+          EventMachine.start_unix_domain_server(@socket, Cognizant::Server::Interface)
+        end
+      end
 
+      # Starts the loop that defines the time window for determining and acting upon process states.
+      def start_periodic_ticks
+        EventMachine.add_periodic_timer(1) do
+          print "."
+        end
+      end
+
+      # Stops the TCP server and the tick loop.
+      def shutdown
+        EventMachine.stop
+      end
+
+      # Override defaults and validate the given options.
+      def validate
         if @bind_address and not @port
           raise Validations::ValidationError, "Missing server port."
         end
-        
+
         if @username and not @password
           raise Validations::ValidationError, "Missing password."
         end
@@ -147,9 +179,9 @@ module Cognizant
             Validations.validate_user(@user)
             Validations.validate_user_group(@group)
             Validations.validate_env(@env)
-        
+
             System.drop_privileges(uid: @user, gid: @group, env: @env)
-        
+
             Validations.validate_file_writable(@pidfile)
             Validations.validate_file_writable(@logfile)
             Validations.validate_directory_writable(@pids_dir)
@@ -178,27 +210,6 @@ module Cognizant
         
         # Validations failed if the fork did not exit normally.
         exit(status.exitstatus) unless status.success?
-      end
-
-      # Starts the TCP server with the set socket lock file or port.
-      def start_interface_server
-        # if @bind_address and @port
-           # EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
-        # else
-          EventMachine.start_unix_domain_server("/var/run/cognizant/cognizant-server.sock", Cognizant::Server::Interface)
-        # end
-      end
-
-      # Starts the loop that defines the time window for determining and acting upon process states.
-      def start_periodic_ticks
-        EventMachine.add_periodic_timer(1) do
-          print "."
-        end
-      end
-
-      # Stops the TCP server and the tick loop.
-      def shutdown
-        EventMachine.stop
       end
     end
   end
