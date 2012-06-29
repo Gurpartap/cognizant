@@ -1,5 +1,114 @@
 #!/usr/bin/env ruby
 
-require 'cognizant/server/daemon'
+# Set the process name.
+$0 = File.basename(__FILE__)
 
-Cognizant::Server::Daemon.new
+# Flush standard output/error immediately.
+$stdout.sync = true
+$stderr.sync = true
+
+begin
+  require 'optparse'
+
+  options = {}
+
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+  Usage:
+    cognizantd [OPTIONS]
+
+  Options:
+    EOF
+
+    opts.on("-f", "--foreground", "Run the daemon in the foreground.") do
+      options[:foreground] = true
+    end
+
+    opts.on("--pidfile FILE", String, "The pid lock file for the daemon.") do |value|
+      options[:pidfile] = value
+    end
+
+    opts.on("--logfile FILE", String, "The file to log the daemon's operations information into.") do |value|
+      options[:logfile] = value
+    end
+
+    opts.on("--loglevel LEVEL", String, "The level of information to log.") do |value|
+      options[:loglevel] = value
+    end
+
+    opts.on("--env ENV", String, "Environment variables for managed processes to inherit.") do |value|
+      options[:env] = value
+    end
+
+    opts.on("--chdir DIRECTORY", String, "The current working directory for the managed processes to start with.") do |value|
+      options[:chdir] = value
+    end
+
+    opts.on("--umask UMASK", String, "Permission mode limitations for file and directory creation.") do |value|
+      options[:umask] = value
+    end
+
+    opts.on("--user USER", String, "Run the daemon and managed processes as the given user.") do |value|
+      options[:user] = value
+    end
+
+    opts.on("--group GROUP", String, "Run the daemon and managed processes as the given user group.") do |value|
+      options[:group] = value
+    end
+
+    opts.on("--pids-dir DIRECTORY", String, "Directory to store the pid files of managed processes, when required.") do |value|
+      options[:pids_dir] = value
+    end
+
+    opts.on("--logs-dir DIRECTORY", String, "Directory to store the log files of managed processes, when required.") do |value|
+      options[:logs_dir] = value
+    end
+
+    opts.on("-s FILE", "--socket FILE", String, "The socket lock file for the server") do |value|
+      options[:socket] = value
+    end
+
+    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The interface to bind the TCP server to.") do |value|
+      options[:bind_address] = value
+    end
+
+    opts.on("-p PORT", "--port PORT", Integer, "The TCP port to start the server with.") do |value|
+      options[:port] = value
+    end
+
+    opts.on("--username USERNAME", String, "Username for securing server access.") do |value|
+      options[:username] = value
+    end
+
+    opts.on("--password PASSWORD", String, "Password to accompany the username.") do |value|
+      options[:password] = value
+    end
+
+    opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
+      options[:trace] = true
+    end
+
+    opts.on("-v", "--version", "Print the version number and exit.") do
+      require 'cognizant/version'
+      $stdout.puts Cognizant::VERSION
+      exit(0)
+    end
+  end.parse!
+
+  require 'cognizant/server/daemon'
+  Cognizant::Server::Daemon.new(options)
+rescue => exception
+  if exception.instance_of?(SystemExit)
+    raise
+  else
+    $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
+    $stderr.puts "    #{exception.message}\n\n"
+    if options[:trace]
+      $stderr.puts exception.backtrace.join("\n")
+      $stderr.puts "\n(See usage by running #{$0} with --help)"
+    else
+      $stderr.puts "(See full trace by running #{$0} with --trace)"
+    end
+    exit(1)
+  end
+end
