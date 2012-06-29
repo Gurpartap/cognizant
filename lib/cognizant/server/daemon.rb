@@ -68,7 +68,7 @@ module Cognizant
       # The socket lock file for the server. This file is ignored if valid
       # bind address and port are given.
       # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
-      # @return [String] Defaults to /var/run/cognizant/cognizant-server.sock
+      # @return [String] Defaults to /var/run/cognizant/cognizantd-server.sock
       attr_accessor :socket
 
       # The interface to bind the TCP server to. e.g. "127.0.0.1".
@@ -98,7 +98,7 @@ module Cognizant
         @loglevel            = options[:loglevel].to_i || Logger::INFO
         @pids_dir            = options[:pids_dir]      || "/var/run/cognizant/pids/"
         @logs_dir            = options[:logs_dir]      || "/var/log/cognizant/logs/"
-        @socket              = options[:socket]        || "/var/run/cognizant/cognizant-server.sock"
+        @socket              = options[:socket]        || "/var/run/cognizant/cognizantd-server.sock"
         @bind_address        = options[:bind_address]  || nil
         @port                = options[:port]          || nil
         @username            = options[:username]      || nil
@@ -109,17 +109,22 @@ module Cognizant
         @user                = options[:user]          || nil
         @group               = options[:group]         || nil
 
+        # Optional validation of options.
         return validate if options[:validate]
 
+        # Setup logging.
         add_log_adapter(File.open(@logfile, "a"))
         add_log_adapter($stdout) if @foreground
-
         log.level = if options[:trace] then Logger::DEBUG else @loglevel end
 
+        bootup
+      end
+
+      private
+
+      def bootup
         log.info "Booting up cognizantd..."
-
         trap_signals
-
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
@@ -129,15 +134,13 @@ module Cognizant
         end
       end
 
-      private
-
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
         if @bind_address and @port
           log.info "Starting the TCP server at #{@bind_address}:#{@port}..."
           EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
         else  
-          log.info "Starting the UNIX domain server with #{@socket}..."
+          log.info "Starting the UNIX domain server with socket #{@socket}..."
           EventMachine.start_unix_domain_server(@socket, Cognizant::Server::Interface)
         end
       end
