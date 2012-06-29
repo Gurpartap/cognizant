@@ -5,13 +5,13 @@ module Cognizant
     # Validations the user/group ownership to the given file. Attempts to
     # create the directory+file if it doesn't already exist.
     # @param [String] file Path to a file
-    def self.validate_file_writable(file)
+    def self.validate_file_writable(file, type = "file")
       file = File.expand_path(file)
 
       begin
         filetype = File.ftype(file)
 
-        unless filetype.eql?("file")
+        unless filetype.eql?(type)
           raise ValidationError, "\"#{file}\" is a #{filetype}. File required."
         end
       rescue Errno::ENOENT
@@ -104,32 +104,32 @@ module Cognizant
     end
 
     # Validates the existence of the user in the system.
-    # @param [String, Integer] uid The user ID or name to validate.
-    def self.validate_user(uid)
-      return unless uid
+    # @param [String, Integer] user The user ID or name to validate.
+    def self.validate_user(user)
+      return unless user
       begin
-        if self.is_number?(uid)
-          Etc.getpwuid(uid)
+        if self.is_number?(user)
+          Etc.getpwuid(user)
         else
-          Etc.getpwnam(uid)
+          Etc.getpwnam(user)
         end
       rescue ArgumentError
-        raise Validations::ValidationError, %{The uid "#{uid}" does not exist.}
+        raise Validations::ValidationError, %{The user "#{user}" does not exist.}
       end
     end
     
     # Validates the existence of the user group in the system.
-    # @param [String, Integer] gid The user group ID or name to validate.
-    def self.validate_user_group(gid)
-      return unless gid
+    # @param [String, Integer] group The user group ID or name to validate.
+    def self.validate_user_group(group)
+      return unless group
       begin
-        if self.is_number?(gid)
-          Etc.getgrgid(gid)
+        if self.is_number?(group)
+          Etc.getgrgid(group)
         else
-          Etc.getgrname(gid)
+          Etc.getgrname(group)
         end
       rescue ArgumentError
-        raise Validations::ValidationError, %{The gid "#{gid}" does not exist.}
+        raise Validations::ValidationError, %{The group "#{group}" does not exist.}
       end
     end
 

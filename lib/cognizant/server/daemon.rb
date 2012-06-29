@@ -1,6 +1,7 @@
 require "logger"
 require "eventmachine"
 
+require "cognizant/system"
 require "cognizant/validations"
 require "cognizant/server/interface"
 
@@ -45,61 +46,63 @@ module Cognizant
       # Run the daemon and managed processes as the given user.
       # e.g. "deploy", 1000
       # @return [String] Defaults to nil
-      attr_accessor :uid
+      attr_accessor :user
 
       # Run the daemon and managed processes as the given user group.
       # e.g. "deploy"
       # @return [String] Defaults to nil
-      attr_accessor :gid
+      attr_accessor :group
 
-      # Directory to store pid files of managed processes into, when required.
+      # Directory to store the pid files of managed processes, when required.
       # e.g. /Users/Gurpartap/.cognizant/pids/
       # @return [String] Defaults to /var/run/cognizant/pids/
-      attr_accessor :process_pids_dir
+      attr_accessor :pids_dir
 
       # Directory to store the log files of managed processes, when required.
       # e.g. /Users/Gurpartap/.cognizant/logs/
       # @return [String] Defaults to /var/log/cognizant/logs/
-      attr_accessor :process_logs_dir
+      attr_accessor :logs_dir
 
       # The socket lock file for the server. This file is ignored if valid
       # bind address and port are given.
       # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
       # @return [String] Defaults to /var/run/cognizant/cognizant-server.sock
-      attr_accessor :server_socket
+      attr_accessor :socket
 
       # The interface to bind the TCP server to. e.g. "127.0.0.1".
       # @return [String] Defaults to nil
-      attr_accessor :server_bind_address
+      attr_accessor :bind_address
 
       # The TCP port to start the server with. e.g. 8081.
       # @return [Integer] Defaults to nil
-      attr_accessor :server_port
+      attr_accessor :port
 
-      # Secure the access to the server with this username and accompanying
-      # password. e.g. "cognizant-user"
+      # Username for securing server access. e.g. "cognizant-user"
       # @return [String] Defaults to nil
-      attr_accessor :server_username
+      attr_accessor :username
 
-      # Password to accompany the username for authentication validation.
+      # Password to accompany the username.
       # e.g. "areallyverylongpasswordbecauseitmatters"
       # @return [String] Defaults to nil
-      attr_accessor :server_password
+      attr_accessor :password
 
       # Initializes and starts the cognizant daemon with the given options
       # as instance attributes.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
-        validate({
-          :pidfile          => "~/.cognizant/cognizantd.pid",
-          :logfile          => "~/.cognizant/cognizant.log",
-          :process_pids_dir => "~/.cognizant/pids/",
-          :process_logs_dir => "~/.cognizant/logs/",
-          :server_socket    => "~/.cognizant/cognizant-server.sock"
-        })
+        validate(options.merge({
+          # :pidfile  => "~/.cognizant/cognizantd.pid",
+          # :logfile  => "~/.cognizant/cognizant.log",
+          # :pids_dir => "~/.cognizant/pids/",
+          # :logs_dir => "~/.cognizant/logs/",
+          # :socket   => "~/.cognizant/cognizant-server.sock"
+        }))
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
+        end
+        unless @foreground
+          # Daemonize.
         end
       end
 
@@ -107,54 +110,82 @@ module Cognizant
 
       # Override defaults and validate the given options.
       def validate(options = {})
-        @foreground          = options[:foreground]          || false
-        @pidfile             = options[:pidfile]             || "/var/run/cognizant/cognizantd.pid"
-        @logfile             = options[:logfile]             || "/var/log/cognizant/cognizantd.log"
-        @loglevel            = options[:loglevel]            || Logger::INFO
-        @process_pids_dir    = options[:process_pids_dir]    || "/var/run/cognizant/pids/"
-        @process_logs_dir    = options[:process_logs_dir]    || "/var/log/cognizant/logs/"
-        @server_socket       = options[:server_socket]       || "/var/run/cognizant/cognizant-server.sock"
-        @server_bind_address = options[:server_bind_address] || nil
-        @server_port         = options[:server_port]         || nil
-        @server_username     = options[:server_username]     || nil
-        @server_password     = options[:server_password]     || nil
-        @env                 = options[:env]                 || {}
-        @chdir               = options[:chdir]               || nil
-        @umask               = options[:umask]               || 0022
-        @uid                 = options[:uid]                 || nil
-        @gid                 = options[:gid]                 || nil
+        @foreground          = options[:foreground]   || false
+        @pidfile             = options[:pidfile]      || "/var/run/cognizant/cognizantd.pid"
+        @logfile             = options[:logfile]      || "/var/log/cognizant/cognizantd.log"
+        @loglevel            = options[:loglevel]     || Logger::INFO
+        @pids_dir            = options[:pids_dir]     || "/var/run/cognizant/pids/"
+        @logs_dir            = options[:logs_dir]     || "/var/log/cognizant/logs/"
+        @socket              = options[:socket]       || "/var/run/cognizant/cognizant-server.sock"
+        @bind_address        = options[:bind_address] || nil
+        @port                = options[:port]         || nil
+        @username            = options[:username]     || nil
+        @password            = options[:password]     || nil
+        @env                 = options[:env]          || {}
+        @chdir               = options[:chdir]        || nil
+        @umask               = options[:umask]        || 0022
+        @user                = options[:user]         || nil
+        @group               = options[:group]        || nil
 
-        Validations.validate_file_writable(@pidfile)
-        Validations.validate_file_writable(@logfile)
-        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
-        Validations.validate_directory_writable(@process_pids_dir)
-        Validations.validate_directory_writable(@process_logs_dir)
-        Validations.validate_file_writable(@server_socket)
-
-        if @server_bind_address and not @server_port
+        if @bind_address and not @port
           raise Validations::ValidationError, "Missing server port."
         end
-
-        if @server_username and not @server_password
+        
+        if @username and not @password
           raise Validations::ValidationError, "Missing password."
         end
-
+        
         if @chdir and not File.directory?(@chdir)
           raise Validations::ValidationError, %{The directory "#{@chdir}" is not available.}
         end
-
-        Validations.validate_env(@env)
+        
+        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
         Validations.validate_umask(@umask)
-        Validations.validate_user(@uid)
-        Validations.validate_user_group(@gid)
+        
+        fork_pid = Process.fork do
+          begin
+            Validations.validate_user(@user)
+            Validations.validate_user_group(@group)
+            Validations.validate_env(@env)
+        
+            System.drop_privileges(uid: @user, gid: @group, env: @env)
+        
+            Validations.validate_file_writable(@pidfile)
+            Validations.validate_file_writable(@logfile)
+            Validations.validate_directory_writable(@pids_dir)
+            Validations.validate_directory_writable(@logs_dir)
+            Validations.validate_file_writable(@socket, "socket")
+          rescue => exception  
+            if @foreground
+              $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
+              $stderr.puts "    #{exception.message}\n\n"
+              if options[:trace]
+                $stderr.puts exception.backtrace.join("\n")
+                $stderr.puts "\n(See usage by running #{$0} with --help)"
+              else
+                $stderr.puts "(See full trace by running #{$0} with --trace)"
+              end
+              exit(1)
+            else
+              raise
+            end
+          end
+        
+          # Exit the forked process normally.
+          exit(0)
+        end
+        status = Process.waitpid2(fork_pid)[1]
+        
+        # Validations failed if the fork did not exit normally.
+        exit(status.exitstatus) unless status.success?
       end
 
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
-        # if @server_bind_address and @server_port
-        #   EventMachine.start_server(server_bind_address || "127.0.0.1", server_port, Cognizant::Server::Interface)
+        # if @bind_address and @port
+           # EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
         # else
-        #   EventMachine.start_unix_domain_server(server_socket, Cognizant::Server::Interface)
+          EventMachine.start_unix_domain_server("/var/run/cognizant/cognizant-server.sock", Cognizant::Server::Interface)
         # end
       end
 
