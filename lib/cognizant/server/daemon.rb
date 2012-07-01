@@ -10,9 +10,9 @@ module Cognizant
     class Daemon
       include Cognizant::Logging
 
-      # Run the daemon in the foreground.
-      # @return [true, false] Defaults to false
-      attr_accessor :foreground
+      # Whether or not to the daemon in the background.
+      # @return [true, false] Defaults to true
+      attr_accessor :daemonize
 
       # The pid lock file for the daemon.
       # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
@@ -32,6 +32,36 @@ module Cognizant
       # @return [Logger::Severity] Defaults to Logger::INFO
       attr_accessor :loglevel
 
+      # The socket lock file for the server. This file is ignored if valid
+      # bind address and port are given.
+      # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
+      # @return [String] Defaults to /var/run/cognizant/cognizantd.sock
+      attr_accessor :socket
+
+      # The TCP address and port to start the server with. e.g. 8081,
+      # "127.0.0.1:8081", "0.0.0.0:8081".
+      # @return [String] Defaults to nil
+      attr_accessor :port
+
+      # Username for securing server access. e.g. "cognizant-user"
+      # @return [String] Defaults to nil
+      attr_accessor :username
+
+      # Password to accompany the username.
+      # e.g. "areallyverylongpasswordbecauseitmatters"
+      # @return [String] Defaults to nil
+      attr_accessor :password
+
+      # Directory to store the pid files of managed processes, when required.
+      # e.g. /Users/Gurpartap/.cognizant/pids/
+      # @return [String] Defaults to /var/run/cognizant/pids/
+      attr_accessor :pids_dir
+
+      # Directory to store the log files of managed processes, when required.
+      # e.g. /Users/Gurpartap/.cognizant/logs/
+      # @return [String] Defaults to /var/log/cognizant/logs/
+      attr_accessor :logs_dir
+
       # Environment variables for managed processes to inherit.
       # @return [Hash] Defaults to {}
       attr_accessor :env
@@ -42,7 +72,7 @@ module Cognizant
 
       # Limit the permission modes for files and directories created by the
       # daemon and the managed processes.
-      # @return [Integer] Defaults to 0022
+      # @return [Integer] Defaults to nil
       attr_accessor :umask
 
       # Run the daemon and managed processes as the given user.
@@ -55,72 +85,50 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :group
 
-      # Directory to store the pid files of managed processes, when required.
-      # e.g. /Users/Gurpartap/.cognizant/pids/
-      # @return [String] Defaults to /var/run/cognizant/pids/
-      attr_accessor :pids_dir
-
-      # Directory to store the log files of managed processes, when required.
-      # e.g. /Users/Gurpartap/.cognizant/logs/
-      # @return [String] Defaults to /var/log/cognizant/logs/
-      attr_accessor :logs_dir
-
-      # The socket lock file for the server. This file is ignored if valid
-      # bind address and port are given.
-      # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
-      # @return [String] Defaults to /var/run/cognizant/cognizantd-server.sock
-      attr_accessor :socket
-
-      # The interface to bind the TCP server to. e.g. "127.0.0.1".
-      # @return [String] Defaults to nil
-      attr_accessor :bind_address
-
-      # The TCP port to start the server with. e.g. 8081.
-      # @return [Integer] Defaults to nil
-      attr_accessor :port
-
-      # Username for securing server access. e.g. "cognizant-user"
-      # @return [String] Defaults to nil
-      attr_accessor :username
-
-      # Password to accompany the username.
-      # e.g. "areallyverylongpasswordbecauseitmatters"
-      # @return [String] Defaults to nil
-      attr_accessor :password
-
       # Initializes and starts the cognizant daemon with the given options
       # as instance attributes.
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
-        @foreground          = options[:foreground]    || false
-        @pidfile             = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
-        @logfile             = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
-        @loglevel            = options[:loglevel].to_i || Logger::INFO
-        @pids_dir            = options[:pids_dir]      || "/var/run/cognizant/pids/"
-        @logs_dir            = options[:logs_dir]      || "/var/log/cognizant/logs/"
-        @socket              = options[:socket]        || "/var/run/cognizant/cognizantd-server.sock"
-        @bind_address        = options[:bind_address]  || nil
-        @port                = options[:port]          || nil
-        @username            = options[:username]      || nil
-        @password            = options[:password]      || nil
-        @env                 = options[:env]           || {}
-        @chdir               = options[:chdir]         || nil
-        @umask               = options[:umask]         || 0022
-        @user                = options[:user]          || nil
-        @group               = options[:group]         || nil
+        # Daemon config.
+        @daemonize           = options[:daemonize]                  || true
+        @pidfile             = File.expand_path(options[:pidfile])  || "/var/run/cognizant/cognizantd.pid"
+        @logfile             = File.expand_path(options[:logfile])  || "/var/log/cognizant/cognizantd.log"
+        @loglevel            = options[:loglevel].to_i              || Logger::INFO
+        @socket              = File.expand_path(options[:socket])   || "/var/run/cognizant/cognizantd.sock"
+        @port                = options[:port]                       || nil
+        @username            = options[:username]                   || nil
+        @password            = options[:password]                   || nil
+        @trace               = options[:trace]                      || nil
+
+        # Processes config.                            
+        @pids_dir            = File.expand_path(options[:pids_dir]) || "/var/run/cognizant/pids/"
+        @logs_dir            = File.expand_path(options[:logs_dir]) || "/var/log/cognizant/logs/"
+        @env                 = options[:env]                        || {}
+        @chdir               = options[:chdir]                      || nil
+        @umask               = options[:umask]                      || nil
+        @user                = options[:user]                       || nil
+        @group               = options[:group]                      || nil
 
         # Optional validation of options.
         return validate if options[:validate]
 
-        # Setup logging.
-        add_log_adapter(File.open(@logfile, "a"))
-        add_log_adapter($stdout) if @foreground
-        log.level = if options[:trace] then Logger::DEBUG else @loglevel end
-
+        setup_prerequisites
         bootup
       end
 
       private
+
+      def setup_prerequisites
+        # Create the require directories.
+        [File.dirname(@pidfile), File.dirname(@logfile), @pids_dir, @logs_dir, File.dirname(@socket)].each do |directory|
+          FileUtils.mkdir_p(directory)
+        end
+
+        # Setup logging.
+        add_log_adapter(File.open(@logfile, "a"))
+        add_log_adapter($stdout) unless @daemonize
+        log.level = if @trace then Logger::DEBUG else @loglevel end
+      end
 
       def bootup
         log.info "Booting up cognizantd..."
@@ -128,20 +136,21 @@ module Cognizant
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
-          unless @foreground
-            daemonize
-          end
+          daemonize
         end
       end
 
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
-        if @bind_address and @port
-          log.info "Starting the TCP server at #{@bind_address}:#{@port}..."
-          EventMachine.start_server("127.0.0.1", 8081, Cognizant::Server::Interface)
+        if port = @port
+          log.info "Starting the TCP server at #{@port}..."
+          host = "127.0.0.1"
+          splitted = port.split(":")
+          host, port = splitted.size > 1
+          EventMachine.start_server(host, port, Server::Interface)
         else  
           log.info "Starting the UNIX domain server with socket #{@socket}..."
-          EventMachine.start_unix_domain_server(@socket, Cognizant::Server::Interface)
+          EventMachine.start_unix_domain_server(@socket, Server::Interface)
         end
       end
 
@@ -155,14 +164,16 @@ module Cognizant
 
       # Daemonize the current process and save it pid in a file.
       def daemonize
-        log.info "Daemonizing into the background..."
-        Process.daemon
+        if @daemonize
+          log.info "Daemonizing into the background..."
+          Process.daemon
 
-        pid = Process.pid
+          pid = Process.pid
 
-        if @pidfile
-          log.info "Writing the daemon pid (#{pid}) to the pidfile..."
-          File.open(@pidfile, "w") { |f| f.write(pid) }
+          if @pidfile
+            log.info "Writing the daemon pid (#{pid}) to the pidfile..."
+            File.open(@pidfile, "w") { |f| f.write(pid) }
+          end
         end
       end
 
@@ -173,6 +184,7 @@ module Cognizant
         end
 
         Signal.trap('TERM', &terminator)
+        Signal.trap('QUIT', &terminator)
         Signal.trap('INT', &terminator)
       end
 
@@ -214,7 +226,7 @@ module Cognizant
             Validations.validate_directory_writable(@logs_dir)
             Validations.validate_file_writable(@socket, "socket")
           rescue => exception  
-            if @foreground
+            unless @daemonize
               $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
               $stderr.puts "    #{exception.message}\n\n"
               if options[:trace]
