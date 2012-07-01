@@ -20,8 +20,8 @@ begin
   Options:
     EOF
 
-    opts.on("-f", "--foreground", "Run the daemon in the foreground.") do
-      options[:foreground] = true
+    opts.on("--[no-]daemonize", "Whether or not to daemonize cognizant into background.") do |value|
+      options[:daemonize] = value
     end
 
     opts.on("--pidfile FILE", String, "The pid lock file for the daemon.") do |value|
@@ -94,6 +94,18 @@ begin
       exit(0)
     end
   end.parse!
+
+  if configfile = ARGV.shift
+    if configfile.eql?("-")
+      config = YAML.load(ARGF.read)
+    else
+      config = YAML.load_file(configfile)
+    end
+    config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
+    options = config.merge(options)
+  end
+
+  puts "options: #{options.inspect}"
 
   require 'cognizant/server/daemon'
   Cognizant::Server::Daemon.new(options)
