@@ -1,5 +1,58 @@
 #!/usr/bin/env ruby
 
-require 'cognizant/client/cli'
+# Set the process name.
+$0 = File.basename(__FILE__)
 
-Cognizant::Client::CLI.new(ARGV)
+# Flush standard output/error immediately.
+$stdout.sync = true
+$stderr.sync = true
+
+begin
+  require 'optparse'
+
+  options = {
+    socket: "/var/run/cognizant/cognizantd.sock"
+  }
+
+  OptionParser.new do |opts|
+    opts.banner = <<-EOF
+  Usage:
+    cognizant [OPTIONS] command
+
+  Options:
+    EOF
+
+    opts.on("-s FILE", "--socket FILE", String, "The socket lock file for the server") do |value|
+      options[:socket] = value
+    end
+
+    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The interface to bind the TCP server to.") do |value|
+      options[:bind_address] = value
+    end
+
+    opts.on("-p PORT", "--port PORT", Integer, "The TCP port to start the server with.") do |value|
+      options[:port] = value
+    end
+
+    opts.on("--username USERNAME", String, "Username for securing server access.") do |value|
+      options[:username] = value
+    end
+
+    opts.on("--password PASSWORD", String, "Password to accompany the username.") do |value|
+      options[:password] = value
+    end
+
+    opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
+      options[:trace] = true
+    end
+
+    opts.on("-v", "--version", "Print the version number and exit.") do
+      require 'cognizant/version'
+      $stdout.puts Cognizant::VERSION
+      exit(0)
+    end
+  end.parse!
+
+  require 'cognizant'
+  Cognizant.add_process(options)
+end
