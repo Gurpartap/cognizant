@@ -15,7 +15,7 @@ begin
   OptionParser.new do |opts|
     opts.banner = <<-EOF
   Usage:
-    cognizantd [OPTIONS]
+    cognizantd [OPTIONS] [CONFIG | -]
 
   Options:
     EOF
@@ -104,8 +104,6 @@ begin
     config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
     options = config.merge(options)
   end
-
-  puts "options: #{options.inspect}"
 
   require 'cognizant/server/daemon'
   Cognizant::Server::Daemon.new(options)

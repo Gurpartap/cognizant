@@ -2,7 +2,6 @@ require "eventmachine"
 
 require "cognizant/logging"
 require "cognizant/system"
-require "cognizant/validations"
 require "cognizant/server/interface"
 
 module Cognizant
@@ -90,24 +89,31 @@ module Cognizant
       # @param [Hash] options A hash of instance attributes and their values.
       def initialize(options = {})
         # Daemon config.
-        @daemonize           = options[:daemonize]                  || true
-        @pidfile             = File.expand_path(options[:pidfile])  || "/var/run/cognizant/cognizantd.pid"
-        @logfile             = File.expand_path(options[:logfile])  || "/var/log/cognizant/cognizantd.log"
-        @loglevel            = options[:loglevel].to_i              || Logger::INFO
-        @socket              = File.expand_path(options[:socket])   || "/var/run/cognizant/cognizantd.sock"
-        @port                = options[:port]                       || nil
-        @username            = options[:username]                   || nil
-        @password            = options[:password]                   || nil
-        @trace               = options[:trace]                      || nil
+        @daemonize           = options.has_key?(:daemonize) ? options[:daemonize] : true
+        @pidfile             = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
+        @logfile             = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
+        @loglevel            = options[:loglevel].to_i || Logger::INFO
+        @socket              = options[:socket]        || "/var/run/cognizant/cognizantd.sock"
+        @port                = options[:port]          || nil
+        @username            = options[:username]      || nil
+        @password            = options[:password]      || nil
+        @trace               = options[:trace]         || nil
 
         # Processes config.                            
-        @pids_dir            = File.expand_path(options[:pids_dir]) || "/var/run/cognizant/pids/"
-        @logs_dir            = File.expand_path(options[:logs_dir]) || "/var/log/cognizant/logs/"
-        @env                 = options[:env]                        || {}
-        @chdir               = options[:chdir]                      || nil
-        @umask               = options[:umask]                      || nil
-        @user                = options[:user]                       || nil
-        @group               = options[:group]                      || nil
+        @pids_dir            = options[:pids_dir] || "/var/run/cognizant/pids/"
+        @logs_dir            = options[:logs_dir] || "/var/log/cognizant/logs/"
+        @env                 = options[:env]      || {}
+        @chdir               = options[:chdir]    || nil
+        @umask               = options[:umask]    || nil
+        @user                = options[:user]     || nil
+        @group               = options[:group]    || nil
+
+        # Expand paths.
+        @pidfile = File.expand_path(@pidfile)
+        @logfile = File.expand_path(@logfile)
+        @socket = File.expand_path(@socket)
+        @pids_dir = File.expand_path(@pids_dir)
+        @logs_dir = File.expand_path(@logs_dir)
 
         # Optional validation of options.
         return validate if options[:validate]
@@ -145,8 +151,8 @@ module Cognizant
         if port = @port
           log.info "Starting the TCP server at #{@port}..."
           host = "127.0.0.1"
-          splitted = port.split(":")
-          host, port = splitted.size > 1
+          splitted = port.to_s.split(":")
+          host, port = splitted if splitted.size > 1
           EventMachine.start_server(host, port, Server::Interface)
         else  
           log.info "Starting the UNIX domain server with socket #{@socket}..."
@@ -197,6 +203,8 @@ module Cognizant
 
       # Override defaults and validate the given options.
       def validate
+        require "cognizant/validations"
+
         if @bind_address and not @port
           raise Validations::ValidationError, "Missing server port."
         end

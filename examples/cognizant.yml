@@ -8,5 +8,6 @@ logs_dir: ~/.cognizant/logs/
 process: -
     name: redis-server
     group: databases
-    start_command: /usr/bin/redis-server
-    ping_command: 
+    start_command: redis-server
+    ping_command: redis-cli PING
+    
