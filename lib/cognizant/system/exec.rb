@@ -116,7 +116,7 @@ module Cognizant
           # Wait until the fork has finished running and accept the exit status.
           status = ::Process.waitpid2(fork_pid)[1]
 
-          # Timeout and try (detach + alive?)?
+          # Timeout and try (detach + pid_running?)?
 
           # Close the file descriptors.
           out_w.close
@@ -162,7 +162,7 @@ module Cognizant
           options[:env] = options[:env].merge({ 'HOME' => user.dir }) if user and user.dir
 
           # Changes the process' idea of the file system root.
-          # Dir.chroot(options[:chroot]) if options[:chroot]
+          Dir.chroot(options[:chroot]) if options[:chroot]
 
           # umask and chdir drops are managed by ::Process.spawn.
         end

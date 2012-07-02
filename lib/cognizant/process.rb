@@ -7,6 +7,7 @@ require "cognizant/system/ps"
 module Cognizant
   class Process
     include System::PID
+    include System::ProcessStatus
 
     # Unique name for the process.
     # @return [String]
@@ -122,7 +123,7 @@ module Cognizant
     attr_accessor :stop_signals
 
     # The grace time period in seconds for the process to stop within.
-    # After the timeout is over, the process is checked for alive status
+    # After the timeout is over, the process is checked for running status
     # and if not stopped, it re-enters the auto start lifecycle based on
     # conditions.
     # @return [String] Defaults to 10
@@ -144,7 +145,7 @@ module Cognizant
 
     # The grace time period in seconds for the process to stop within
     # (for restart). After the timeout is over, the process is checked for
-    # alive status and if not stopped, it re-enters the auto start lifecycle
+    # running status and if not stopped, it re-enters the auto start lifecycle
     # based on conditions.
     # @return [String] Defaults to 10
     attr_accessor :restart_timeout
@@ -229,7 +230,7 @@ module Cognizant
           @process_running
         # elsif self.ping_command and run(self.ping_command).succeeded
         #   true
-        elsif System::ProcessStatus.exists?(read_pid)
+        elsif pid_running?
           true
         else
           false
@@ -281,7 +282,7 @@ module Cognizant
       result_handler = Proc.new do |result|
         # If it is a boolean and value is true OR if it's an execution result and it succeeded.
         if (!!result == result and result) or (result.respond_to?(:succeeded) and result.succeeded)
-          unlink_pid unless alive?
+          unlink_pid unless pid_running?
         end
       end
       execute_action(
@@ -299,7 +300,7 @@ module Cognizant
       result_handler = Proc.new do |result|
         # If it is a boolean and value is true OR if it's an execution result and it succeeded.
         if (!!result == result and result) or (result.respond_to?(:succeeded) and result.succeeded)
-          unlink_pid unless alive?
+          unlink_pid unless pid_running?
         end
       end
       execute_action(
@@ -369,7 +370,7 @@ module Cognizant
           end
 
           # If the caller has attempted to set signals, then it can handle it's result.
-          if (options.has_key?(:signals) and success = System::Process.new(read_pid).stop(signals: signals, timeout: timeout))
+          if (options.has_key?(:signals) and success = stop_with_signals(signals: signals, timeout: timeout))
             run(after_command) if after_command
             queue.push(success)
             Thread.exit
