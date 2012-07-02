@@ -13,7 +13,7 @@ module Cognizant
 
         # The command to restart the process with. This command should be
         # similar in behavior to the stop command, since the process will
-        # anyways be automatically started again, if autostart is set to true.
+        # anyways be automatically started again.
         # @return [String] Defaults to nil
         attr_accessor :restart_command
 

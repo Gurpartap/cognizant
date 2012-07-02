@@ -9,10 +9,6 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :group
 
-      # Whether or not to auto start the process.
-      # @return [true, false] Defaults to true
-      attr_accessor :autostart
-
       # Whether or not to daemonize the process. It is recommended that
       # cognizant managed your process completely by process not
       # daemonizing itself. Find a non-daemonizing option in your process'
@@ -66,7 +62,8 @@ module Cognizant
       # @return [Array] Defaults to []
       attr_accessor :groups
 
-      # The command to check the running status of the process with.
+      # The command to check the running status of the process with. The exit
+      # status of the command is used to determine the status.
       # e.g. "/usr/bin/redis-cli PING"
       # @return [String] Defaults to nil
       attr_accessor :ping_command

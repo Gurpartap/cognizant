@@ -10,17 +10,8 @@ module Cognizant
       ) do alias succeeded? succeeded end
 
       def self.command(command, options = {})
-        # Defaults.
-        options[:name]      ||= ""
-        options[:daemonize] ||= true
-        options[:uid]       ||= nil
-        options[:gid]       ||= nil
-        options[:groups]    ||= []
-        options[:env]       ||= {}
-        options[:pidfile]  ||= nil
-        options[:chroot]    ||= nil
-        options[:chdir]     ||= nil
-        options[:umask]     ||= File.umask
+        options[:groups] ||= []
+        options[:env]    ||= {}
 
         pid, pid_w = IO.pipe
 
@@ -52,8 +43,8 @@ module Cognizant
             $0 = options[:name] if options[:name]
 
             # Collect logs only when daemonizing.
-            stdout = [options[:log_access] || options[:log_file]   || "/dev/null", "a"]
-            stderr = [options[:log_error]  || options[:log_access] || options[:log_file] || "/dev/null", "a"]
+            stdout = [options[:logfile] || "/dev/null", "a"]
+            stderr = [options[:errfile] || options[:logfile] || "/dev/null", "a"]
           else
             stdout = out_w
             stderr = err_w

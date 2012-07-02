@@ -50,8 +50,11 @@ module Cognizant
           end
           execute_action(
             result_handler,
-            daemonize: self.daemonize,
+            name:      self.name,
+            daemonize: self.daemonize || true,
             env:       (self.env || {}).merge(self.start_env || {}),
+            logfile:   self.logfile,
+            errfile:   self.errfile,
             before:    self.start_before_command,
             command:   self.start_command,
             after:     self.start_after_command,

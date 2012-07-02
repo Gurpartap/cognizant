@@ -8,16 +8,10 @@ require "cognizant/system/exec"
 
 module Cognizant
   class Process
-    include Cognizant::Logging
     include Cognizant::Process::PID
     include Cognizant::Process::Status
     include Cognizant::Process::Attributes
     include Cognizant::Process::Actions
-
-    # The number of ticks to skip. Employed when starting, stopping or
-    # restarting for the timeout grace period.
-    # @private
-    attr_accessor :ticks_to_skip
 
     state_machine :initial => :unmonitored do
       # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
@@ -39,7 +33,7 @@ module Cognizant
         transition :stopping   => :stopped,   :unless => :process_running?
 
         transition :stopped    => :running,   :if     => :process_running?
-        transition :stopped    => :starting,  :if     => Proc.new { |p| p.autostart and not p.process_running? }
+        transition :stopped    => :starting,  :unless => :process_running?
 
         transition :restarting => :running,   :if     => :process_running?
         transition :restarting => :stopped,   :unless => :process_running?
@@ -57,12 +51,12 @@ module Cognizant
         transition :running => :stopping
       end
 
-      event :unmonitor do
-        transition any => :unmonitored
-      end
-
       event :restart do
         transition [:running, :stopped] => :restarting
+      end
+
+      event :unmonitor do
+        transition any => :unmonitored
       end
 
       after_transition any => :starting,   :do => :start_process
@@ -75,13 +69,10 @@ module Cognizant
 
     def initialize(options)
       options.each do |attribute_name, value|
-        # Do not accept non configurable attributes.
-        unless [:ticks_to_skip].include?(attribute_name)
-          self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
-        end
+        self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end
 
-      self.ticks_to_skip = 0
+      @ticks_to_skip = 0
 
       # Let state_machine initialize as well.
       super
@@ -106,7 +97,7 @@ module Cognizant
     def process_running?
       @process_running = begin
         # Do not assume change when we're giving time to an execution by skipping ticks.
-        if self.ticks_to_skip > 0
+        if @ticks_to_skip > 0
           @process_running
         elsif self.ping_command and run(self.ping_command).succeeded?
           true
@@ -122,29 +113,27 @@ module Cognizant
       @pidfile = @pidfile || File.join(Cognizant::Server.daemon.pids_dir, self.name + '.pid')
     end
 
+    def logfile
+      @logfile = @logfile || File.join(Cognizant::Server.daemon.logs_dir, self.name + '.log')
+    end
+
     private
 
     def skip_ticks_for(skips)
       # Accept negative skips resulting >= 0.
-      self.ticks_to_skip = [self.ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
+      @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
     end
 
     def skip_tick?
-      (self.ticks_to_skip -= 1) > 0 if self.ticks_to_skip > 0
-    end
-
-    def run_options(overrides = {})
-      options = {}
-      # CONFIGURABLE_ATTRIBUTES.each do |o|
-      #   options[o] = self.send(o)
-      # end
-      options.merge(overrides)
+      (@ticks_to_skip -= 1) > 0 if @ticks_to_skip > 0
     end
 
     def run(command, overrides = {})
-      options = {}
-      options = run_options({ daemonize: false }.merge(overrides)) if overrides
-      System::Execute.command(command, options)
+      options = { daemonize: false }
+      [:uid, :gid, :groups, :chroot, :chdir, :umask].each do |attribute|
+        options[attribute] = self.send(attribute)
+      end
+      System::Execute.command(command, options.merge(overrides))
     end
   end
 end

@@ -12,8 +12,6 @@ module Cognizant
       private
 
       def execute_action(result_handler, options)
-        daemonize      = options[:daemonize] || false
-        env            = options[:env]
         before_command = options[:before]
         command        = options[:command]
         after_command  = options[:after]
@@ -30,7 +28,14 @@ module Cognizant
               Thread.exit
             end
 
-            if (command and success = run(command, { daemonize: daemonize, env: env }) and success.succeeded?)
+            action_run_options = {
+              name:      options[:name],
+              daemonize: options[:daemonize] || false,
+              env:       options[:env],
+              logfile:   options[:logfile],
+              errfile:   options[:errfile]
+            }
+            if (command and success = run(command, action_run_options) and success.succeeded?)
               run(after_command) if after_command
               queue.push(success)
               Thread.exit

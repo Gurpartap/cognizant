@@ -185,8 +185,6 @@ module Cognizant
         EventMachine.next_tick {
           @redis = Cognizant::Process.new({
             name: "redis-server",
-            daemonize: true,
-            autostart: true,
             start_command: "/usr/local/bin/redis-server -",
             start_with_input: "daemonize no",
             start_timeout: 2,
