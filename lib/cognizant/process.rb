@@ -23,25 +23,25 @@ module Cognizant
       # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
       # The distinction between stopped and unmonitored is that stopped
       # means we know it is not running and unmonitored is that we don't care if it's running.
-      state :unmonitored, :started, :stopped
+      state :unmonitored, :running, :stopped
 
       # These are transitionary states, we expect the process to change state after a certain period of time.
       state :starting, :stopping, :restarting
 
       event :tick do
-        transition :starting   => :started,   :if     => :process_running?
+        transition :starting   => :running,   :if     => :process_running?
         transition :starting   => :stopped,   :unless => :process_running?
 
-        transition :started    => :stopped,   :unless => :process_running?
+        transition :running    => :stopped,   :unless => :process_running?
 
         # The process failed to die after entering the stopping state. Change the state to reflect reality.
-        transition :stopping   => :started,   :if     => :process_running?
+        transition :stopping   => :running,   :if     => :process_running?
         transition :stopping   => :stopped,   :unless => :process_running?
 
-        transition :stopped    => :started,   :if     => :process_running?
+        transition :stopped    => :running,   :if     => :process_running?
         transition :stopped    => :starting,  :if     => Proc.new { |p| p.autostart and not p.process_running? }
 
-        transition :restarting => :started,   :if     => :process_running?
+        transition :restarting => :running,   :if     => :process_running?
         transition :restarting => :stopped,   :unless => :process_running?
       end
 
@@ -54,7 +54,7 @@ module Cognizant
       end
 
       event :stop do
-        transition :started => :stopping
+        transition :running => :stopping
       end
 
       event :unmonitor do
@@ -62,7 +62,7 @@ module Cognizant
       end
 
       event :restart do
-        transition [:started, :stopped] => :restarting
+        transition [:running, :stopped] => :restarting
       end
 
       after_transition any => :starting,   :do => :start_process
@@ -119,7 +119,7 @@ module Cognizant
     end
 
     def pidfile
-      @pidfile = @pidfile# || File.join(self.daemon.pids_dir, self.name + '.pid')
+      @pidfile = @pidfile || File.join(Cognizant::Server.daemon.pids_dir, self.name + '.pid')
     end
 
     private
