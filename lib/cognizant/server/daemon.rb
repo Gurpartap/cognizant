@@ -189,8 +189,9 @@ module Cognizant
             autostart: true,
             start_command: "/usr/local/bin/redis-server -",
             start_with_input: "daemonize no",
-            pidfile: "/tmp/redis-server.pid",
-            start_timeout: 3
+            start_timeout: 2,
+            stop_timeout: 2,
+            restart_timeout: 2
           })
           @redis.stop if @redis
           self.processes[@redis.name] = @redis
