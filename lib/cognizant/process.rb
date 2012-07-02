@@ -38,7 +38,7 @@ module Cognizant
         transition :stopping   => :stopped,   :unless => :process_running?
 
         transition :stopped    => :started,   :if     => :process_running?
-        transition :stopped    => :starting,  :if     => :autostart?
+        transition :stopped    => :starting,  :if     => -> { self.autostart and not process_running? }
 
         transition :restarting => :started,   :if     => :process_running?
         transition :restarting => :stopped,   :unless => :process_running?
@@ -127,7 +127,7 @@ module Cognizant
     private
 
     def default_pid_file
-      ""
+      File.join(self.pids_dir, self.name + '.pid')
     end
 
     def skip_ticks_for(skips)
