@@ -1,6 +1,6 @@
 module Cognizant
-  module System
-    module ProcessStatus
+  module Process
+    module Status
       def pid_running?
         pid = read_pid
         return false unless pid and pid != 0
