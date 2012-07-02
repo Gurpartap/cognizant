@@ -1,7 +1,7 @@
 require "cognizant/system/exec"
 
 module Cognizant
-  module Process
+  class Process
     module PID
       def read_pid
         if self.pid_command

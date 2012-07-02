@@ -1,14 +1,6 @@
-require "cognizant/process/attributes/start_attributes"
-require "cognizant/process/attributes/stop_attributes"
-require "cognizant/process/attributes/restart_attributes"
-
 module Cognizant
-  module Process
+  class Process
     module Attributes
-      include Cognizant::Process::Attributes::Start
-      include Cognizant::Process::Attributes::Stop
-      include Cognizant::Process::Attributes::Restart
-
       # Unique name for the process.
       # @return [String]
       attr_accessor :name
@@ -30,15 +22,15 @@ module Cognizant
 
       # The pid lock file for the process. Required when daemonize is set to
       # false.
-      # @return [String] Defaults to #{pids_dir}/#{name}.pid
+      # @return [String] Defaults to value of :pids_dir/:name.pid
       attr_accessor :pidfile
 
       # The file to log the process' STDOUT stream into.
-      # @return [String] Defaults to #{logs_dir}/#{name}.log
+      # @return [String] Defaults to value of :logs_dir/:name.log
       attr_accessor :logfile
 
       # The file to log the daemon's STDERR stream into.
-      # @return [String] Defaults to #{logfile}
+      # @return [String] Defaults to value of :logfile
       attr_accessor :errfile
 
       # Environment variables for process.

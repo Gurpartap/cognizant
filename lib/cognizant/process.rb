@@ -1,6 +1,5 @@
 require 'state_machine'
 
-require "cognizant/system/exec"
 require "cognizant/process/pid"
 require "cognizant/process/ps"
 require "cognizant/process/attributes"
@@ -87,6 +86,21 @@ module Cognizant
       super
     end
 
+    def tick
+      print "."
+      return puts "(skip tick)" if skip_tick?
+      @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
+      super
+    end
+
+    def record_transition_start
+      print "changing state from `#{state}`"
+    end
+
+    def record_transition_end
+      puts " to `#{state}`"
+    end
+
     def process_running?
       @process_running = begin
         # Do not assume change when we're giving time to an execution by skipping ticks.
@@ -110,49 +124,19 @@ module Cognizant
       @pidfile = @pidfile || default_pid_file
     end
 
-    def record_transition_start
-      print "changing state from `#{state}`"
-    end
-
-    def record_transition_end
-      puts " to `#{state}`"
-    end
-
-    def tick
-      print "."
-      return puts "(skip tick)" if skip_tick?
-      @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
-      super
-    end
-
     private
 
     def default_pid_file
       ""
     end
 
-    def skip_ticks_for(seconds)
-      # 1 second = 1 skip
-      # We can optionally accept negative skip seconds totalling >= 0.
-      self.ticks_to_skip = [self.ticks_to_skip + (seconds.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in skip_tick?
+    def skip_ticks_for(skips)
+      # Accept negative skips resulting >= 0.
+      self.ticks_to_skip = [self.ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
     end
 
     def skip_tick?
       (self.ticks_to_skip -= 1) > 0 if self.ticks_to_skip > 0
-    end
-
-    def run_options(overrides = {})
-      options = {}
-      # CONFIGURABLE_ATTRIBUTES.each do |o|
-      #   options[o] = self.send(o)
-      # end
-      options.merge(overrides)
-    end
-
-    def run(command, overrides = {})
-      options = {}
-      options = run_options({ daemonize: false }.merge(overrides)) if overrides
-      System::Execute.command(command, options)
     end
   end
 end

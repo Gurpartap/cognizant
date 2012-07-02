@@ -1,5 +1,5 @@
 module Cognizant
-  module Process
+  class Process
     module Status
       def pid_running?
         pid = read_pid
