@@ -6,8 +6,8 @@ module Cognizant
         # @return [Hash] Defaults to {}
         attr_accessor :stop_env
 
-        # The command to run before the stop command is run. The exit status
-        # of this command determines whether or not to run the stop command.
+        # The command to run before the process is stopped. The exit status
+        # of this command determines whether or not to proceed.
         # @return [String] Defaults to nil
         attr_accessor :stop_before_command
 

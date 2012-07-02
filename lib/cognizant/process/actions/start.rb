@@ -6,8 +6,8 @@ module Cognizant
         # @return [Hash] Defaults to {}
         attr_accessor :start_env
 
-        # The command to run before the start command is run. The exit status
-        # of this command determines whether or not to run the start command.
+        # The command to run before the process is started. The exit status
+        # of this command determines whether or not to proceed.
         # @return [String] Defaults to nil
         attr_accessor :start_before_command
 

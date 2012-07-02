@@ -6,8 +6,8 @@ module Cognizant
         # @return [Hash] Defaults to {}
         attr_accessor :restart_env
 
-        # The command to run before the restart command is run. The exit status
-        # of this command determines whether or not to run the restart command.
+        # The command to run before the process is restarted. The exit status
+        # of this command determines whether or not to proceed.
         # @return [String] Defaults to nil
         attr_accessor :restart_before_command
 

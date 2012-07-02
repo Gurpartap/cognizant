@@ -22,15 +22,15 @@ module Cognizant
 
       # The pid lock file for the process. Required when daemonize is set to
       # false.
-      # @return [String] Defaults to value of :pids_dir/:name.pid
+      # @return [String] Defaults to value of pids_dir/name.pid
       attr_accessor :pidfile
 
       # The file to log the process' STDOUT stream into.
-      # @return [String] Defaults to value of :logs_dir/:name.log
+      # @return [String] Defaults to value of logs_dir/name.log
       attr_accessor :logfile
 
       # The file to log the daemon's STDERR stream into.
-      # @return [String] Defaults to value of :logfile
+      # @return [String] Defaults to value of logfile
       attr_accessor :errfile
 
       # Environment variables for process.
