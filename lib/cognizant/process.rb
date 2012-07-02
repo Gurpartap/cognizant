@@ -1,0 +1,221 @@
+require "cognizant/system/exec"
+require "cognizant/system/ps"
+
+module Cognizant
+  module Server
+    class Process
+      # Unique name for the process.
+      # @return [String]
+      attr_accessor :name
+
+      # Group for the process.
+      # @return [String] Defaults to nil
+      attr_accessor :group
+
+      # Whether or not to auto start the process.
+      # @return [true, false] Defaults to true
+      attr_accessor :autostart
+
+      # Whether or not to daemonize the process. It is recommended that
+      # cognizant managed your process completely by process not
+      # daemonizing itself. Find a non-daemonizing option in your process'
+      # documentation.
+      # @return [true, false] Defaults to true
+      attr_accessor :daemonize
+
+      # The pid lock file for the process. Required when daemonize is set to
+      # false.
+      # @return [String] Defaults to #{pids_dir}/#{name}.pid
+      attr_accessor :pidfile
+
+      # The file to log the process' STDOUT stream into.
+      # @return [String] Defaults to #{logs_dir}/#{name}.log
+      attr_accessor :logfile
+
+      # The file to log the daemon's STDERR stream into.
+      # @return [String] Defaults to #{logfile}
+      attr_accessor :errfile
+
+      # Environment variables for process.
+      # @return [Hash] Defaults to {}
+      attr_accessor :env
+
+      # The chroot directory to change the process' idea of the file system
+      # root.
+      # @return [String] Defaults to nil
+      attr_accessor :chroot
+
+      # The current working directory for the process to start with.
+      # @return [String] Defaults to nil
+      attr_accessor :chdir
+
+      # Limit the permission modes for files and directories created by the
+      # process.
+      # @return [Integer] Defaults to nil
+      attr_accessor :umask
+
+      # Run the process as the given user.
+      # e.g. "deploy", 1000
+      # @return [String] Defaults to nil
+      attr_accessor :uid
+
+      # Run the process as the given user group.
+      # e.g. "deploy"
+      # @return [String] Defaults to nil
+      attr_accessor :gid
+
+      # Supplementary user groups for the process.
+      # e.g. ["staff"]
+      # @return [Array] Defaults to []
+      attr_accessor :groups
+
+      # The command to check the running status of the process with.
+      # e.g. "/usr/bin/redis-cli PING"
+      # @return [String] Defaults to nil
+      attr_accessor :ping_command
+
+      # The command to start the process with.
+      # e.g. "/usr/bin/redis-server"
+      # @return [String] Defaults to nil
+      attr_accessor :start_command
+
+      # The grace time period in seconds for the process to start within.
+      # After the timeout is over, the process the considered not started
+      # and it re-enters the auto start lifecycle based on conditions.
+      # @return [String] Defaults to 10
+      attr_accessor :start_timeout
+
+      # Start the process with this in it's STDIN.
+      # e.g. "daemonize no"
+      # @return [String] Defaults to nil
+      attr_accessor :start_with_input
+
+      # Start the process with this file's data in it's STDIN.
+      # e.g. "/etc/redis/redis.conf"
+      # @return [String] Defaults to nil
+      attr_accessor :start_with_input_file
+
+      # Start the process with this command's output in it's (process') STDIN.
+      # e.g. "cat /etc/redis/redis.conf"
+      # @return [String] Defaults to nil
+      attr_accessor :start_with_input_command
+
+      # The command to stop the process with.
+      # e.g. "/usr/bin/redis-server"
+      # @return [String] Defaults to nil
+      attr_accessor :stop_command
+
+      # The signals to pass to the process one by one attempting to stop it.
+      # Each signal is passed within the timeout period over equally
+      # distributed intervals (min. 2 seconds). Override with signals without
+      # "KILL" to never force kill a process.
+      # e.g. ["TERM", "INT"]
+      # @return [Array] Defaults to ["TERM", "INT", "KILL"]
+      attr_accessor :stop_signals
+
+      # The grace time period in seconds for the process to stop within.
+      # After the timeout is over, the process is checked for alive status
+      # and if not stopped, it re-enters the auto start lifecycle based on
+      # conditions.
+      # @return [String] Defaults to 10
+      attr_accessor :stop_timeout
+
+      # The command to restart the process with. This command should be similar
+      # in behavior to the stop command, since the process will anyways be
+      # automatically started again, if autostart is set to true.
+      # @return [String] Defaults to nil
+      attr_accessor :restart_command
+
+      # The signals to pass to the process one by one attempting to restart it.
+      # Each signal is passed within the timeout period over equally
+      # distributed intervals (min. 2 seconds). Override with signals without
+      # "KILL" to never force kill a process.
+      # e.g. ["TERM", "INT"]
+      # @return [Array] Defaults to ["TERM", "INT", "KILL"]
+      attr_accessor :restart_signals
+
+      # The grace time period in seconds for the process to stop within
+      # (for restart). After the timeout is over, the process is checked for
+      # alive status and if not stopped, it re-enters the auto start lifecycle
+      # based on conditions.
+      # @return [String] Defaults to 10
+      attr_accessor :restart_timeout
+
+      # The number of ticks to skip. Employed when starting, stopping or
+      # restarting for the timeout grace period.
+      # @private
+      attr_accessor :ticks_to_skip
+
+      state_machine :initial => :unmonitored do
+        # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
+        # The distinction between stopped and unmonitored is that stopped
+        # means we know it is not running and unmonitored is that we don't care if it's running.
+        state :unmonitored, :started, :stopped
+
+        # These are transitionary states, we expect the process to change state after a certain period of time.
+        state :starting, :stopping, :restarting
+
+        event :tick do
+          transition :starting   => :started,   :if     => :process_running?
+          transition :starting   => :stopped,   :unless => :process_running?
+
+          transition :started    => :stopped,   :unless => :process_running?
+
+          # The process failed to die after entering the stopping state. Change the state to reflect reality.
+          transition :stopping   => :started,   :if     => :process_running?
+          transition :stopping   => :stopped,   :unless => :process_running?
+
+          transition :stopped    => :started,   :if     => :process_running?
+          transition :stopped    => :starting,  :if     => :autostart?
+
+          transition :restarting => :started,   :if     => :process_running?
+          transition :restarting => :stopped,   :unless => :process_running?
+        end
+
+        event :monitor do
+          transition :unmonitored => :stopped
+        end
+
+        event :start do
+          transition [:unmonitored, :stopped] => :starting
+        end
+
+        event :stop do
+          transition :started => :stopping
+        end
+
+        event :unmonitor do
+          transition any => :unmonitored
+        end
+
+        event :restart do
+          transition [:started, :stopped] => :restarting
+        end
+
+        after_transition any => :starting,   :do => :start_process
+        after_transition any => :stopping,   :do => :stop_process
+        after_transition any => :restarting, :do => :restart_process
+      end
+
+      def process_running?
+        @process_running = begin
+          # Do not assume change when we're giving time to an execution by skipping ticks.
+          if self.ticks_to_skip > 0
+            @process_running
+          # elsif self.ping_command and run(self.ping_command).succeeded?
+          #   true
+          elsif System::ProcessStatus.exists?(self.pid)
+            true
+          else
+            false
+          end
+        end
+      end
+
+      def autostart?
+        self.autostart and not process_running?
+      end
+
+    end
+  end
+end

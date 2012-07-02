@@ -20,4 +20,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "yard"
 
   gem.add_dependency "eventmachine"
+  gem.add_dependency "state_machine"
 end
