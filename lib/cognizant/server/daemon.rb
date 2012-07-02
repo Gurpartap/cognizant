@@ -85,6 +85,11 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :group
 
+      # Array of processes being managed.
+      # @private
+      # @return [Array]
+      attr_accessor :processes
+
       # Initializes and starts the cognizant daemon with the given options
       # as instance attributes.
       # @param [Hash] options A hash of instance attributes and their values.
@@ -141,6 +146,8 @@ module Cognizant
         log.info "Booting up cognizantd..."
         trap_signals
         EventMachine.run do
+          # Start without any knowledge of processes.
+          self.processes = {}
           start_interface_server
           start_periodic_ticks
           daemonize
@@ -166,16 +173,31 @@ module Cognizant
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
           print "."
+          self.processes.each do |group, process|
+            process.tick
+          end
         end
+        EventMachine.next_tick {
+          @redis = Cognizant::Process.new({
+            name: "redis-server",
+            daemonize: true,
+            autostart: true,
+            start_command: "/usr/local/bin/redis-server -",
+            start_with_input: "daemonize no",
+          })
+          @redis.stop if @redis
+          self.processes[@redis.name] = @redis
+          @redis.monitor
+        }
       end
 
       # Daemonize the current process and save it pid in a file.
       def daemonize
         if @daemonize
           log.info "Daemonizing into the background..."
-          Process.daemon
+          ::Process.daemon
 
-          pid = Process.pid
+          pid = ::Process.pid
 
           if @pidfile
             log.info "Writing the daemon pid (#{pid}) to the pidfile..."
@@ -192,13 +214,14 @@ module Cognizant
 
         Signal.trap('TERM', &terminator)
         Signal.trap('QUIT', &terminator)
-        Signal.trap('INT', &terminator)
+        Signal.trap('INT',  &terminator)
       end
 
       # Stops the TCP server and the tick loop, and performs cleanup.
       def shutdown
         log.info "Shutting down cognizantd..."
         logger.close
+
         EventMachine.next_tick { EventMachine.stop }
       end
 
@@ -221,7 +244,7 @@ module Cognizant
         Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
         Validations.validate_umask(@umask)
         
-        fork_pid = Process.fork do
+        fork_pid = ::Process.fork do
           begin
             Validations.validate_user(@user)
             Validations.validate_user_group(@group)
@@ -253,7 +276,7 @@ module Cognizant
           # Exit the forked process normally.
           exit(0)
         end
-        status = Process.waitpid2(fork_pid)[1]
+        status = ::Process.waitpid2(fork_pid)[1]
         
         # Validations failed if the fork did not exit normally.
         exit(status.exitstatus) unless status.success?
