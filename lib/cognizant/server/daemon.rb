@@ -121,11 +121,29 @@ module Cognizant
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
-        # Optional validation of options.
-        return validate if options[:validate]
+        # # Optional validation of options.
+        # return validate if options[:validate]
+      end
 
+      def bootup
         setup_prerequisites
-        bootup
+        trap_signals
+        log.info "Booting up cognizantd..."
+        EventMachine.run do
+          # Start without any knowledge of processes.
+          self.processes = {}
+          start_interface_server
+          start_periodic_ticks
+          daemonize
+        end
+      end
+
+      # Stops the TCP server and the tick loop, and performs cleanup.
+      def shutdown
+        log.info "Shutting down cognizantd..."
+        # logger.close
+
+        EventMachine.next_tick { EventMachine.stop }
       end
 
       private
@@ -140,18 +158,6 @@ module Cognizant
         add_log_adapter(File.open(@logfile, "a"))
         add_log_adapter($stdout) unless @daemonize
         log.level = if @trace then Logger::DEBUG else @loglevel end
-      end
-
-      def bootup
-        log.info "Booting up cognizantd..."
-        trap_signals
-        EventMachine.run do
-          # Start without any knowledge of processes.
-          self.processes = {}
-          start_interface_server
-          start_periodic_ticks
-          daemonize
-        end
       end
 
       # Starts the TCP server with the set socket lock file or port.
@@ -216,14 +222,6 @@ module Cognizant
         Signal.trap('TERM', &terminator)
         Signal.trap('QUIT', &terminator)
         Signal.trap('INT',  &terminator)
-      end
-
-      # Stops the TCP server and the tick loop, and performs cleanup.
-      def shutdown
-        log.info "Shutting down cognizantd..."
-        logger.close
-
-        EventMachine.next_tick { EventMachine.stop }
       end
 
       # Override defaults and validate the given options.

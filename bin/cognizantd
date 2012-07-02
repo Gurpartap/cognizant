@@ -105,8 +105,8 @@ begin
     options = config.merge(options)
   end
 
-  require 'cognizant/server/daemon'
-  Cognizant::Server::Daemon.new(options)
+  require 'cognizant/server'
+  Cognizant::Server.start(options)
 rescue => exception
   if exception.instance_of?(SystemExit)
     raise
