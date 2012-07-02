@@ -1,3 +1,4 @@
+require "json"
 require "eventmachine"
 
 require "cognizant/server/commands"
@@ -9,16 +10,15 @@ module Cognizant
         # puts "-- someone connected to the server!"
       end
 
-      def receive_data(command)
-        command = command.strip.downcase
-        if Commands.respond_to?(command)
-          Commands.send(command) do |response|
-            send_data "#{response}\r\n\r\n"
+      def receive_data(args)
+        args = [*args.split]
+        command = args.shift.to_s.strip.downcase
+        if command.size > 0
+          Commands.send(command, *args) do |response|
+            send_data "#{response.to_json}\r\n\r\n"
           end
-        else
-          send_data "No such command: #{command}\r\n\r\n"
         end
-        close_connection_after_writing
+        # close_connection_after_writing
       end
 
       def unbind
