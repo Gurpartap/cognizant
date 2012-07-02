@@ -4,6 +4,7 @@ require "cognizant/process/pid"
 require "cognizant/process/ps"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
+require "cognizant/system/exec"
 
 module Cognizant
   class Process
@@ -38,7 +39,7 @@ module Cognizant
         transition :stopping   => :stopped,   :unless => :process_running?
 
         transition :stopped    => :started,   :if     => :process_running?
-        transition :stopped    => :starting,  :if     => -> { self.autostart and not process_running? }
+        transition :stopped    => :starting,  :if     => Proc.new { |p| p.autostart and not p.process_running? }
 
         transition :restarting => :started,   :if     => :process_running?
         transition :restarting => :stopped,   :unless => :process_running?
@@ -69,7 +70,7 @@ module Cognizant
       after_transition any => :restarting, :do => :restart_process
 
       before_transition any => any, :do => :record_transition_start
-      after_transition any => any,  :do => :record_transition_end
+      after_transition  any => any, :do => :record_transition_end
     end
 
     def initialize(options)
@@ -87,9 +88,10 @@ module Cognizant
     end
 
     def tick
-      print "."
-      return puts "(skip tick)" if skip_tick?
+      return if skip_tick?
       @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
+
+      # Invoke the state_machine event.
       super
     end
 
@@ -106,8 +108,8 @@ module Cognizant
         # Do not assume change when we're giving time to an execution by skipping ticks.
         if self.ticks_to_skip > 0
           @process_running
-        # elsif self.ping_command and run(self.ping_command).succeeded
-        #   true
+        elsif self.ping_command and run(self.ping_command).succeeded?
+          true
         elsif pid_running?
           true
         else
@@ -116,19 +118,11 @@ module Cognizant
       end
     end
 
-    def autostart?
-      self.autostart and not process_running?
-    end
-
     def pidfile
-      @pidfile = @pidfile || default_pid_file
+      @pidfile = @pidfile# || File.join(self.daemon.pids_dir, self.name + '.pid')
     end
 
     private
-
-    def default_pid_file
-      File.join(self.pids_dir, self.name + '.pid')
-    end
 
     def skip_ticks_for(skips)
       # Accept negative skips resulting >= 0.
@@ -137,6 +131,20 @@ module Cognizant
 
     def skip_tick?
       (self.ticks_to_skip -= 1) > 0 if self.ticks_to_skip > 0
+    end
+
+    def run_options(overrides = {})
+      options = {}
+      # CONFIGURABLE_ATTRIBUTES.each do |o|
+      #   options[o] = self.send(o)
+      # end
+      options.merge(overrides)
+    end
+
+    def run(command, overrides = {})
+      options = {}
+      options = run_options({ daemonize: false }.merge(overrides)) if overrides
+      System::Execute.command(command, options)
     end
   end
 end

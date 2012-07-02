@@ -40,7 +40,7 @@ module Cognizant
         def restart_process
           result_handler = Proc.new do |result|
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
-            if (!!result == result and result) or (result.respond_to?(:succeeded) and result.succeeded)
+            if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid unless pid_running?
             end
           end

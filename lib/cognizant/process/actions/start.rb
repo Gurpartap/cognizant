@@ -44,7 +44,7 @@ module Cognizant
 
         def start_process
           result_handler = Proc.new do |result|
-            if result.respond_to?(:succeeded) and result.succeeded
+            if result.respond_to?(:succeeded?) and result.succeeded?
               write_pid(result.pid) if result.pid != 0
             end
           end

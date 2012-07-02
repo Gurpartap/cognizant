@@ -7,7 +7,8 @@ module Cognizant
         :stderr,
         :exit_code,
         :succeeded
-      )
+      ) do alias succeeded? succeeded end
+
       def self.command(command, options = {})
         # Defaults.
         options[:name]      ||= ""

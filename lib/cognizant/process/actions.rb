@@ -1,5 +1,3 @@
-require "cognizant/system/exec"
-
 require "cognizant/process/actions/start"
 require "cognizant/process/actions/stop"
 require "cognizant/process/actions/restart"
@@ -12,20 +10,6 @@ module Cognizant
       include Cognizant::Process::Actions::Restart
 
       private
-
-      def run_options(overrides = {})
-        options = {}
-        # CONFIGURABLE_ATTRIBUTES.each do |o|
-        #   options[o] = self.send(o)
-        # end
-        options.merge(overrides)
-      end
-
-      def run(command, overrides = {})
-        options = {}
-        options = run_options({ daemonize: false }.merge(overrides)) if overrides
-        System::Execute.command(command, options)
-      end
 
       def execute_action(result_handler, options)
         daemonize      = options[:daemonize] || false
@@ -41,12 +25,12 @@ module Cognizant
           result = false
           queue = Queue.new
           thread = Thread.new do
-            if before_command and not success = run(before_command).succeeded
+            if before_command and not success = run(before_command).succeeded?
               queue.push(success)
               Thread.exit
             end
 
-            if (command and success = run(command, { daemonize: daemonize, env: env }) and success.succeeded)
+            if (command and success = run(command, { daemonize: daemonize, env: env }) and success.succeeded?)
               run(after_command) if after_command
               queue.push(success)
               Thread.exit
