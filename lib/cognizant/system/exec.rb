@@ -1,6 +1,13 @@
 module Cognizant
   module System
     module Execute
+      ExecutionResult = Struct.new(
+        :pid,
+        :stdout,
+        :stderr,
+        :exit_code,
+        :succeeded
+      )
       def self.command(command, options = {})
         # Defaults.
         options[:name]      ||= ""
@@ -9,7 +16,7 @@ module Cognizant
         options[:gid]       ||= nil
         options[:groups]    ||= []
         options[:env]       ||= {}
-        options[:pid_file]  ||= nil
+        options[:pidfile]  ||= nil
         options[:chroot]    ||= nil
         options[:chdir]     ||= nil
         options[:umask]     ||= File.umask
@@ -97,13 +104,14 @@ module Cognizant
         if options[:daemonize]
           # Detach (non blocking) the process executing the command and move on.
           ::Process.detach(fork_pid)
-      
-          return Result.new({
-            :pid       => pid.read.to_i,
-            :stdout    => nil,
-            :stderr    => nil,
-            :exit_code => 0
-          })
+
+          return ExecutionResult.new(
+            pid.read.to_i,
+            nil,
+            nil,
+            0,
+            true
+          )
         else
           # Wait until the fork has finished running and accept the exit status.
           status = ::Process.waitpid2(fork_pid)[1]
@@ -115,12 +123,13 @@ module Cognizant
           err_w.close
 
           # Collect and return stdout, stderr and exitcode.
-          return Result.new({
-            :pid       => pid.read.to_i,
-            :stdout    => out_r.read,
-            :stderr    => err_r.read,
-            :exit_code => status.exitstatus
-          })
+          return ExecutionResult.new(
+            pid.read.to_i,
+            out_r.read,
+            err_r.read,
+            status.exitstatus,
+            status.exitstatus.zero?
+          )
         end
       end
 

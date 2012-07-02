@@ -1,9 +1,9 @@
 module Cognizant
   module System
     module ProcessStatus
-      def self.exists?(pid)
+      def self.exists?(pid = 0)
         return false unless pid and pid != 0
-        signal(signal, pid)
+        self.signal(0, pid)
         # It's running since no exception was raised.
         true
       rescue Errno::ESRCH
@@ -28,7 +28,7 @@ module Cognizant
         catch :stopped do
           signals.each do |stop_signal|
             # Send the stop signal and wait for it to stop.
-            signal(stop_signal, pid)
+            self.signal(stop_signal, pid)
 
             # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
             ([timeout / signals, 2].max).times do

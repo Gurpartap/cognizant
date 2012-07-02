@@ -172,7 +172,6 @@ module Cognizant
       def start_periodic_ticks
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
-          print "."
           self.processes.each do |group, process|
             process.tick
           end
@@ -184,6 +183,8 @@ module Cognizant
             autostart: true,
             start_command: "/usr/local/bin/redis-server -",
             start_with_input: "daemonize no",
+            pidfile: "/tmp/redis-server.pid",
+            start_timeout: 3
           })
           @redis.stop if @redis
           self.processes[@redis.name] = @redis

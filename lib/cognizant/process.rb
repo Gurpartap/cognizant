@@ -78,6 +78,10 @@ module Cognizant
     # @return [String] Defaults to nil
     attr_accessor :ping_command
 
+    # The command that returns the pid of the process.
+    # @return [String] Defaults to nil
+    attr_accessor :pid_command
+
     # The command to start the process with.
     # e.g. "/usr/bin/redis-server"
     # @return [String] Defaults to nil
@@ -223,7 +227,7 @@ module Cognizant
         # Do not assume change when we're giving time to an execution by skipping ticks.
         if self.ticks_to_skip > 0
           @process_running
-        # elsif self.ping_command and run(self.ping_command).succeeded?
+        # elsif self.ping_command and run(self.ping_command).succeeded
         #   true
         elsif System::ProcessStatus.exists?(read_pid)
           true
@@ -252,13 +256,13 @@ module Cognizant
     def tick
       print "."
       return puts "(skip tick)" if skip_tick?
-      @action_thread.kill if @action_thread # Is this even required? Since we a have timer within the thread to destruct itself.
+      @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
       super
     end
 
     def start_process
       result_handler = Proc.new do |result|
-        if result.respond_to?(:succeeded?) and result.succeeded?
+        if result.respond_to?(:succeeded) and result.succeeded
           write_pid(result.pid) if result.pid != 0
         end
       end
@@ -276,7 +280,7 @@ module Cognizant
     def stop_process
       result_handler = Proc.new do |result|
         # If it is a boolean and value is true OR if it's an execution result and it succeeded.
-        if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
+        if (!!result == result and result) or (result.respond_to?(:succeeded) and result.succeeded)
           unlink_pid unless alive?
         end
       end
@@ -294,7 +298,7 @@ module Cognizant
     def restart_process
       result_handler = Proc.new do |result|
         # If it is a boolean and value is true OR if it's an execution result and it succeeded.
-        if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
+        if (!!result == result and result) or (result.respond_to?(:succeeded) and result.succeeded)
           unlink_pid unless alive?
         end
       end
@@ -353,12 +357,12 @@ module Cognizant
         result = false
         queue = Queue.new
         thread = Thread.new do
-          if before_command and not success = run(before_command).succeeded?
+          if before_command and not success = run(before_command).succeeded
             queue.push(success)
             Thread.exit
           end
 
-          if (command and success = run(command, { daemonize: daemonize, env: env }) and success.succeeded?)
+          if (command and success = run(command, { daemonize: daemonize, env: env }) and success.succeeded)
             run(after_command) if after_command
             queue.push(success)
             Thread.exit
@@ -385,7 +389,7 @@ module Cognizant
           end
           sleep 1
         end
-
+        
         # Kill the nested thread.
         thread.kill
 
