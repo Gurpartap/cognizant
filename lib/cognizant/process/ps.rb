@@ -1,7 +1,7 @@
 module Cognizant
   module System
     module ProcessStatus
-      def def pid_running?
+      def pid_running?
         pid = read_pid
         return false unless pid and pid != 0
         signal(0, pid)
@@ -23,24 +23,22 @@ module Cognizant
         # Return if the process is already stopped.
         return true unless pid_running?
 
-        pid = read_pid
-
         signals = options[:signals] || ["TERM", "INT", "KILL"]
         timeout = options[:timeout] || 10
 
         catch :stopped do
           signals.each do |stop_signal|
             # Send the stop signal and wait for it to stop.
-            signal(stop_signal, pid)
+            signal(stop_signal, @process_pid)
 
             # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
             ([timeout / signals, 2].max).times do
-              throw :stopped unless pid_running?(pid)
+              throw :stopped unless pid_running?
               sleep 1
             end
           end
         end
-        not pid_running?(pid)
+        not pid_running?
       end
 
       def signal(signal, pid = nil)
