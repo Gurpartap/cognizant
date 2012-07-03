@@ -1,5 +1,7 @@
 # Cognizant
 
+![Cognizant](images/logo-small.png "Cognizant")
+
 Cognizant keeps your processes up and running by monitoring over their state and resource utilization efficiently.
 
 ## Getting started
@@ -25,11 +27,11 @@ If you wish to start without giving superuser access, you may do it as such by s
 or
 
     $ echo <<EOF | cognizantd -
-      socket   ~/.cognizant/cognizantd.sock
-      pidfile  ~/.cognizant/cognizantd.pid
-      logfile  ~/.cognizant/cognizantd.log
-      pids-dir ~/.cognizant/pids/
-      logs-dir ~/.cognizant/logs/
+      socket:   ~/.cognizant/cognizantd.sock
+      pidfile:  ~/.cognizant/cognizantd.pid
+      logfile:  ~/.cognizant/cognizantd.log
+      pids-dir: ~/.cognizant/pids/
+      logs-dir: ~/.cognizant/logs/
     EOF
 
 ## Using with `cognizant`
