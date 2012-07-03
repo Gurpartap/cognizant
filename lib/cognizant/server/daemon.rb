@@ -215,8 +215,8 @@ module Cognizant
         end
 
         Signal.trap('TERM', &terminator)
-        Signal.trap('QUIT', &terminator)
         Signal.trap('INT',  &terminator)
+        Signal.trap('QUIT', &terminator)
       end
     end
   end

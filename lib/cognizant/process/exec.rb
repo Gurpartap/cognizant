@@ -1,6 +1,6 @@
 module Cognizant
   class Process
-    module System
+    module Execution
       ExecutionResult = Struct.new(
         :pid,
         :stdout,
