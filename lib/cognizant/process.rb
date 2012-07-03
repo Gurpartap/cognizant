@@ -34,7 +34,7 @@ module Cognizant
         transition :stopping   => :stopped,   :unless => :process_running?
 
         transition :stopped    => :running,   :if     => :process_running?
-        transition :stopped    => :starting,  :unless => :process_running?
+        transition :stopped    => :starting,  :if     => lambda { |p| p.autostart and not p.process_running? }
 
         transition :restarting => :running,   :if     => :process_running?
         transition :restarting => :stopped,   :unless => :process_running?
@@ -60,9 +60,10 @@ module Cognizant
         transition any => :unmonitored
       end
 
-      after_transition any => :starting,   :do => :start_process
-      after_transition any => :stopping,   :do => :stop_process
-      after_transition any => :restarting, :do => :restart_process
+      after_transition any       => :starting,   :do => :start_process
+      before_transition :running => :stopping,   :do => lambda { |p| p.autostart = false }
+      after_transition any       => :stopping,   :do => :stop_process
+      after_transition any       => :restarting, :do => :restart_process
 
       before_transition any => any, :do => :record_transition_start
       after_transition  any => any, :do => :record_transition_end

@@ -16,6 +16,10 @@ module Cognizant
       # @return [true, false] Defaults to true
       attr_accessor :daemonize
 
+      # Whether or not to auto start the process.
+      # @return [true, false] Defaults to true
+      attr_accessor :autostart
+
       # The pid lock file for the process. Required when daemonize is set to
       # false.
       # @return [String] Defaults to value of pids_dir/name.pid

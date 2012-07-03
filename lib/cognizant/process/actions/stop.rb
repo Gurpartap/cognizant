@@ -19,7 +19,7 @@ module Cognizant
         # The signals to pass to the process one by one attempting to stop it.
         # Each signal is passed within the timeout period over equally
         # distributed intervals (min. 2 seconds). Override with signals without
-        # "KILL" to never force kill a process.
+        # "KILL" to never force kill the process.
         # e.g. ["TERM", "INT"]
         # @return [Array] Defaults to ["TERM", "INT", "KILL"]
         attr_accessor :stop_signals

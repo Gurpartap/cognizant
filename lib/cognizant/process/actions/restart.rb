@@ -11,16 +11,16 @@ module Cognizant
         # @return [String] Defaults to nil
         attr_accessor :restart_before_command
 
-        # The command to restart the process with. This command should be
-        # similar in behavior to the stop command, since the process will
-        # anyways be automatically started again.
+        # The command to restart the process with. This command can optionally
+        # be similar in behavior to the stop command, since the process will
+        # anyways be automatically started again, if autostart is set to true.
         # @return [String] Defaults to nil
         attr_accessor :restart_command
 
         # The signals to pass to the process one by one attempting to restart
         # it. Each signal is passed within the timeout period over equally
         # distributed intervals (min. 2 seconds). Override with signals without
-        # "KILL" to never force kill a process.
+        # "KILL" to never force kill the process.
         # e.g. ["TERM", "INT"]
         # @return [Array] Defaults to ["TERM", "INT", "KILL"]
         attr_accessor :restart_signals
