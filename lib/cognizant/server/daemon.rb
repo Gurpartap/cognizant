@@ -2,7 +2,6 @@ require "eventmachine"
 
 require "cognizant/logging"
 require "cognizant/process"
-require "cognizant/system/exec"
 require "cognizant/server/interface"
 
 module Cognizant
@@ -120,9 +119,6 @@ module Cognizant
         @socket   = File.expand_path(@socket)
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
-
-        # # Optional validation of options.
-        # return validate if options[:validate]
       end
 
       def bootup
@@ -221,63 +217,6 @@ module Cognizant
         Signal.trap('TERM', &terminator)
         Signal.trap('QUIT', &terminator)
         Signal.trap('INT',  &terminator)
-      end
-
-      # Override defaults and validate the given options.
-      def validate
-        require "cognizant/validations"
-
-        if @bind_address and not @port
-          raise Validations::ValidationError, "Missing server port."
-        end
-
-        if @username and not @password
-          raise Validations::ValidationError, "Missing password."
-        end
-        
-        if @chdir and not File.directory?(@chdir)
-          raise Validations::ValidationError, %{The directory "#{@chdir}" is not available.}
-        end
-        
-        Validations.validate_includes(@loglevel, [Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR, Logger::FATAL])
-        Validations.validate_umask(@umask)
-        
-        fork_pid = ::Process.fork do
-          begin
-            Validations.validate_user(@user)
-            Validations.validate_user_group(@group)
-            Validations.validate_env(@env)
-
-            System::Execute.drop_privileges(uid: @user, gid: @group, env: @env)
-
-            Validations.validate_file_writable(@pidfile)
-            Validations.validate_file_writable(@logfile)
-            Validations.validate_directory_writable(@pids_dir)
-            Validations.validate_directory_writable(@logs_dir)
-            Validations.validate_file_writable(@socket, "socket")
-          rescue => exception  
-            unless @daemonize
-              $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
-              $stderr.puts "    #{exception.message}\n\n"
-              if options[:trace]
-                $stderr.puts exception.backtrace.join("\n")
-                $stderr.puts "\n(See usage by running #{$0} with --help)"
-              else
-                $stderr.puts "(See full trace by running #{$0} with --trace)"
-              end
-              exit(1)
-            else
-              raise
-            end
-          end
-        
-          # Exit the forked process normally.
-          exit(0)
-        end
-        status = ::Process.waitpid2(fork_pid)[1]
-        
-        # Validations failed if the fork did not exit normally.
-        exit(status.exitstatus) unless status.success?
       end
     end
   end
