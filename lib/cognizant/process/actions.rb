@@ -42,7 +42,7 @@ module Cognizant
             end
 
             # If the caller has attempted to set signals, then it can handle it's result.
-            if (options.has_key?(:signals) and success = stop_with_signals(signals: signals, timeout: timeout))
+            if (options.has_key?(:signals) and success = send_signals(signals: signals, timeout: timeout))
               run(after_command) if after_command
               queue.push(success)
               Thread.exit
@@ -77,7 +77,7 @@ module Cognizant
         skip_ticks_for(timeout)
       end
 
-      def stop_with_signals(options = {})
+      def send_signals(options = {})
         # Return if the process is already stopped.
         return true unless pid_running?
 
