@@ -2,7 +2,6 @@ require "cognizant/server/daemon"
 
 module Cognizant
   module Server
-
     def self.start(options = {})
       @daemon = Cognizant::Server::Daemon.new(options)
       @daemon.bootup

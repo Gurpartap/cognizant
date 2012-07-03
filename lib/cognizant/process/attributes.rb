@@ -16,7 +16,8 @@ module Cognizant
       # @return [true, false] Defaults to true
       attr_accessor :daemonize
 
-      # Whether or not to auto start the process.
+      # Whether or not to auto start the process on initial run. Afterwards,
+      # this attribute is overwritten by stop or restart request.
       # @return [true, false] Defaults to true
       attr_accessor :autostart
 

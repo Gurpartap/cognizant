@@ -60,10 +60,11 @@ module Cognizant
         transition any => :unmonitored
       end
 
-      after_transition any       => :starting,   :do => :start_process
+      after_transition  any      => :starting,   :do => :start_process
       before_transition :running => :stopping,   :do => lambda { |p| p.autostart = false }
-      after_transition any       => :stopping,   :do => :stop_process
-      after_transition any       => :restarting, :do => :restart_process
+      after_transition  any      => :stopping,   :do => :stop_process
+      before_transition any      => :restarting, :do => lambda { |p| p.autostart = true }
+      after_transition  any      => :restarting, :do => :restart_process
 
       before_transition any => any, :do => :record_transition_start
       after_transition  any => any, :do => :record_transition_end
