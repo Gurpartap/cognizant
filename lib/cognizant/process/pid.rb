@@ -1,11 +1,9 @@
-require "cognizant/system/exec"
-
 module Cognizant
   class Process
     module PID
       def read_pid
         if self.pid_command
-          str = System::Execute.command(self.pid_command).stdout.to_i
+          str = execute(self.pid_command).stdout.to_i
           @process_pid = str unless not str or str.zero?
         elsif self.pidfile and File.exists?(self.pidfile)
           str = File.read(self.pidfile).to_i

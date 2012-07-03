@@ -1,6 +1,6 @@
 module Cognizant
-  module System
-    module Execute
+  class Process
+    module System
       ExecutionResult = Struct.new(
         :pid,
         :stdout,
@@ -9,7 +9,7 @@ module Cognizant
         :succeeded
       ) do alias succeeded? succeeded end
 
-      def self.command(command, options = {})
+      def execute(command, options = {})
         options[:groups] ||= []
         options[:env]    ||= {}
 
@@ -24,7 +24,7 @@ module Cognizant
         # Run the following in a fork so that the privilege changes do not affect the parent process.
         fork_pid = ::Process.fork do
           # Set the user and groups for the process in context.
-          self.drop_privileges(options)
+          drop_privileges(options)
 
           if options[:daemonize]
             # Create a new session to detach from the controlling terminal.
@@ -65,7 +65,7 @@ module Cognizant
           end
 
           # Merge spawn options.
-        	spawn_options = self.construct_spawn_options(options, {
+        	spawn_options = construct_spawn_options(options, {
         		:in  => stdin,
         		:out => stdout,
         		:err => stderr
@@ -125,7 +125,9 @@ module Cognizant
         end
       end
 
-      def self.drop_privileges(options = {})
+      private
+
+      def drop_privileges(options = {})
         # Cannot drop privileges unless we are superuser.
         if ::Process.euid == 0
           # Drop ~= decrease, since we can only decrease privileges.
@@ -162,7 +164,7 @@ module Cognizant
 
       private
 
-      def self.construct_spawn_options(options, overrides = {})
+      def construct_spawn_options(options, overrides = {})
         spawn_options = {}
         [:chdir, :umask].each do |o|
           spawn_options[o] = options[o] if options[o]

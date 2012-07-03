@@ -4,7 +4,7 @@ require "cognizant/process/pid"
 require "cognizant/process/ps"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
-require "cognizant/system/exec"
+require "cognizant/process/system"
 
 module Cognizant
   class Process
@@ -12,6 +12,7 @@ module Cognizant
     include Cognizant::Process::Status
     include Cognizant::Process::Attributes
     include Cognizant::Process::Actions
+    include Cognizant::Process::System
 
     state_machine :initial => :unmonitored do
       # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
@@ -133,7 +134,7 @@ module Cognizant
       [:uid, :gid, :groups, :chroot, :chdir, :umask].each do |attribute|
         options[attribute] = self.send(attribute)
       end
-      System::Execute.command(command, options.merge(overrides))
+      execute(command, options.merge(overrides))
     end
   end
 end
