@@ -1,13 +1,14 @@
-daemonize: true
-pidfile: ~/.cognizant/cognizantd.pid
-logfile: ~/.cognizant/cognizantd.log
-socket: ~/.cognizant/cognizantd.sock
-pids_dir: ~/.cognizant/pids/
-logs_dir: ~/.cognizant/logs/
+---
+daemonize: false
+pidfile:   ~/.cognizant/cognizantd.pid
+logfile:   ~/.cognizant/cognizantd.log
+socket:    ~/.cognizant/cognizantd.sock
+pids_dir:  ~/.cognizant/pids/
+logs_dir:  ~/.cognizant/logs/
 
-process: -
-    name: redis-server
-    group: databases
+monitor:
+  - name:          redis-server
+    group:         databases
+    autostart:     false
     start_command: redis-server
-    ping_command: redis-cli PING
-    
+    ping_command:  redis-cli PING

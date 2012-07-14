@@ -119,6 +119,8 @@ module Cognizant
         @socket   = File.expand_path(@socket)
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
+
+        @processes_to_monitor = options[:monitor] || nil
       end
 
       def bootup
@@ -126,8 +128,7 @@ module Cognizant
         trap_signals
         log.info "Booting up cognizantd..."
         EventMachine.run do
-          # Start without any knowledge of processes.
-          self.processes = {}
+          preload_processes
           start_interface_server
           start_periodic_ticks
           daemonize
@@ -144,16 +145,16 @@ module Cognizant
 
       private
 
-      def setup_prerequisites
-        # Create the require directories.
-        [File.dirname(@pidfile), File.dirname(@logfile), @pids_dir, @logs_dir, File.dirname(@socket)].each do |directory|
-          FileUtils.mkdir_p(directory)
+      def preload_processes
+        self.processes = {}
+        @processes_to_monitor.each do |process_attributes|
+          process = Cognizant::Process.new(process_attributes)
+          self.processes[process_attributes[:name]] = process
+          process.monitor
+          # TODO: Load all processes, sort by dependency resolution and
+          #       then issue the monitor call to each indepedent dependency group.
         end
-
-        # Setup logging.
-        add_log_adapter(File.open(@logfile, "a"))
-        add_log_adapter($stdout) unless @daemonize
-        log.level = if @trace then Logger::DEBUG else @loglevel end
+        # TODO: "@processes_to_monitor = nil"?
       end
 
       # Starts the TCP server with the set socket lock file or port.
@@ -174,24 +175,48 @@ module Cognizant
       def start_periodic_ticks
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
+          puts "self.processes: [#{self.processes}]"
           self.processes.each do |group, process|
             process.tick
           end
         end
-        EventMachine.next_tick {
-          @redis = Cognizant::Process.new({
-            name: "redis-server",
-            autostart: true,
-            start_command: "/usr/local/bin/redis-server -",
-            start_with_input: "daemonize no",
-            start_timeout: 2,
-            stop_timeout: 2,
-            restart_timeout: 2
-          })
-          @redis.stop if @redis
-          self.processes[@redis.name] = @redis
-          @redis.monitor
-        }
+        # EventMachine.next_tick {
+        #   @redis = Cognizant::Process.new({
+        #     name: "redis-server",
+        #     autostart: true,
+        #     start_command: "/usr/local/bin/redis-server -",
+        #     start_with_input: "daemonize no",
+        #     start_timeout: 2,
+        #     stop_timeout: 2,
+        #     restart_timeout: 2
+        #   })
+        #   @redis.stop if @redis
+        #   self.processes[@redis.name] = @redis
+        #   @redis.monitor
+        # }
+      end
+
+      def setup_prerequisites
+        # Create the require directories.
+        [File.dirname(@pidfile), File.dirname(@logfile), @pids_dir, @logs_dir, File.dirname(@socket)].each do |directory|
+          FileUtils.mkdir_p(directory)
+        end
+
+        # Setup logging.
+        add_log_adapter(File.open(@logfile, "a"))
+        add_log_adapter($stdout) unless @daemonize
+        log.level = if @trace then Logger::DEBUG else @loglevel end
+      end
+
+      def trap_signals
+        terminator = Proc.new do
+          log.info "Received signal to shutdown."
+          shutdown
+        end
+
+        Signal.trap('TERM', &terminator)
+        Signal.trap('INT',  &terminator)
+        Signal.trap('QUIT', &terminator)
       end
 
       # Daemonize the current process and save it pid in a file.
@@ -207,17 +232,6 @@ module Cognizant
             File.open(@pidfile, "w") { |f| f.write(pid) }
           end
         end
-      end
-
-      def trap_signals
-        terminator = Proc.new do
-          log.info "Received signal to shutdown."
-          shutdown
-        end
-
-        Signal.trap('TERM', &terminator)
-        Signal.trap('INT',  &terminator)
-        Signal.trap('QUIT', &terminator)
       end
     end
   end

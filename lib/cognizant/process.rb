@@ -71,6 +71,9 @@ module Cognizant
     end
 
     def initialize(options)
+      # Default.
+      self.autostart = true
+
       options.each do |attribute_name, value|
         self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end

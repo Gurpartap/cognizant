@@ -35,7 +35,7 @@ module Cognizant
       end
 
       def self.shutdown(*args)
-        yield("ERR: Extra arguments given")
+        # yield("ERR: Extra arguments given")
         Cognizant::Server.daemon.shutdown
         yield("OK")
       end
