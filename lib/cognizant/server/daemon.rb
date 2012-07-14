@@ -120,6 +120,7 @@ module Cognizant
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
+        # Only accepted through a config stdin/file.
         @processes_to_monitor = options[:monitor] || nil
       end
 
@@ -147,14 +148,11 @@ module Cognizant
 
       def preload_processes
         self.processes = {}
-        @processes_to_monitor.each do |process_attributes|
-          process = Cognizant::Process.new(process_attributes)
-          self.processes[process_attributes[:name]] = process
+        @processes_to_monitor.each do |name, attributes|
+          process = Cognizant::Process.new(attributes.merge({ name: name }))
+          self.processes[name] = process
           process.monitor
-          # TODO: Load all processes, sort by dependency resolution and
-          #       then issue the monitor call to each indepedent dependency group.
         end
-        # TODO: "@processes_to_monitor = nil"?
       end
 
       # Starts the TCP server with the set socket lock file or port.

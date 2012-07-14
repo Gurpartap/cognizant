@@ -6,9 +6,13 @@ socket:    ~/.cognizant/cognizantd.sock
 pids_dir:  ~/.cognizant/pids/
 logs_dir:  ~/.cognizant/logs/
 
-monitor:
-  - name:          redis-server
-    group:         databases
-    autostart:     false
-    start_command: redis-server
-    ping_command:  redis-cli PING
+processes: {
+  redis-server: {
+    start_command: redis-server,
+    ping_command: redis-cli PING
+  },
+  sleep-10: {
+    start_command: sleep 10
+    autostart: false
+  }
+}
