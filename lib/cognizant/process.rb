@@ -1,8 +1,8 @@
 require 'state_machine'
 
 require "cognizant/process/pid"
-require "cognizant/process/ps"
-require "cognizant/process/exec"
+require "cognizant/process/status"
+require "cognizant/process/execution"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
 
@@ -10,9 +10,9 @@ module Cognizant
   class Process
     include Cognizant::Process::PID
     include Cognizant::Process::Status
+    include Cognizant::Process::Execution
     include Cognizant::Process::Attributes
     include Cognizant::Process::Actions
-    include Cognizant::Process::Execution
 
     state_machine :initial => :unmonitored do
       # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
@@ -93,7 +93,7 @@ module Cognizant
     end
 
     def record_transition_start
-      print "changing state from `#{state}`"
+      print "#{name}: changing state from `#{state}`"
     end
 
     def record_transition_end
@@ -126,7 +126,7 @@ module Cognizant
     private
 
     def skip_ticks_for(skips)
-      # Accept negative skips resulting >= 0.
+      # Accept negative skips with the result being >= 0.
       @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
     end
 
