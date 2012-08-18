@@ -114,14 +114,14 @@ module Cognizant
         @group    = options[:group]    || nil
 
         # Expand paths.
+        @socket   = File.expand_path(@socket)
         @pidfile  = File.expand_path(@pidfile)
         @logfile  = File.expand_path(@logfile)
-        @socket   = File.expand_path(@socket)
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
-        # Only accepted through a config stdin/file.
-        @processes_to_monitor = options[:monitor] || nil
+        # Only accepted through a config file/stdin.
+        load_processes(options[:monitor])
       end
 
       def bootup
@@ -129,26 +129,34 @@ module Cognizant
         trap_signals
         log.info "Booting up cognizantd..."
         EventMachine.run do
-          preload_processes
           start_interface_server
           start_periodic_ticks
           daemonize
         end
       end
 
+      def load(config_file)
+        log.info "Loading config from #{config_file}..."
+        config = YAML.load_file(config_file)
+        config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
+        load_processes(config[:monitor]) if config.has_key?(:monitor)
+      end
+
       # Stops the TCP server and the tick loop, and performs cleanup.
       def shutdown
         log.info "Shutting down cognizantd..."
-        # logger.close
 
-        EventMachine.next_tick { EventMachine.stop }
+        EventMachine.next_tick {
+          EventMachine.stop
+          logger.close
+        }
       end
 
       private
 
-      def preload_processes
-        self.processes = {}
-        @processes_to_monitor.each do |name, attributes|
+      def load_processes(processes_to_load)
+        self.processes ||= {}
+        processes_to_load.each do |name, attributes|
           process = Cognizant::Process.new(attributes.merge({ name: name }))
           self.processes[name] = process
           process.monitor
@@ -173,7 +181,6 @@ module Cognizant
       def start_periodic_ticks
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
-          puts "self.processes: [#{self.processes}]"
           self.processes.each do |group, process|
             process.tick
           end
