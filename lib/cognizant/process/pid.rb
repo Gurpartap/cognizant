@@ -7,7 +7,7 @@ module Cognizant
           @process_pid = str unless not str or str.zero? # TODO: Also check if the pid is alive.
         elsif self.pidfile and File.exists?(self.pidfile)
           str = File.read(self.pidfile).to_i
-          @process_pid = str unless not str or str.zero? # TODO: Also check if the pid is alive.s
+          @process_pid = str unless not str or str.zero? # TODO: Also check if the pid is alive.
         end
         @process_pid
       end
