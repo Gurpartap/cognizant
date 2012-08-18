@@ -1,0 +1,21 @@
+---
+daemonize: false
+pidfile: ~/.cognizant/cognizantd.pid
+logfile: ~/.cognizant/cognizantd.log
+socket: ~/.cognizant/cognizantd.sock
+pids_dir: ~/.cognizant/pids/
+logs_dir: ~/.cognizant/logs/
+
+monitor: {
+  redis-server: {
+    start_command: /usr/local/bin/redis-server -,
+    start_with_input: daemonize no,
+    ping_command: redis-cli PING,
+    autostart: true,
+    stop_timeout: 5
+  },
+  sleep-10: {
+    start_command: sleep 10,
+    autostart: true
+  }
+}
