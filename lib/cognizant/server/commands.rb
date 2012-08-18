@@ -1,11 +1,16 @@
 module Cognizant
   module Server
     module Commands
+      def self.load(config_file)
+        Cognizant::Server.daemon.load(config_file)
+        yield("OK")
+      end
+
       def self.status(*args)
-        if process = args.shift
-          Cognizant::Server.daemon.processes.each do |name, p|
-            if p.name.eql?(process)
-              yield("redis-server: #{p.state}")
+        if process_name = args.shift
+          Cognizant::Server.daemon.processes.each do |name, process|
+            if process.name.eql?(process_name)
+              yield("#{process.name}: #{process.state}")
               return yield("OK")
             end
           end  
@@ -18,13 +23,13 @@ module Cognizant
       %w(monitor start stop restart unmonitor).each do |action|
         class_eval <<-END
           def self.#{action}(*args)
-            unless process = args.shift
+            unless process_name = args.shift
               yield("ERR: Missing process name")
               return yield("OK")
             end
-            Cognizant::Server.daemon.processes.each do |name, p|
-              if p.name.eql?(process)
-                p.#{action}
+            Cognizant::Server.daemon.processes.each do |name, process|
+              if process.name.eql?(process_name)
+                process.#{action}
                 return yield("OK")
               end
             end
@@ -34,8 +39,7 @@ module Cognizant
         END
       end
 
-      def self.shutdown(*args)
-        # yield("ERR: Extra arguments given")
+      def self.shutdown
         Cognizant::Server.daemon.shutdown
         yield("OK")
       end
