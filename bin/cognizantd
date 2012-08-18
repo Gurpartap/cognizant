@@ -95,11 +95,11 @@ begin
     end
   end.parse!
 
-  if configfile = ARGV.shift
-    if configfile.eql?("-")
+  if config_file = ARGV.shift
+    if config_file.eql?("-")
       config = YAML.load(ARGF.read)
     else
-      config = YAML.load_file(configfile)
+      config = YAML.load_file(config_file)
     end
     config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
     options = config.merge(options)
