@@ -42,7 +42,7 @@ module Cognizant
             end
 
             # If the caller has attempted to set signals, then it can handle it's result.
-            if (options.has_key?(:signals) and success = send_signals(signals: signals, timeout: timeout))
+            if success = send_signals(signals: signals, timeout: timeout)
               run(after_command) if after_command
               queue.push(success)
               Thread.exit
@@ -54,7 +54,7 @@ module Cognizant
 
           timeout_left = timeout + 1
           while (timeout_left -= 1) > 0 do
-            # If there is something in the queue, we have the required result. Simpler than Mutex#synchronize.
+            # If there is something in the queue, we have the required result.
             if result = queue.pop
               # Rollback the pending skips, since we finished before timeout.
               skip_ticks_for(-timeout_left)
@@ -90,7 +90,7 @@ module Cognizant
             signal(stop_signal, @process_pid)
 
             # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
-            ([timeout / signals, 2].max).times do
+            ([timeout / signals.size, 2].max).times do
               throw :stopped unless pid_running?
               sleep 1
             end
