@@ -14,8 +14,12 @@ module Cognizant
         args = [*args.split]
         command = args.shift.to_s.strip.downcase
         if command.size > 0
-          Commands.send(command, *args) do |response|
-            send_data "#{response.to_json}\r\n\r\n"
+          begin
+            Commands.send(command, *args) do |response|
+              send_data "#{response.to_json}\r\n\r\n"
+            end
+          rescue => e
+            send_data "#{e.inspect.to_json}\r\n\r\n"
           end
         end
         # close_connection_after_writing
