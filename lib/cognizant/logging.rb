@@ -6,7 +6,7 @@ module Cognizant
 
     def add_log_adapter(file)
       @files ||= Array.new
-      @files << file
+      @files << file unless @files.include?(file)
       @logger = nil
     end
 
