@@ -12,7 +12,9 @@ monitor: {
     start_with_input: daemonize no,
     ping_command: redis-cli PING,
     autostart: true,
-    stop_timeout: 5
+    stop_timeout: 5,
+    start_timeout: 2,
+    restart_timeout: 2
   },
   sleep-10: {
     start_command: sleep 10,
