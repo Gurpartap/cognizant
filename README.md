@@ -1,7 +1,9 @@
 # Cognizant
 
 Cognizant is a system utility that supervises your processes, ensuring their
-state based on a preset criteria.
+state based on a flexible criteria. Although the core works efficiently, yet
+the command interface to the utility and some other features need some work.
+Contributions will be overwhelmingly welcomed!
 
 In simpler terms, cognizant keeps your processes up and running. It ensures
 that something productive (like restart) is done when the process being
