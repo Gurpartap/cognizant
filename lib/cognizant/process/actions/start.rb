@@ -50,15 +50,18 @@ module Cognizant
           end
           execute_action(
             result_handler,
-            name:      self.name,
-            daemonize: self.daemonize || true,
-            env:       (self.env || {}).merge(self.start_env || {}),
-            logfile:   self.logfile,
-            errfile:   self.errfile,
-            before:    self.start_before_command,
-            command:   self.start_command,
-            after:     self.start_after_command,
-            timeout:   self.start_timeout
+            name:          self.name,
+            daemonize:     self.daemonize || true,
+            env:           (self.env || {}).merge(self.start_env || {}),
+            logfile:       self.logfile,
+            errfile:       self.errfile,
+            before:        self.start_before_command,
+            command:       self.start_command,
+            input:         self.start_with_input,
+            input_file:    self.start_with_input_file,
+            input_command: self.start_with_input_command,
+            after:         self.start_after_command,
+            timeout:       self.start_timeout
           )
         end
       end

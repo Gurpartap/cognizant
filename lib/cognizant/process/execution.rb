@@ -51,15 +51,15 @@ module Cognizant
           end
 
           # TODO: Run popen as spawned process before privileges are dropped for increased abilities?
-          stdin_data = options[:start_with_input] if options[:start_with_input]
-          stdin_data = IO.popen(options[:start_with_input_command]).gets if options[:start_with_input_command]
+          stdin_data = options[:input] if options[:input]
+          stdin_data = IO.popen(options[:input_command]).gets if options[:input_command]
 
           if stdin_data
             stdin, stdin_w = IO.pipe
             stdin_w.write stdin_data
             stdin_w.close # stdin is closed by ::Process.spawn.
-          elsif options[:start_with_input_file] and File.exists?(options[:start_with_input_file])
-            stdin = options[:start_with_input_file]
+          elsif options[:input_file] and File.exists?(options[:input_file])
+            stdin = options[:input_file]
           else
             stdin = "/dev/null"
           end
