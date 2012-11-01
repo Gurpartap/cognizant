@@ -4,9 +4,9 @@ require File.expand_path('../lib/cognizant/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Gurpartap Singh"]
   gem.email         = ["contact@gurpartap.com"]
-  gem.description   = "Process monitoring and management framework"
-  gem.summary       = "Cognizant is an advanced and efficient process monitoring and management framework."
-  gem.homepage      = "http://gurpartap.github.com/cognizant/"
+  gem.description   = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
+  gem.summary       = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
+  gem.homepage      = "http://github.com/Gurpartap/cognizant"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
