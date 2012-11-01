@@ -101,6 +101,8 @@ or
 
 Cognizant can be administered using the `cognizant` command line utility. This is an application for performing administration tasks like monitoring, starting, stopping processes or loading configuration and processes' information.
 
+PS: Currently the following methods are not implemented. However, there's a way to manage already defined processes by using `telnet /path/to/cognizantd.sock` and then `start my-process`, etc. See lib/cognizant/server/commands.rb for more commands.
+
 Here's how you tell cognizant to start monitoring a new process:
 
     $ cognizant monitor --name          resque-worker-1                \
