@@ -25,6 +25,12 @@ following examples:
 - Logs collection daemon
 - Or any other program that needs to keep running
 
+## Links
+
+Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
+Github (source): https://github.com/Gurpartap/cognizant
+Rubygems: https://rubygems.org/gems/cognizant
+
 ## Monitoring
 
 Cognizant can be used to monitor an application process' state so that it
