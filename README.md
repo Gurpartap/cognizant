@@ -1,14 +1,19 @@
 # Cognizant
 
 Cognizant is a system utility that supervises your processes, ensuring their
-state based on a flexible criteria. Although the core works efficiently, yet
-the command interface to the utility and some other features need some work.
-Contributions will be overwhelmingly welcomed!
+state based on a flexible criteria.
 
 In simpler terms, cognizant keeps your processes up and running. It ensures
 that something productive (like restart) is done when the process being
 monitored matches a certain condition (like RAM, CPU usage or a custom
 condition).
+
+PS: Although the core works efficiently, yet the command interface to the
+utility, documentation and some other features need a lot of work.
+Contributions will be overwhelmingly welcomed!
+
+PS2: This README is written as a roadmap for the features cognizant would
+ideally provide. Some of them might not yet be implemented (e.g. conditions).
 
 Cognizant can be used to monitor any long running process, including the
 following examples:
