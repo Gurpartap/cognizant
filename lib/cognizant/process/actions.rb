@@ -28,14 +28,7 @@ module Cognizant
               Thread.exit
             end
 
-            action_run_options = {
-              name:      options[:name],
-              daemonize: options[:daemonize] || false,
-              env:       options[:env],
-              logfile:   options[:logfile],
-              errfile:   options[:errfile]
-            }
-            if (command and success = run(command, action_run_options) and success.succeeded?)
+            if (command and success = run(command, options) and success.succeeded?)
               run(after_command) if after_command
               queue.push(success)
               Thread.exit

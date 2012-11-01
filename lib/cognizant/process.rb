@@ -70,15 +70,18 @@ module Cognizant
       after_transition  any => any, :do => :record_transition_end
     end
 
-    def initialize(options)
+    def initialize(process_name = nil, options = {})
       # Default.
       self.autostart = true
+      self.name = process_name if process_name
 
       options.each do |attribute_name, value|
         self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end
 
       @ticks_to_skip = 0
+
+      yield(self) if block_given?
 
       # Let state_machine initialize as well.
       super
@@ -134,12 +137,13 @@ module Cognizant
       (@ticks_to_skip -= 1) > 0 if @ticks_to_skip > 0
     end
 
-    def run(command, overrides = {})
+    def run(command, action_overrides = {})
       options = { daemonize: false }
+      # Options from daemon config.
       [:uid, :gid, :groups, :chroot, :chdir, :umask].each do |attribute|
         options[attribute] = self.send(attribute)
       end
-      execute(command, options.merge(overrides))
+      execute(command, options.merge(action_overrides))
     end
   end
 end
