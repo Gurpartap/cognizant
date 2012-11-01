@@ -73,6 +73,8 @@ The daemon, with it's default options, requires superuser access to certain syst
 
 To start without superuser access, specify these file and directory config variables to where the user starting it has write access:
 
+PS: See `examples/cognizantd.yml` for more examples.
+
     $ cognizantd ~/.cognizant/cognizantd.yml
     
     # assuming that:
@@ -101,7 +103,7 @@ or
 
 Cognizant can be administered using the `cognizant` command line utility. This is an application for performing administration tasks like monitoring, starting, stopping processes or loading configuration and processes' information.
 
-PS: Currently the following methods are not implemented. However, there's a way to manage already defined processes by using `telnet /path/to/cognizantd.sock` and then `start my-process`, etc. See lib/cognizant/server/commands.rb for more commands.
+PS: Currently the following methods are not implemented. However, there's a way to manage already defined processes by using `telnet /path/to/cognizantd.sock` and then `start my-process`, etc. See `lib/cognizant/server/commands.rb` for more commands.
 
 Here's how you tell cognizant to start monitoring a new process:
 
