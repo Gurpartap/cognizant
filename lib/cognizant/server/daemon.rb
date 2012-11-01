@@ -1,5 +1,6 @@
 require "eventmachine"
 
+require "cognizant"
 require "cognizant/logging"
 require "cognizant/process"
 require "cognizant/server/interface"
@@ -120,8 +121,10 @@ module Cognizant
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
-        # Only accepted through a config file/stdin.
-        load_processes(options[:monitor])
+        self.processes = {}
+
+        # # Only available through a config file/stdin.
+        # load_processes(options[:monitor]) if options.has_key?(:monitor)
       end
 
       def bootup
@@ -136,30 +139,37 @@ module Cognizant
       end
 
       def load(config_file)
+        config_file = File.expand_path(config_file)
         log.info "Loading config from #{config_file}..."
-        config = YAML.load_file(config_file)
-        config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
-        load_processes(config[:monitor]) if config.has_key?(:monitor)
+        # config = YAML.load_file(config_file)
+        # config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
+        # load_processes(config[:monitor]) if config.has_key?(:monitor)
+        Kernel.load(config_file)
+      end
+
+      def monitor(process_name = nil, attributes = {}, &block)
+        process = Cognizant::Process.new(process_name, attributes, &block)
+        self.processes[process_name] = process
+        process.monitor
       end
 
       # Stops the TCP server and the tick loop, and performs cleanup.
       def shutdown
         log.info "Shutting down cognizantd..."
 
-        EventMachine.next_tick {
+        EventMachine.next_tick do
           EventMachine.stop
           logger.close
-        }
+        end
       end
 
       private
 
       def load_processes(processes_to_load)
-        self.processes ||= {}
-        processes_to_load.each do |name, attributes|
-          process = Cognizant::Process.new(attributes.merge({ name: name }))
-          self.processes[name] = process
-          process.monitor
+        if processes_to_load
+          processes_to_load.each do |name, attributes|
+            monitor(name, attributes)
+          end
         end
       end
 
@@ -185,20 +195,6 @@ module Cognizant
             process.tick
           end
         end
-        # EventMachine.next_tick {
-        #   @redis = Cognizant::Process.new({
-        #     name: "redis-server",
-        #     autostart: true,
-        #     start_command: "/usr/local/bin/redis-server -",
-        #     start_with_input: "daemonize no",
-        #     start_timeout: 2,
-        #     stop_timeout: 2,
-        #     restart_timeout: 2
-        #   })
-        #   @redis.stop if @redis
-        #   self.processes[@redis.name] = @redis
-        #   @redis.monitor
-        # }
       end
 
       def setup_prerequisites
