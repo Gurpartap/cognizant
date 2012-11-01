@@ -124,7 +124,7 @@ module Cognizant
         self.processes = {}
 
         # # Only available through a config file/stdin.
-        # load_processes(options[:monitor]) if options.has_key?(:monitor)
+        load_processes(options[:monitor]) if options.has_key?(:monitor)
       end
 
       def bootup
