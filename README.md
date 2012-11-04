@@ -1,28 +1,34 @@
-# Cognizant
+# Cognizant: system utility to supervise your processes
 
-Cognizant is a system utility that supervises your processes, ensuring their
-state based on a flexible criteria.
+Let us say that you have a program that is critical for your application. Any
+downtime for the processes of this program would hurt your business. You want
+to make sure these processes are always up and working. If anything unexpected
+happens to their state, you want to be notified about it.
 
-In simpler terms, cognizant keeps your processes up and running. It ensures
+Enter Cognizant. Cognizant is a system utility that supervises your processes,
+monitoring and ensuring their state based on a flexible criteria.
+
+In simpler terms, it keeps your processes up and running. It ensures
 that something productive (like restart) is done when the process being
 monitored matches a certain condition (like RAM, CPU usage or a custom
 condition).
 
-PS: Although the core works efficiently, yet the command interface to the
-utility, documentation and some other features need a lot of work.
-Contributions will be overwhelmingly welcomed!
+PS: Although the core works efficiently, yet conditions, notifications, the
+command interface to the utility, documentation and some other features need
+a lot of work. Contributions will be overwhelmingly welcomed!
 
-PS2: This README is written as a roadmap for the features cognizant would
-ideally provide. Some of them might not yet be implemented (e.g. conditions).
+PS2: This README is written as a roadmap for the features planned for cognizant.
+Some of them might not yet be implemented (e.g. conditions, notifications,
+etc.).
 
 Cognizant can be used to monitor any long running process, including the
-following examples:
+following:
 
 - Web servers (Nginx, Apache httpd, WebSocket, etc.)
 - Databases (Redis, MongoDB, MySQL, PostgreSQL, etc.)
-- Job workers (Resque, Sidekiq, etc.)
+- Job workers (Resque, Sidekiq, Qless, etc.)
 - Message queue applications (RabbitMQ, Beanstalkd, etc.)
-- Logs collection daemon
+- Logs collection daemons
 - Or any other program that needs to keep running
 
 ## Links
@@ -45,6 +51,12 @@ Conditions provide a way to monitor and act on more than just the state of a
 process. For example, conditions can monitor the resource utilization (RAM,
 CPU, etc.) of the application process and restart it if it matches a
 condition.
+
+## Notifications
+
+Notifications provide a way to alert system administrator of unexpected events
+happening with the process. Notifications can use multiple gateways, including
+email and twitter [direct message].
 
 ## Getting started
 
@@ -146,11 +158,35 @@ Or check status of all processes:
       uptime: 0
     }
 
-### Works anywhere
-
-Cognizant can be used on any operating system where Ruby 1.9+ works.
+## FAQs
 
 ### What are the other programs similar to cognizant?
+
+### Which one of these should I be using?
+
+The one that gets your job done efficiently.
+
+### What does the term "cognizant" mean?
+
+If it matters, cognizant means "having knowledge or being aware of", according
+to Apple's Dictionary.
+
+## Contributing
+
+Contributions are definitely welcome. To contribute, just follow the usual
+workflow:
+
+1. Fork Cognizant
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Github pull request
+
+## Compatibility
+
+Cognizant was developed and tested under Ruby 1.9.3.
+
+## Similar programs
 
 - Monit
 - God (Ruby)
@@ -161,10 +197,7 @@ Cognizant can be used on any operating system where Ruby 1.9+ works.
 - Systemd
 - Launchd
 
-### Which one of these should I be using?
+## About
 
-The one that gets your job done efficiently.
-
-### What does the term "cognizant" mean?
-
-If it matters, cognizant means "having knowledge or being aware of", according to Apple's Dictionary.
+Cognizant is a project of [Gurpartap Singh](http://gurpartap.com/). Feel free
+to get in touch.
