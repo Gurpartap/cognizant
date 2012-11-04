@@ -17,32 +17,32 @@ begin
   OptionParser.new do |opts|
     opts.banner = <<-EOF
   Usage:
-    cognizant [OPTIONS] command
+    cognizant [OPTIONS] [ACTION [ARGUMENTS]]
 
   Options:
     EOF
 
-    opts.on("-s FILE", "--socket FILE", String, "The socket lock file for the server") do |value|
+    opts.on("-s FILE", "--socket FILE", String, "The socket lock file of the daemon server") do |value|
       options[:socket] = value
     end
 
-    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The interface to bind the TCP server to.") do |value|
+    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The server address of the daemon server.") do |value|
       options[:bind_address] = value
     end
 
-    opts.on("-p PORT", "--port PORT", Integer, "The TCP port to start the server with.") do |value|
+    opts.on("-p PORT", "--port PORT", Integer, "The server port of the daemon server.") do |value|
       options[:port] = value
     end
 
-    opts.on("--username USERNAME", String, "Username for securing server access.") do |value|
+    opts.on("--username USERNAME", String, "Username to use for authentication with server.") do |value|
       options[:username] = value
     end
 
-    opts.on("--password PASSWORD", String, "Password to accompany the username.") do |value|
+    opts.on("--password PASSWORD", String, "Password to use for authentication with server.") do |value|
       options[:password] = value
     end
 
-    opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
+    opts.on("-t", "--trace", "Turn on tracing, enabling full backtrace.") do
       options[:trace] = true
     end
 

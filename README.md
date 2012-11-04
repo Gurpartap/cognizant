@@ -27,9 +27,9 @@ following examples:
 
 ## Links
 
-Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
-Github (source): https://github.com/Gurpartap/cognizant
-Rubygems: https://rubygems.org/gems/cognizant
+- Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
+- Source: https://github.com/Gurpartap/cognizant
+- Rubygems: https://rubygems.org/gems/cognizant
 
 ## Monitoring
 

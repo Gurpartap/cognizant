@@ -15,7 +15,7 @@ begin
   OptionParser.new do |opts|
     opts.banner = <<-EOF
   Usage:
-    cognizantd [OPTIONS] [CONFIG | -]
+    cognizantd [OPTIONS] [CONFIGFILE | -]
 
   Options:
     EOF
