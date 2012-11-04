@@ -13,6 +13,9 @@ that something productive (like restart) is done when the process being
 monitored matches a certain condition (like RAM, CPU usage or a custom
 condition).
 
+And if it matters, cognizant means "having knowledge or being aware of",
+according to Apple's Dictionary.
+
 PS: Although the core works efficiently, yet conditions, notifications, the
 command interface to the utility, documentation and some other features need
 a lot of work. Contributions will be overwhelmingly welcomed!
@@ -157,19 +160,6 @@ Or check status of all processes:
       state: stoppped,
       uptime: 0
     }
-
-## FAQs
-
-### What are the other programs similar to cognizant?
-
-### Which one of these should I be using?
-
-The one that gets your job done efficiently.
-
-### What does the term "cognizant" mean?
-
-If it matters, cognizant means "having knowledge or being aware of", according
-to Apple's Dictionary.
 
 ## Contributing
 
