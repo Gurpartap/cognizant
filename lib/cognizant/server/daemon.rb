@@ -4,6 +4,7 @@ require "cognizant"
 require "cognizant/logging"
 require "cognizant/process"
 require "cognizant/server/interface"
+require "cognizant/system/process"
 
 module Cognizant
   module Server
@@ -134,7 +135,8 @@ module Cognizant
         EventMachine.run do
           start_interface_server
           start_periodic_ticks
-          daemonize
+          daemonize_process
+          write_pid
         end
       end
 
@@ -175,6 +177,7 @@ module Cognizant
 
       # Starts the TCP server with the set socket lock file or port.
       def start_interface_server
+        stop_previous_server
         if port = @port
           log.info "Starting the TCP server at #{@port}..."
           host = "127.0.0.1"
@@ -220,18 +223,55 @@ module Cognizant
         Signal.trap('QUIT', &terminator)
       end
 
+      def stop_previous_server
+        if @pidfile and File.exists?(@pidfile)
+          if previous_daemon_pid = File.read(@pidfile).to_i
+            # Only attempt to stop automatically if the daemon will run in background.
+            if @daemonize and System::Process.pid_running?(previous_daemon_pid)
+              # Ensure that the process stops within 5 seconds or force kill.
+              signals = ["TERM", "KILL"]
+              timeout = 2
+              catch :stopped do
+                signals.each do |stop_signal|
+                  # Send the stop signal and wait for it to stop.
+                  System::Process.signal(stop_signal, previous_daemon_pid)
+
+                  # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
+                  ([timeout / signals.size, 2].max).times do
+                    throw :stopped unless System::Process.pid_running?(previous_daemon_pid)
+                    sleep 1
+                  end
+                end
+              end
+            end
+          end
+
+          # Alert the user to manually stop the previous daemon, if it is [still] alive.
+          if System::Process.pid_running?(previous_daemon_pid)
+            raise "There is already a daemon running with pid #{previous_daemon_pid}."
+          else
+            begin
+              File.unlink(@pidfile) if @pidfile
+            rescue Errno::ENOENT
+              nil
+            end
+          end
+        end
+      end
+
       # Daemonize the current process and save it pid in a file.
-      def daemonize
+      def daemonize_process
         if @daemonize
           log.info "Daemonizing into the background..."
           ::Process.daemon
+        end
+      end
 
-          pid = ::Process.pid
-
-          if @pidfile
-            log.info "Writing the daemon pid (#{pid}) to the pidfile..."
-            File.open(@pidfile, "w") { |f| f.write(pid) }
-          end
+      def write_pid
+        pid = ::Process.pid
+        if @pidfile
+          log.info "Writing the daemon pid (#{pid}) to the pidfile..."
+          File.open(@pidfile, "w") { |f| f.write(pid) }
         end
       end
     end
