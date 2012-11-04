@@ -34,13 +34,7 @@ following:
 - Logs collection daemons
 - Or any other program that needs to keep running
 
-## Links
-
-- Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
-- Source: https://github.com/Gurpartap/cognizant
-- Rubygems: https://rubygems.org/gems/cognizant
-
-## Monitoring
+### Monitoring
 
 Cognizant can be used to monitor an application process' state so that it
 is running at all times. When cognizant is instructed to monitor a process,
@@ -48,14 +42,14 @@ by default, the process will automatically be started. These processes are
 automatically monitored for their state. i.e. a process is automatically
 started again if it stops unexpectedly.
 
-## Conditions
+### Conditions
 
 Conditions provide a way to monitor and act on more than just the state of a
 process. For example, conditions can monitor the resource utilization (RAM,
 CPU, etc.) of the application process and restart it if it matches a
 condition.
 
-## Notifications
+### Notifications
 
 Notifications provide a way to alert system administrator of unexpected events
 happening with the process. Notifications can use multiple gateways, including
@@ -186,6 +180,12 @@ Cognizant was developed and tested under Ruby 1.9.3.
 - SysV Init
 - Systemd
 - Launchd
+
+### Links
+
+- Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
+- Source: https://github.com/Gurpartap/cognizant
+- Rubygems: https://rubygems.org/gems/cognizant
 
 ## About
 
