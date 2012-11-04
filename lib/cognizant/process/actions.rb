@@ -56,7 +56,7 @@ module Cognizant
             end
             sleep 1
           end
-        
+
           # Kill the nested thread.
           thread.kill
 

@@ -65,11 +65,11 @@ module Cognizant
           end
 
           # Merge spawn options.
-        	spawn_options = construct_spawn_options(options, {
-        		:in  => stdin,
-        		:out => stdout,
-        		:err => stderr
-        	})
+          spawn_options = construct_spawn_options(options, {
+            :in  => stdin,
+            :out => stdout,
+            :err => stderr
+          })
 
           # Spawn a process to execute the command.
           process_pid = ::Process.spawn(options[:env], command, spawn_options)

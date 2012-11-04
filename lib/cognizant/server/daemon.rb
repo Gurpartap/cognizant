@@ -124,7 +124,7 @@ module Cognizant
 
         self.processes = {}
 
-        # # Only available through a config file/stdin.
+        # Only available through a config file/stdin.
         load_processes(options[:monitor]) if options.has_key?(:monitor)
       end
 
@@ -184,7 +184,7 @@ module Cognizant
           splitted = port.to_s.split(":")
           host, port = splitted if splitted.size > 1
           EventMachine.start_server(host, port, Server::Interface)
-        else  
+        else
           log.info "Starting the UNIX domain server with socket #{@socket}..."
           EventMachine.start_unix_domain_server(@socket, Server::Interface)
         end
