@@ -18,7 +18,8 @@ monitor: {
     group: redis,
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 7777",
-    ping_command: redis-cli -p 7777 PING
+    ping_command: redis-cli -p 7777 PING,
+    stop_command: redis-cli -p 7777 SHUTDOWN
   },
   sleep-10: {
     start_command: sleep 10
