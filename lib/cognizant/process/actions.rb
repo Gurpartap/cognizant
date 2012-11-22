@@ -74,7 +74,7 @@ module Cognizant
       def send_signals(options = {})
         # Return if the process is already stopped.
         return true unless pid_running?
-        Cognizant::System::Process.send_signals?(@process_pid, options)
+        Cognizant::System::Process.send_signals(@process_pid, options)
         not pid_running?
       end
     end
