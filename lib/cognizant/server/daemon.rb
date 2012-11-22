@@ -122,7 +122,7 @@ module Cognizant
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
-        self.processes = {}
+        self.processes = Array.new
 
         # Only available through a config file/stdin.
         load_processes(options[:monitor]) if options.has_key?(:monitor)
@@ -151,8 +151,7 @@ module Cognizant
 
       def monitor(process_name = nil, attributes = {}, &block)
         process = Cognizant::Process.new(process_name, attributes, &block)
-        group_name = attributes[:group] || ""
-        self.processes[group_name] = process
+        self.processes << process
         process.monitor
       end
 
@@ -195,9 +194,7 @@ module Cognizant
       def start_periodic_ticks
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
-          self.processes.each do |group, process|
-            process.tick
-          end
+          self.processes.map(&:tick)
         end
       end
 
