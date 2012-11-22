@@ -167,6 +167,8 @@ Available commands are:
 - `restart   process_name`     - Restart the specified process
 - `shutdown`                   - Stop the monitoring daemon
 
+See `cognizant help` for more options.
+
 ## Contributing
 
 Contributions are definitely welcome. To contribute, just follow the usual
