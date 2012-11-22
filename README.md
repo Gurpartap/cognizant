@@ -16,9 +16,9 @@ condition).
 And if it matters, cognizant means "having knowledge or being aware of",
 according to Apple's Dictionary.
 
-PS: Although the core works efficiently, yet conditions, notifications, the
-command interface to the utility, documentation and some other features need
-a lot of work. Contributions will be overwhelmingly welcomed!
+PS: Although the core works efficiently, yet conditions, notifications,
+documentation and some other features need a lot of work. Contributions
+will be overwhelmingly welcomed!
 
 PS2: This README is written as a roadmap for the features planned for cognizant.
 Some of them might not yet be implemented (e.g. conditions, notifications,
@@ -139,8 +139,6 @@ or
 
 Cognizant can be administered using the `cognizant` command line utility. This is an application for performing administration tasks like monitoring, starting, stopping processes or loading configuration and processes' information.
 
-PS: Currently the following methods are not implemented. However, there's a way to manage already defined processes by using `telnet /path/to/cognizantd.sock` and then `start my-process`, etc. See `lib/cognizant/server/commands.rb` for more commands.
-
 Here's how you tell cognizant to start monitoring new processes:
 
     $ cognizant load ./examples/redis-server.rb # find this file in source code
@@ -148,7 +146,6 @@ Here's how you tell cognizant to start monitoring new processes:
 Now check status of all managed processes:
 
     $ cognizant status
-    
     +----------------+-------+------------------------+
     | Process        | Group | State                  |
     +----------------+-------+------------------------+
@@ -157,6 +154,18 @@ Now check status of all managed processes:
     | redis-server-2 | redis | running since 1 minute |
     +----------------+-------+------------------------+
     2012-11-23 01:16:18 +0530
+
+Available commands are:
+
+- `help`                       - Shows a list of commands or help for one command
+- `status    [process_name]`   - Display status of managed process[es]
+- `load      /path/to/file.rb` - Loads the process information from specified Ruby file
+- `monitor   process_name`     - Monitor the specified process
+- `unmonitor process_name`     - Unmonitor the specified process
+- `start     process_name`     - Start the specified process
+- `stop      process_name`     - Stop the specified process
+- `restart   process_name`     - Restart the specified process
+- `shutdown`                   - Stop the monitoring daemon
 
 ## Contributing
 
