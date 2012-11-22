@@ -112,6 +112,27 @@ or
     logfile:  ~/.cognizant/cognizantd.log
     pids_dir: ~/.cognizant/pids/
     logs_dir: ~/.cognizant/logs/
+    
+    monitor: {
+      redis-server-1: {
+        group: redis,
+        start_command: /usr/local/bin/redis-server -,
+        start_with_input: "daemonize no\nport 6666",
+        ping_command: redis-cli -p 6666 PING,
+        stop_signals: [TERM, INT]
+      },
+      redis-server-2: {
+        group: redis,
+        start_command: /usr/local/bin/redis-server -,
+        start_with_input: "daemonize no\nport 7777",
+        ping_command: redis-cli -p 7777 PING,
+        stop_command: redis-cli -p 7777 SHUTDOWN
+      },
+      sleep-10: {
+        start_command: sleep 10,
+        autostart: false
+      }
+    }
     EOF
 
 ## Using the administration utility
@@ -120,40 +141,22 @@ Cognizant can be administered using the `cognizant` command line utility. This i
 
 PS: Currently the following methods are not implemented. However, there's a way to manage already defined processes by using `telnet /path/to/cognizantd.sock` and then `start my-process`, etc. See `lib/cognizant/server/commands.rb` for more commands.
 
-Here's how you tell cognizant to start monitoring a new process:
+Here's how you tell cognizant to start monitoring new processes:
 
-    $ cognizant monitor --name          resque-worker-1                \
-                        --group         resque                         \
-                        --chdir         /apps/example/current/         \
-                        --start_command "bundle exec rake resque:work"
+    $ cognizant load ./examples/redis-server.rb # find this file in source code
 
-Now check it's status:
+Now check status of all managed processes:
 
-    $ cognizant status resque-worker-1
-    ---
-    resque-worker-1: {
-      state: running,
-      uptime: 3600 # 1 hour
-    }
-
-Or check status of all processes:
-
-    $ cognizant status resque-worker-1
-    ---
-    redis-server: {
-      state: running,
-      uptime: 5400 # 1 hour 30 minutes
-    },
-    resque-worker-1: {
-      group: resque,
-      state: running,
-      uptime: 3600 # 1 hour
-    },
-    resque-worker-2: {
-      group: resque,
-      state: stoppped,
-      uptime: 0
-    }
+    $ cognizant status
+    
+    +----------------+-------+------------------------+
+    | Process        | Group | State                  |
+    +----------------+-------+------------------------+
+    | redis-server-1 | redis | running since 1 minute |
+    +----------------+-------+------------------------+
+    | redis-server-2 | redis | running since 1 minute |
+    +----------------+-------+------------------------+
+    2012-11-23 01:16:18 +0530
 
 ## Contributing
 
