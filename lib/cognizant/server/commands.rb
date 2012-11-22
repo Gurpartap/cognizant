@@ -10,11 +10,9 @@ module Cognizant
 
       def self.status(*args)
         output_processes = []
-        if args.size == 1 and process_name = args.shift
+        if args.size > 0
           Cognizant::Server.daemon.processes.each do |process|
-            if process.name.eql?(process_name)
-              output_processes << process
-            end
+            output_processes << process if args.include?(process.name)
           end
           if output_processes.size == 0
             raise("ERR: No such process")
