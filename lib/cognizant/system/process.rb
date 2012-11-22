@@ -23,8 +23,8 @@ module Cognizant
       end
 
       def self.send_signals(pid, options = {})
-        # Return if the process is already stopped.
-        return true unless pid_running?
+        # Return if the process is not running.
+        return true unless self.pid_running?(pid)
 
         signals = options[:signals] || ["TERM", "INT", "KILL"]
         timeout = options[:timeout] || 10
