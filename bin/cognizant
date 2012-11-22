@@ -56,13 +56,13 @@ command :status do |c|
 
         status_data = JSON.parse(output)
         status_data.each_with_index do |process, index|
-          status_data[index]["State"] = "[green]#{process["State"]}[/]"
+          status_data[index]["State"] = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
         end
 
         formatador = Formatador.new
         formatador.display_line
         formatador.display_table(status_data, ["Process", "Group", "State"])
-        formatador.display_line("Time: #{Time.now}")
+        formatador.display_line(Time.now)
         formatador.display_line
       rescue => e
         Formatador.display_line("[red]#{output}[/]")
@@ -143,6 +143,29 @@ def connect_and_perform(global_options, task, args, &block)
     output_handler.call(UNIXSocket.new(global_options[:socket]))
   else
     output_handler.call(TCPSocket.new(global_options["bind-address"], global_options["port"]))
+  end
+end
+
+def distance_of_time_in_words(seconds)
+  minutes = seconds / 60
+  case
+    when minutes < 1
+      "less than a minute"
+    when minutes == 1
+      "#{minutes} minute"
+    when minutes < 50
+      "#{minutes} minutes"
+    when minutes < 90
+      "about one hour"
+    when minutes < 1080
+      hours = (minutes / 60).round
+      hours == 1 ? "#{hours} hour" : "#{hours} hours"
+    when minutes < 1440
+      "one day"
+    when minutes < 2880
+      "about one day"
+    else
+      "#{(minutes / 1440).round} days"
   end
 end
 

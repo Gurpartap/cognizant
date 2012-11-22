@@ -27,7 +27,8 @@ module Cognizant
           output << {
             "Process" => process.name,
             "Group"   => process.group,
-            "State"   => process.state
+            "State"   => process.state,
+            "Since"   => process.last_transition_time
           }
         end
         yield(output.to_json)

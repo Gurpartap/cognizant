@@ -66,8 +66,10 @@ module Cognizant
       before_transition any      => :restarting, :do => lambda { |p| p.autostart = true }
       after_transition  any      => :restarting, :do => :restart_process
 
-      before_transition any => any, :do => :record_transition_start
-      after_transition  any => any, :do => :record_transition_end
+      after_transition any => any, :do => :cache_transition_time
+
+      before_transition any => any, :do => :debug_transition_start
+      after_transition  any => any, :do => :debug_transition_end
     end
 
     def initialize(process_name = nil, options = {})
@@ -95,11 +97,19 @@ module Cognizant
       super
     end
 
-    def record_transition_start
+    def cache_transition_time
+      @last_transition_time = Time.now.to_i
+    end
+
+    def last_transition_time
+      @last_transition_time || 0
+    end
+
+    def debug_transition_start
       print "#{name}: changing state from `#{state}`"
     end
 
-    def record_transition_end
+    def debug_transition_end
       puts " to `#{state}`"
     end
 
