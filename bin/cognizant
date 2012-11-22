@@ -8,8 +8,6 @@ $stdout.sync = true
 $stderr.sync = true
 
 begin
-  require 'optparse'
-
   options = {
     socket: "/var/run/cognizant/cognizantd.sock"
   }
@@ -59,3 +57,101 @@ GLOBAL OPTIONS:
   require 'cognizant'
   Cognizant.add_process(options)
 end
+
+# require 'cognizant/version'
+# require 'gli'
+# require 'formatador'
+# 
+# include GLI::App
+# 
+# program_desc "administration utility for cognizantd"
+# @version = Cognizant::VERSION
+# 
+# sort_help :manually
+# 
+# desc "The socket lock file of the daemon server"
+# arg_name "FILE"
+# flag [:socket], :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
+# 
+# desc "The server address of the daemon server."
+# arg_name "ADDRESS"
+# flag ["bind-address"], :type => String
+# 
+# desc "The server port of the daemon server."
+# arg_name "PORT"
+# flag [:port], :type => Integer
+# 
+# desc "Username to use for authentication with server."
+# arg_name "USERNAME"
+# flag [:username], :type => String
+# 
+# desc "Password to use for authentication with server."
+# arg_name "PASSWORD"
+# flag [:password], :type => String
+# 
+# desc "Print the version number and exit."
+# switch [:version], :negatable => false
+# 
+# desc "Turn on tracing, enabling full backtrace."
+# switch [:trace], :negatable => false
+# 
+# desc "Display status of all managed processes"
+# command [:status] do |c|
+#   c.action do |global_options, options, args|
+#     formatador = Formatador.new
+# 
+#     formatador.display_line
+#     formatador.display_line("Time:")
+#     formatador.indent {
+#       formatador.display_line(Time.now)
+#     }
+#     
+#     formatador.display_line
+#     formatador.display_line("Groups:")
+# 
+#     formatador.indent {
+#       formatador.display_line("[bold]resque[/]:")
+#       formatador.indent {
+#         formatador.display_table([
+#           {
+#             :process => "resque-1",
+#             :state => "[green]running[/] since 36 days 13 hours"
+#           },
+#           {
+#             :process => "resque-2",
+#             :state => "[red]stopped[/] since 12 minutes"
+#           }
+#         ])
+#       }
+# 
+#       formatador.display_line
+#       formatador.display_line("[bold]database[/]:")
+#       formatador.indent {
+#         formatador.display_table([
+#           {
+#             :process => "psql",
+#             :state => "[green]running[/] since 21 days"
+#           },
+#           {
+#             :process => "redis-server",
+#             :state => "[green]running[/] since 26 days 13 hours"
+#           }
+#         ])
+#       }
+# 
+#       formatador.display_line
+#       formatador.display_line("[bold]web[/]:")
+#       formatador.indent {
+#         formatador.display_table([
+#           {
+#             :process => "puma",
+#             :state => "[green]running[/] since 21 days"
+#           }
+#         ])
+#       }
+#       formatador.display_line
+#     }
+#   end
+# end
+# 
+# exit run(ARGV)
