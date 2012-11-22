@@ -1,52 +1,64 @@
+require "json"
+
 module Cognizant
   module Server
     module Commands
       def self.load(config_file)
         Cognizant::Server.daemon.load(config_file)
-        yield("OK")
+        # yield("OK")
       end
 
       def self.status(*args)
-        if process_name = args.shift
+        if [*args].size == 1 and process_name = args.shift
           Cognizant::Server.daemon.processes.each do |process|
             if process.name.eql?(process_name)
               yield("#{process.name}: #{process.state}")
-              return yield("OK")
+              return # yield("OK")
             end
           end  
-          yield("ERR: No such process")
-          return yield("OK")
+          raise("ERR: No such process")
+          # yield("OK")
+        else
+          output = []
+          Cognizant::Server.daemon.processes.each do |process|
+            output << {
+              "Process" => process.name,
+              "Group"   => process.group,
+              "State"   => process.state
+            }
+          end
+          yield(output.to_json)
+          # yield("OK")
         end
-        yield("OK")
       end
 
       %w(monitor start stop restart unmonitor).each do |action|
         class_eval <<-END
           def self.#{action}(*args)
             unless process_name = args.shift
-              yield("ERR: Missing process name")
-              return yield("OK")
+              raise("ERR: Missing process name")
+              return # yield("OK")
             end
             Cognizant::Server.daemon.processes.each do |process|
               if process.name.eql?(process_name)
                 process.#{action}
-                return yield("OK")
+                return # yield("OK")
               end
             end
-            yield("ERR: No such process")
-            yield("OK")
+            raise("ERR: No such process")
+            # yield("OK")
           end
         END
       end
 
       def self.shutdown
         Cognizant::Server.daemon.shutdown
-        yield("OK")
+        # yield("OK")
       end
 
       def self.method_missing(command, *args)
-        yield("ERR: Unknown command '#{command}'")
-        yield("OK")
+        raise("ERR: Unknown command '#{command}'")
+        # yield("OK")
       end
     end
   end
