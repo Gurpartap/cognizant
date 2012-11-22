@@ -168,7 +168,7 @@ workflow:
 
 ## Compatibility
 
-Cognizant was developed and tested under Ruby 1.9.3.
+Cognizant was developed and tested under Ruby 1.9.2-p290.
 
 ## Similar programs
 
