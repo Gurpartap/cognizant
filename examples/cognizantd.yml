@@ -8,14 +8,17 @@ logs_dir: ~/.cognizant/logs/
 
 monitor: {
   redis-server-1: {
+    group: redis,
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 6666",
-    ping_command: redis-cli --port 6666 PING
+    ping_command: redis-cli -p 6666 PING,
+    stop_signals: [TERM, INT]
   },
   redis-server-2: {
+    group: redis,
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 7777",
-    ping_command: redis-cli --port 7777 PING
+    ping_command: redis-cli -p 7777 PING
   },
   sleep-10: {
     start_command: sleep 10
