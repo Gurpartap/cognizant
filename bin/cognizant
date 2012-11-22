@@ -16,10 +16,13 @@ begin
 
   OptionParser.new do |opts|
     opts.banner = <<-EOF
-  Usage:
-    cognizant [OPTIONS] [ACTION [ARGUMENTS]]
+NAME
+    cognizant - administration utility for cognizantd
 
-  Options:
+SYNOPSIS:
+    cognizant [global options] command [command options] [arguments...]
+
+GLOBAL OPTIONS:
     EOF
 
     opts.on("-s FILE", "--socket FILE", String, "The socket lock file of the daemon server") do |value|

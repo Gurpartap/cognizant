@@ -14,10 +14,13 @@ begin
 
   OptionParser.new do |opts|
     opts.banner = <<-EOF
-  Usage:
-    cognizantd [OPTIONS] [CONFIGFILE | -]
+NAME
+    cognizantd - system utility daemon to supervise your processes
 
-  Options:
+SYNOPSIS:
+    cognizantd [global options] [config file | -]
+
+GLOBAL OPTIONS:
     EOF
 
     opts.on("--[no-]daemonize", "Whether or not to daemonize cognizant into background.") do |value|
