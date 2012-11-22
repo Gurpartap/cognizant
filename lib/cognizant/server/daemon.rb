@@ -86,7 +86,7 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :group
 
-      # Array of processes being managed.
+      # Array of process groups being managed.
       # @private
       # @return [Array]
       attr_accessor :processes
@@ -151,7 +151,8 @@ module Cognizant
 
       def monitor(process_name = nil, attributes = {}, &block)
         process = Cognizant::Process.new(process_name, attributes, &block)
-        self.processes[process_name] = process
+        group_name = attributes[:group] || ""
+        self.processes[group_name] = process
         process.monitor
       end
 
