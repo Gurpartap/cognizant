@@ -8,7 +8,7 @@ module Cognizant
 
       def self.status(*args)
         if process_name = args.shift
-          Cognizant::Server.daemon.processes.each do |name, process|
+          Cognizant::Server.daemon.processes.each do |process|
             if process.name.eql?(process_name)
               yield("#{process.name}: #{process.state}")
               return yield("OK")
@@ -27,7 +27,7 @@ module Cognizant
               yield("ERR: Missing process name")
               return yield("OK")
             end
-            Cognizant::Server.daemon.processes.each do |name, process|
+            Cognizant::Server.daemon.processes.each do |process|
               if process.name.eql?(process_name)
                 process.#{action}
                 return yield("OK")
