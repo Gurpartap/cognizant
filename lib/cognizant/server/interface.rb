@@ -1,4 +1,3 @@
-require "json"
 require "eventmachine"
 
 require "cognizant/server/commands"
@@ -28,13 +27,13 @@ module Cognizant
         if command.size > 0
           begin
             Commands.send(command, *args) do |response|
-              send_data "#{response.to_json}\r\n\r\n"
+              send_data "#{response}"
             end
           rescue => e
-            send_data "#{e.inspect.to_json}\r\n\r\n"
+            send_data "#{e.message}"
           end
         end
-        # close_connection_after_writing
+        close_connection_after_writing
       end
 
       def unbind
