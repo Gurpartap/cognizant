@@ -158,7 +158,6 @@ module Cognizant
       # Stops the TCP server and the tick loop, and performs cleanup.
       def shutdown
         log.info "Shutting down cognizantd..."
-
         EventMachine.next_tick do
           EventMachine.stop
           logger.close

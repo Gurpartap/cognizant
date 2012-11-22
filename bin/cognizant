@@ -1,157 +1,150 @@
 #!/usr/bin/env ruby
 
+require "cognizant/version"
+require "gli"
+require "formatador"
+require "socket"
+
+include GLI::App
+
 # Set the process name.
 $0 = File.basename(__FILE__)
 
-# Flush standard output/error immediately.
+# Set to flush standard output/error immediately.
 $stdout.sync = true
 $stderr.sync = true
 
-begin
-  options = {
-    socket: "/var/run/cognizant/cognizantd.sock"
-  }
+program_desc "administration utility for cognizantd"
+@version = Cognizant::VERSION
 
-  OptionParser.new do |opts|
-    opts.banner = <<-EOF
-NAME
-    cognizant - administration utility for cognizantd
+sort_help :manually
 
-SYNOPSIS:
-    cognizant [global options] command [command options] [arguments...]
+desc "The socket lock file of the daemon server"
+arg_name "FILE"
+flag :socket, :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
 
-GLOBAL OPTIONS:
-    EOF
+desc "The server address of the daemon server"
+arg_name "ADDRESS"
+flag "bind-address", :type => String
 
-    opts.on("-s FILE", "--socket FILE", String, "The socket lock file of the daemon server") do |value|
-      options[:socket] = value
-    end
+desc "The server port of the daemon server"
+arg_name "PORT"
+flag :port, :type => Integer
 
-    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The server address of the daemon server.") do |value|
-      options[:bind_address] = value
-    end
+desc "Username to use for authentication with server"
+arg_name "USERNAME"
+flag :username, :type => String
 
-    opts.on("-p PORT", "--port PORT", Integer, "The server port of the daemon server.") do |value|
-      options[:port] = value
-    end
+desc "Password to use for authentication with server"
+arg_name "PASSWORD"
+flag :password, :type => String
 
-    opts.on("--username USERNAME", String, "Username to use for authentication with server.") do |value|
-      options[:username] = value
-    end
+desc "Print the version number and exit"
+switch :version, :negatable => false
 
-    opts.on("--password PASSWORD", String, "Password to use for authentication with server.") do |value|
-      options[:password] = value
-    end
+desc "Turn on tracing, enabling full backtrace"
+switch :trace, :negatable => false
 
-    opts.on("-t", "--trace", "Turn on tracing, enabling full backtrace.") do
-      options[:trace] = true
-    end
+desc "Display status of managed process[es]"
+arg_name "process_name", :optional
+command :status do |c|
+  c.action do |global_options, options, args|
+    formatador = Formatador.new
 
-    opts.on("-v", "--version", "Print the version number and exit.") do
-      require 'cognizant/version'
-      $stdout.puts Cognizant::VERSION
-      exit(0)
-    end
-  end.parse!
-
-  require 'cognizant'
-  Cognizant.add_process(options)
+    formatador.display_line
+    formatador.display_table([
+      {
+        :process => "resque-1",
+        :group => "resque",
+        :state => "[green]running[/] since 36 days 13 hours"
+      },
+      {
+        :process => "resque-2",
+        :group => "resque",
+        :state => "[red]stopped[/] since 12 minutes"
+      },
+      {
+        :process => "psql",
+        :group => "database",
+        :state => "[green]running[/] since 21 days"
+      },
+      {
+        :process => "redis-server",
+        :group => "database",
+        :state => "[green]running[/] since 26 days 13 hours"
+      },
+      {
+        :process => "puma",
+        :group => "web",
+        :state => "[green]running[/] since 21 days"
+      }
+    ], [:process, :group, :state])
+    formatador.display_line("Time: #{Time.now}")
+    formatador.display_line
+  end
 end
 
-# require 'cognizant/version'
-# require 'gli'
-# require 'formatador'
-# 
-# include GLI::App
-# 
-# program_desc "administration utility for cognizantd"
-# @version = Cognizant::VERSION
-# 
-# sort_help :manually
-# 
-# desc "The socket lock file of the daemon server"
-# arg_name "FILE"
-# flag [:socket], :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
-# 
-# desc "The server address of the daemon server."
-# arg_name "ADDRESS"
-# flag ["bind-address"], :type => String
-# 
-# desc "The server port of the daemon server."
-# arg_name "PORT"
-# flag [:port], :type => Integer
-# 
-# desc "Username to use for authentication with server."
-# arg_name "USERNAME"
-# flag [:username], :type => String
-# 
-# desc "Password to use for authentication with server."
-# arg_name "PASSWORD"
-# flag [:password], :type => String
-# 
-# desc "Print the version number and exit."
-# switch [:version], :negatable => false
-# 
-# desc "Turn on tracing, enabling full backtrace."
-# switch [:trace], :negatable => false
-# 
-# desc "Display status of all managed processes"
-# command [:status] do |c|
-#   c.action do |global_options, options, args|
-#     formatador = Formatador.new
-# 
-#     formatador.display_line
-#     formatador.display_line("Time:")
-#     formatador.indent {
-#       formatador.display_line(Time.now)
-#     }
-#     
-#     formatador.display_line
-#     formatador.display_line("Groups:")
-# 
-#     formatador.indent {
-#       formatador.display_line("[bold]resque[/]:")
-#       formatador.indent {
-#         formatador.display_table([
-#           {
-#             :process => "resque-1",
-#             :state => "[green]running[/] since 36 days 13 hours"
-#           },
-#           {
-#             :process => "resque-2",
-#             :state => "[red]stopped[/] since 12 minutes"
-#           }
-#         ])
-#       }
-# 
-#       formatador.display_line
-#       formatador.display_line("[bold]database[/]:")
-#       formatador.indent {
-#         formatador.display_table([
-#           {
-#             :process => "psql",
-#             :state => "[green]running[/] since 21 days"
-#           },
-#           {
-#             :process => "redis-server",
-#             :state => "[green]running[/] since 26 days 13 hours"
-#           }
-#         ])
-#       }
-# 
-#       formatador.display_line
-#       formatador.display_line("[bold]web[/]:")
-#       formatador.indent {
-#         formatador.display_table([
-#           {
-#             :process => "puma",
-#             :state => "[green]running[/] since 21 days"
-#           }
-#         ])
-#       }
-#       formatador.display_line
-#     }
-#   end
-# end
-# 
-# exit run(ARGV)
+desc "Monitor the specified process"
+arg_name "process_name"
+command :monitor do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :monitor, args)
+  end
+end
+
+desc "Unmonitor the specified process"
+arg_name "process_name"
+command :unmonitor do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :unmonitor, args)
+  end
+end
+
+desc "Start the specified process"
+arg_name "process_name"
+command :start do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :start, args)
+  end
+end
+
+desc "Stop the specified process"
+arg_name "process_name"
+command :stop do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :stop, args)
+  end
+end
+
+desc "Restart the specified process"
+arg_name "process_name"
+command :restart do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :restart, args)
+  end
+end
+
+desc "Stop the monitoring daemon"
+command :shutdown do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :shutdown, args)
+  end
+end
+
+def connect_and_perform(global_options, task, args, &block)
+  process_name = [*args].first
+  output_handler = Proc.new do |socket|
+    socket.write("#{task.to_s} #{process_name}")
+    socket.flush
+    output = socket.gets
+    block.call(output) if block
+  end
+
+  if global_options[:socket]
+    output_handler.call(UNIXSocket.new(global_options[:socket]))
+  else
+    output_handler.call(TCPSocket.new(global_options["bind-address"], global_options["port"]))
+  end
+end
+
+exit run(ARGV)
