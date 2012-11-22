@@ -4,6 +4,7 @@ require "cognizant/version"
 require "gli"
 require "formatador"
 require "socket"
+require "json"
 
 include GLI::App
 
@@ -49,38 +50,32 @@ desc "Display status of managed process[es]"
 arg_name "process_name", :optional
 command :status do |c|
   c.action do |global_options, options, args|
-    formatador = Formatador.new
+    connect_and_perform(global_options, :status, args) do |output|
+      begin  
+        JSON.parse(output)
 
-    formatador.display_line
-    formatador.display_table([
-      {
-        :process => "resque-1",
-        :group => "resque",
-        :state => "[green]running[/] since 36 days 13 hours"
-      },
-      {
-        :process => "resque-2",
-        :group => "resque",
-        :state => "[red]stopped[/] since 12 minutes"
-      },
-      {
-        :process => "psql",
-        :group => "database",
-        :state => "[green]running[/] since 21 days"
-      },
-      {
-        :process => "redis-server",
-        :group => "database",
-        :state => "[green]running[/] since 26 days 13 hours"
-      },
-      {
-        :process => "puma",
-        :group => "web",
-        :state => "[green]running[/] since 21 days"
-      }
-    ], [:process, :group, :state])
-    formatador.display_line("Time: #{Time.now}")
-    formatador.display_line
+        status_data = JSON.parse(output)
+        status_data.each_with_index do |process, index|
+          status_data[index]["State"] = "[green]#{process["State"]}[/]"
+        end
+
+        formatador = Formatador.new
+        formatador.display_line
+        formatador.display_table(status_data, ["Process", "Group", "State"])
+        formatador.display_line("Time: #{Time.now}")
+        formatador.display_line
+      rescue => e
+        Formatador.display_line("[red]#{output}[/]")
+      end
+    end
+  end
+end
+
+desc "Loads the process information from specified Ruby file"
+arg_name "file"
+command :load do |c|
+  c.action do |global_options, options, args|
+    connect_and_perform(global_options, :load, args)
   end
 end
 
@@ -137,7 +132,11 @@ def connect_and_perform(global_options, task, args, &block)
     socket.write("#{task.to_s} #{process_name}")
     socket.flush
     output = socket.gets
-    block.call(output) if block
+    if block
+      block.call(output)
+    else
+      Formatador.display_line(output)
+    end
   end
 
   if global_options[:socket]
