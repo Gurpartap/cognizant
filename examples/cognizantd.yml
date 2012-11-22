@@ -7,17 +7,17 @@ pids_dir: ~/.cognizant/pids/
 logs_dir: ~/.cognizant/logs/
 
 monitor: {
-  redis-server: {
+  redis-server-1: {
     start_command: /usr/local/bin/redis-server -,
-    start_with_input: daemonize no,
-    ping_command: redis-cli PING,
-    autostart: true,
-    stop_timeout: 5,
-    start_timeout: 2,
-    restart_timeout: 2
+    start_with_input: "daemonize no\nport 6666",
+    ping_command: redis-cli --port 6666 PING
+  },
+  redis-server-2: {
+    start_command: /usr/local/bin/redis-server -,
+    start_with_input: "daemonize no\nport 7777",
+    ping_command: redis-cli --port 7777 PING
   },
   sleep-10: {
-    start_command: sleep 10,
-    autostart: true
+    start_command: sleep 10
   }
 }
