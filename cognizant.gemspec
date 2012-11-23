@@ -22,6 +22,7 @@ Gem::Specification.new do |gem|
   # cognizantd
   gem.add_dependency "eventmachine"
   gem.add_dependency "state_machine"
+  gem.add_dependency "activesupport"
 
   # cognizant
   gem.add_dependency "gli"
