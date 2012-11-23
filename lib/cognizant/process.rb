@@ -104,6 +104,45 @@ module Cognizant
       super
     end
 
+    def tick
+      return if skip_tick?
+      @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
+
+      # Invoke the state_machine event.
+      super
+
+      self.run_checks if self.running?
+    end
+
+    def record_transition(transition)
+      unless transition.loopback?
+        @transitioned = true
+        @last_transition_time = Time.now.to_i
+
+        # When a process changes state, we should clear the memory of all the checks.
+        @checks.each { |check| check.clear_history! }
+        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+      end
+    end
+
+    def last_transition_time
+      @last_transition_time || 0
+    end
+
+    def dispatch!(action, reason = nil)
+      @action_mutex.synchronize do
+        if action.respond_to?(:call)
+          action.call(self)
+        else
+          self.send("#{action}")
+        end
+      end
+    end
+
+    def notify_triggers(transition)
+      @triggers.each { |trigger| trigger.notify(transition) }
+    end
+
     def check(condition_name, options, &block)
       klass = Cognizant::Process::Conditions[condition_name]
       case klass.superclass.name.split("::").last
@@ -115,24 +154,6 @@ module Cognizant
     end
 
     def run_checks
-      # now = Time.now.to_i
-      # 
-      # actions_queue = Queue.new
-      # check_threads = []
-      # @checks.each do |check|
-      #   check_threads << Thread.new do
-      #     actions = check.run(read_pid, now)
-      #     queue.push(actions)
-      #   end
-      # end
-      # 
-      # while actions = actions_queue.pop do
-      #   actions.each do |a|
-      #     break if @transitioned
-      #     self.send("#{a}")
-      #   end
-      # end
-
       now = Time.now.to_i
 
       threads = @checks.collect do |check|
@@ -154,45 +175,6 @@ module Cognizant
         break if @transitioned
         self.dispatch!(action, reason)
       end
-    end
-
-    def dispatch!(action, reason = nil)
-      @action_mutex.synchronize do
-        if action.respond_to?(:call)
-          action.call(self)
-        else
-          self.send("#{action}")
-        end
-      end
-    end
-
-    def tick
-      return if skip_tick?
-      @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
-
-      # Invoke the state_machine event.
-      super
-
-      self.run_checks if self.running?
-    end
-
-    def notify_triggers(transition)
-      @triggers.each { |trigger| trigger.notify(transition) }
-    end
-
-    def record_transition(transition)
-      unless transition.loopback?
-        @transitioned = true
-        @last_transition_time = Time.now.to_i
-
-        # When a process changes state, we should clear the memory of all the checks.
-        @checks.each { |check| check.clear_history! }
-        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
-      end
-    end
-
-    def last_transition_time
-      @last_transition_time || 0
     end
 
     def process_running?
