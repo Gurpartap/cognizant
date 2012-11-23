@@ -1,3 +1,6 @@
+require "active_support/core_ext/numeric"
+require "active_support/duration"
+
 require "cognizant/server"
 
 module Cognizant
