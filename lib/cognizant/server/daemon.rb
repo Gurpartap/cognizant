@@ -193,6 +193,7 @@ module Cognizant
       def start_periodic_ticks
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
+          System.reset_data
           self.processes.map(&:tick)
         end
       end

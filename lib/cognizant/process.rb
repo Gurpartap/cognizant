@@ -1,10 +1,14 @@
-require 'state_machine'
+require "monitor"
+require "thread"
+
+require "state_machine"
 
 require "cognizant/process/pid"
 require "cognizant/process/status"
 require "cognizant/process/execution"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
+require "cognizant/process/condition_check"
 
 module Cognizant
   class Process
@@ -66,10 +70,7 @@ module Cognizant
       before_transition any      => :restarting, :do => lambda { |p| p.autostart = true }
       after_transition  any      => :restarting, :do => :restart_process
 
-      after_transition any => any, :do => :cache_transition_time
-
-      before_transition any => any, :do => :debug_transition_start
-      after_transition  any => any, :do => :debug_transition_end
+      after_transition  any => any, :do => :record_transition
     end
 
     def initialize(process_name = nil, options = {})
@@ -82,11 +83,69 @@ module Cognizant
       end
 
       @ticks_to_skip = 0
+      @checks = []
+      @action_mutex = Monitor.new
 
       yield(self) if block_given?
 
       # Let state_machine initialize as well.
       super
+    end
+
+    def on(condition_name, options, &block)
+      @checks << ConditionCheck.new(condition_name, options, &block)
+    end
+
+    def run_checks
+      # now = Time.now.to_i
+      # 
+      # actions_queue = Queue.new
+      # check_threads = []
+      # @checks.each do |check|
+      #   check_threads << Thread.new do
+      #     actions = check.run(read_pid, now)
+      #     queue.push(actions)
+      #   end
+      # end
+      # 
+      # while actions = actions_queue.pop do
+      #   actions.each do |a|
+      #     break if @transitioned
+      #     self.send("#{a}")
+      #   end
+      # end
+
+      now = Time.now.to_i
+
+      threads = @checks.collect do |check|
+        [check, Thread.new { Thread.current[:actions] = check.run(read_pid, now) }]
+      end
+
+      @transitioned = false
+
+      threads.inject([]) do |actions, (check, thread)|
+        thread.join
+        if thread[:actions].size > 0
+          puts "#{check.condition_name} dispatched: #{thread[:actions].join(',')}"
+          thread[:actions].each do |action|
+            actions << [action, check.to_s]
+          end
+        end
+        actions
+      end.each do |(action, reason)|
+        break if @transitioned
+        self.dispatch!(action, reason)
+      end
+    end
+
+    def dispatch!(action, reason = nil)
+      @action_mutex.synchronize do
+        if action.respond_to?(:call)
+          action.call(self)
+        else
+          self.send("#{action}")
+        end
+      end
     end
 
     def tick
@@ -95,22 +154,23 @@ module Cognizant
 
       # Invoke the state_machine event.
       super
+
+      self.run_checks if self.running?
     end
 
-    def cache_transition_time
-      @last_transition_time = Time.now.to_i
+    def record_transition(transition)
+      unless transition.loopback?
+        @transitioned = true
+        @last_transition_time = Time.now.to_i
+
+        # When a process changes state, we should clear the memory of all the checks.
+        @checks.each { |check| check.clear_history! }
+        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+      end
     end
 
     def last_transition_time
       @last_transition_time || 0
-    end
-
-    def debug_transition_start
-      print "#{name}: changing state from `#{state}`"
-    end
-
-    def debug_transition_end
-      puts " to `#{state}`"
     end
 
     def process_running?
