@@ -56,12 +56,13 @@ command :status do |c|
 
         status_data = JSON.parse(output)
         status_data.each_with_index do |process, index|
-          status_data[index]["State"] = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
+          status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
+          status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
         end
 
         formatador = Formatador.new
         formatador.display_line
-        formatador.display_table(status_data, ["Process", "Group", "State"])
+        formatador.display_table(status_data, ["Process", "Group", "State", "PID", "% CPU", "Memory"])
         formatador.display_line(Time.now)
         formatador.display_line
       rescue => e
@@ -148,25 +149,31 @@ end
 
 def distance_of_time_in_words(seconds)
   minutes = seconds / 60
-  case
-    when minutes < 1
-      "less than a minute"
-    when minutes == 1
-      "#{minutes} minute"
-    when minutes < 50
-      "#{minutes} minutes"
-    when minutes < 90
-      "about one hour"
-    when minutes < 1080
-      hours = (minutes / 60).round
-      hours == 1 ? "#{hours} hour" : "#{hours} hours"
-    when minutes < 1440
-      "one day"
-    when minutes < 2880
-      "about one day"
-    else
-      "#{(minutes / 1440).round} days"
+  return nil if minutes < 0
+  case minutes
+    when 0               then "less than a minute"
+    when 1..59           then pluralize((minutes/1).floor, "minute", "minutes")
+    when 60..1439        then pluralize((minutes/60).floor, "hour", "hours")
+    when 1440..11519     then pluralize((minutes/1440).floor, "day", "days")
+    when 11520..43199    then pluralize((minutes/11520).floor, "week", "weeks")
+    when 43200..525599   then pluralize((minutes/43200).floor, "month", "months")  
+    else                      pluralize((minutes/525600).floor, "year", "years")
   end
+end
+
+SIZE_PREFIX = %w(TiB GiB MiB KiB Bytes).freeze
+def number_to_human_size(size)
+  size = size.to_f
+  i = SIZE_PREFIX.length - 1
+  while size > 512 && i > 0
+    i -= 1
+    size /= 1024
+  end
+  ((size > 9 || size.modulo(1) < 0.1 ? "%d" : "%.1f") % size) + " " + SIZE_PREFIX[i]
+end
+
+def pluralize(count, singular, plural)
+  "#{count || 0} " + ((count == 1 || count =~ /^1(\.0+)?$/) ? singular : plural)
 end
 
 exit run(ARGV)
