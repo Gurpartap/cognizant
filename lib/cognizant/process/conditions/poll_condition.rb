@@ -1,7 +1,7 @@
 module Cognizant
   class Process
     module Conditions
-      class Condition
+      class PollCondition
         def initialize(options = {})
           @options = options
         end
