@@ -82,9 +82,9 @@ module Cognizant
       self.name = process_name.to_s if process_name
       self.autostart = true # Default.
 
-      if options.has_key?(:checks) and options[:checks].kind_of?(Array)
-        options[:checks].each do |args|
-          self.check(*args)
+      if options.has_key?(:checks) and options[:checks].kind_of?(Hash)
+        options[:checks].each do |condition_name, args|
+          self.check(condition_name, args)
         end
       end
       options.delete(:checks)
