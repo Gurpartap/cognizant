@@ -8,6 +8,7 @@ logs_dir: ~/.cognizant/logs/
 
 monitor: {
   redis-server-1: {
+    autostart: false,
     group: redis,
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 6666",
@@ -29,14 +30,21 @@ monitor: {
     }
   },
   redis-server-2: {
+    autostart: false,
     group: redis,
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 7777",
     ping_command: redis-cli -p 7777 PING,
     stop_command: redis-cli -p 7777 SHUTDOWN
   },
-  sleep-10: {
-    start_command: sleep 10,
-    autostart: false
+  sleep: {
+    start_command: sleep 3,
+    checks: {
+      flapping: {
+        times: 4,
+        within: 15, # Seconds.
+        retry_after: 30 # Seconds.
+      }
+    }
   }
 }

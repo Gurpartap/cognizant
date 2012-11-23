@@ -18,6 +18,7 @@
     #   `say "Boom!"`
     # end
 
+    process.check(:flapping, :times => 2, :within => 30.seconds, :retry_after => 7.seconds)
     process.check(:cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart)
 
     process.check(:memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5]) do |p|
