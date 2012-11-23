@@ -63,6 +63,9 @@ module Cognizant
 
       event :unmonitor do
         transition any => :unmonitored
+        # TODO: # When the user issues an unmonitor cmd, reset any triggers so that
+                # scheduled events gets cleared
+                # triggers.each { |t| t.reset! }
       end
 
       after_transition  any      => :starting,   :do => :start_process
@@ -71,12 +74,14 @@ module Cognizant
       before_transition any      => :restarting, :do => lambda { |p| p.autostart = true }
       after_transition  any      => :restarting, :do => :restart_process
 
+      before_transition any => any, :do => :notify_triggers
       after_transition  any => any, :do => :record_transition
     end
 
     def initialize(process_name = nil, options = {})
       @ticks_to_skip = 0
       @checks = []
+      @triggers = []
       @action_mutex = Monitor.new
       
       self.name = process_name.to_s if process_name
@@ -100,7 +105,13 @@ module Cognizant
     end
 
     def check(condition_name, options, &block)
-      @checks << ConditionCheck.new(condition_name, options.deep_symbolize_keys!, &block)
+      klass = Cognizant::Process::Conditions[condition_name]
+      case klass.superclass.name.split("::").last
+      when "TriggerCondition"
+        @triggers << klass.new(self, options.deep_symbolize_keys!)
+      when "PollCondition"
+        @checks << ConditionCheck.new(condition_name, options.deep_symbolize_keys!, &block)
+      end
     end
 
     def run_checks
@@ -163,6 +174,10 @@ module Cognizant
       super
 
       self.run_checks if self.running?
+    end
+
+    def notify_triggers(transition)
+      @triggers.each { |trigger| trigger.notify(transition) }
     end
 
     def record_transition(transition)
