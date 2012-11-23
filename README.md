@@ -20,10 +20,6 @@ PS: Although the core works efficiently, yet conditions, notifications,
 documentation and some other features need a lot of work. Contributions
 will be overwhelmingly welcomed!
 
-PS2: This README is written as a roadmap for the features planned for cognizant.
-Some of them might not yet be implemented (e.g. conditions, notifications,
-etc.).
-
 Cognizant can be used to monitor any long running process, including the
 following:
 
@@ -88,13 +84,11 @@ The daemon, with it's default options, requires superuser access to certain syst
 
 To start without superuser access, specify these file and directory config variables to where the user starting it has write access:
 
-PS: See `examples/cognizantd.yml` for more examples.
-
-    $ cognizantd ~/.cognizant/cognizantd.yml
+    $ cognizantd ./examples/cognizantd.yml
     
     # assuming that:
     
-    $ cat ~/.cognizant/cognizantd.yml
+    $ cat ~/.examples/cognizantd.yml # find this file in source code for latest version
     ---
     socket:   ~/.cognizant/cognizantd.sock
     pidfile:  ~/.cognizant/cognizantd.pid
