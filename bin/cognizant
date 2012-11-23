@@ -46,7 +46,7 @@ switch :version, :negatable => false
 desc "Turn on tracing, enabling full backtrace"
 switch :trace, :negatable => false
 
-desc "Display status of managed process[es]"
+desc "Display status of managed process(es) or group(s)"
 arg_name "process_name", :optional
 command :status do |c|
   c.action do |global_options, options, args|
@@ -79,7 +79,7 @@ command :load do |c|
   end
 end
 
-desc "Monitor the specified process"
+desc "Monitor the specified process or group"
 arg_name "process_name"
 command :monitor do |c|
   c.action do |global_options, options, args|
@@ -87,7 +87,7 @@ command :monitor do |c|
   end
 end
 
-desc "Unmonitor the specified process"
+desc "Unmonitor the specified process or group"
 arg_name "process_name"
 command :unmonitor do |c|
   c.action do |global_options, options, args|
@@ -95,7 +95,7 @@ command :unmonitor do |c|
   end
 end
 
-desc "Start the specified process"
+desc "Start the specified process or group"
 arg_name "process_name"
 command :start do |c|
   c.action do |global_options, options, args|
@@ -103,7 +103,7 @@ command :start do |c|
   end
 end
 
-desc "Stop the specified process"
+desc "Stop the specified process or group"
 arg_name "process_name"
 command :stop do |c|
   c.action do |global_options, options, args|
@@ -111,7 +111,7 @@ command :stop do |c|
   end
 end
 
-desc "Restart the specified process"
+desc "Restart the specified process or group"
 arg_name "process_name"
 command :restart do |c|
   c.action do |global_options, options, args|
@@ -119,7 +119,7 @@ command :restart do |c|
   end
 end
 
-desc "Stop the monitoring daemon"
+desc "Stop the monitoring daemon without affecting processes"
 command :shutdown do |c|
   c.action do |global_options, options, args|
     connect_and_perform(global_options, :shutdown, args)

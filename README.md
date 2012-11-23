@@ -101,17 +101,6 @@ PS: See `examples/cognizantd.yml` for more examples.
     logfile:  ~/.cognizant/cognizantd.log
     pids_dir: ~/.cognizant/pids/
     logs_dir: ~/.cognizant/logs/
-
-or
-
-    # pass config directly into the daemon's STDIN
-    $ echo <<EOF | cognizantd -
-    ---
-    socket:   ~/.cognizant/cognizantd.sock
-    pidfile:  ~/.cognizant/cognizantd.pid
-    logfile:  ~/.cognizant/cognizantd.log
-    pids_dir: ~/.cognizant/pids/
-    logs_dir: ~/.cognizant/logs/
     
     monitor: {
       redis-server-1: {
@@ -133,41 +122,64 @@ or
         autostart: false
       }
     }
+
+or
+
+    # pass config directly into the daemon's STDIN
+    $ echo <<EOF | cognizantd -
+    ---
+    socket:   ~/.cognizant/cognizantd.sock
+    ...
+    monitor: {
+      ...
+      ...
+    }
     EOF
 
 ## Using the administration utility
 
 Cognizant can be administered using the `cognizant` command line utility. This is an application for performing administration tasks like monitoring, starting, stopping processes or loading configuration and processes' information.
 
-Here's how you tell cognizant to start monitoring new processes:
+Here are some basic operational commands:
 
-    $ cognizant load ./examples/redis-server.rb # find this file in source code
+    $ cognizant monitor redis # by group name
+    $ cognizant restart redis-server-1 # by process name
+
+To get cognizant to ignore a particular process' state:
+
+    $ cognizant unmonitor sleep-10
 
 Now check status of all managed processes:
 
     $ cognizant status
-    +----------------+-------+------------------------+
-    | Process        | Group | State                  |
-    +----------------+-------+------------------------+
-    | redis-server-1 | redis | running since 1 minute |
-    +----------------+-------+------------------------+
-    | redis-server-2 | redis | running since 1 minute |
-    +----------------+-------+------------------------+
+    +----------------+-------+--------------------------------------+
+    | Process        | Group | State                                |
+    +----------------+-------+--------------------------------------+
+    | redis-server-1 | redis | running since 1 minute               |
+    +----------------+-------+--------------------------------------+
+    | redis-server-2 | redis | running since 2 minutes              |
+    +----------------+-------+--------------------------------------+
+    | sleep-10       |       | unmonitored since less than a minute |
+    +----------------+-------+--------------------------------------+
     2012-11-23 01:16:18 +0530
 
-Available commands are:
+Here's how you tell cognizant to start monitoring new processes:
 
-- `help`                       - Shows a list of commands or help for one command
-- `status    [process_name]`   - Display status of managed process[es]
-- `load      /path/to/file.rb` - Loads the process information from specified Ruby file
-- `monitor   process_name`     - Monitor the specified process
-- `unmonitor process_name`     - Unmonitor the specified process
-- `start     process_name`     - Start the specified process
-- `stop      process_name`     - Stop the specified process
-- `restart   process_name`     - Restart the specified process
-- `shutdown`                   - Stop the monitoring daemon
+    $ cognizant load ./examples/redis-server.rb # find this file in source code
 
-See `cognizant help` for more options.
+All of the available commands are:
+
+- `help`               - Shows a list of commands or help for one command
+- `status    [name]`   - Display status of managed process(es) or group(s)
+- `load      ./cog.rb` - Loads the process information from specified Ruby file
+- `monitor   name`     - Monitor the specified process or group
+- `unmonitor name`     - Unmonitor the specified process or group
+- `start     name`     - Start the specified process or group
+- `stop      name`     - Stop the specified process or group
+- `restart   name`     - Restart the specified process or group
+- `shutdown`           - Stop the monitoring daemon without affecting processes
+
+See `cognizant help` for options.
 
 ## Contributing
 

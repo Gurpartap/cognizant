@@ -12,7 +12,7 @@ module Cognizant
         output_processes = []
         if args.size > 0
           Cognizant::Server.daemon.processes.each do |process|
-            output_processes << process if args.include?(process.name)
+            output_processes << process if args.include?(process.name) or args.include?(process.group)
           end
           if output_processes.size == 0
             raise("ERR: No such process")
@@ -38,18 +38,25 @@ module Cognizant
       %w(monitor start stop restart unmonitor).each do |action|
         class_eval <<-END
           def self.#{action}(*args)
-            unless process_name = args.shift
+            unless args.size > 0
               raise("ERR: Missing process name")
               return # yield("OK")
             end
+            output_processes = []
             Cognizant::Server.daemon.processes.each do |process|
-              if process.name.eql?(process_name)
-                process.#{action}
-                return # yield("OK")
+              if args.include?(process.name) or args.include?(process.group)
+                output_processes << process
               end
             end
-            raise("ERR: No such process")
-            # yield("OK")
+
+            if output_processes.size == 0
+              raise("ERR: No such process")
+              # yield("OK")
+            else
+              output_processes.each do |process|
+                process.#{action}
+              end
+            end
           end
         END
       end
