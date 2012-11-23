@@ -151,7 +151,7 @@ module Cognizant
 
       def monitor(process_name = nil, attributes = {}, &block)
         process = Cognizant::Process.new(process_name, attributes, &block)
-        self.processes[process_name] = process
+        self.processes[process.name] = process
         process.monitor
       end
 
