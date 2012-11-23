@@ -8,7 +8,7 @@ module Cognizant
         KB_LABEL = "KB"
 
         def initialize(options = {})
-          @above = options[:above]
+          @above = options[:above].to_f
         end
 
         def run(pid)

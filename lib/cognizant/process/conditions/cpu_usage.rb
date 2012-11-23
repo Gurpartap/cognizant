@@ -5,7 +5,7 @@ module Cognizant
     module Conditions
       class CpuUsage < Condition
         def initialize(options = {})
-          @above = options[:above]
+          @above = options[:above].to_f
         end
 
         def run(pid)

@@ -19,9 +19,10 @@ module Cognizant
           @do = options.has_key?(:do) ? Array(options.delete(:do)) : [:restart]
         end
 
-        @every = options.delete(:every)
+        @every = options.delete(:every).to_i
         @times = options.delete(:times) || [1, 1]
         @times = [@times, @times] unless @times.is_a?(Array) # handles :times => 5
+        @times.map(&:to_i)
 
         clear_history!
 
