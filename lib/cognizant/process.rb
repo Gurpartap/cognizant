@@ -139,10 +139,6 @@ module Cognizant
       end
     end
 
-    def notify_triggers(transition)
-      @triggers.each { |trigger| trigger.notify(transition) }
-    end
-
     def check(condition_name, options, &block)
       klass = Cognizant::Process::Conditions[condition_name]
       case klass.superclass.name.split("::").last
@@ -151,6 +147,10 @@ module Cognizant
       when "PollCondition"
         @checks << ConditionCheck.new(condition_name, options.deep_symbolize_keys!, &block)
       end
+    end
+
+    def notify_triggers(transition)
+      @triggers.each { |trigger| trigger.notify(transition) }
     end
 
     def run_checks
