@@ -1,7 +1,7 @@
 module Cognizant
   class Process
     module Conditions
-      class MemoryUsage < Condition
+      class MemoryUsage < PollCondition
         MB = 1024 ** 2
         FORMAT_STR = "%d%s"
         MB_LABEL = "MB"

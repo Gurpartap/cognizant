@@ -1,7 +1,7 @@
 module Cognizant
   class Process
     module Conditions
-      class AlwaysTrue < Condition
+      class AlwaysTrue < PollCondition
         def run(pid)
           1
         end

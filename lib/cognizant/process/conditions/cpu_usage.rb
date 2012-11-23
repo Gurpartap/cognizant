@@ -3,7 +3,7 @@ require "cognizant/system"
 module Cognizant
   class Process
     module Conditions
-      class CpuUsage < Condition
+      class CpuUsage < PollCondition
         def initialize(options = {})
           @above = options[:above].to_f
         end
