@@ -96,23 +96,26 @@ GLOBAL OPTIONS:
     end
 
     opts.on("-v", "--version", "Print the version number and exit.") do
-      require 'cognizant/version'
+      require "cognizant/version"
       $stdout.puts Cognizant::VERSION
       exit(0)
     end
   end.parse!
 
   if config_file = ARGV.shift
+    require "cognizant/util/symbolize_hash_keys"
+
     if config_file.eql?("-")
       config = YAML.load(ARGF.read)
     else
       config = YAML.load_file(config_file)
     end
     config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
+    config.deep_symbolize_keys!
     options = config.merge(options)
   end
 
-  require 'cognizant/server'
+  require "cognizant/server"
   Cognizant::Server.start(options)
 rescue => exception
   if exception.instance_of?(SystemExit)
