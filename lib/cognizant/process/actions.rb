@@ -1,7 +1,7 @@
 require "cognizant/process/actions/start"
 require "cognizant/process/actions/stop"
 require "cognizant/process/actions/restart"
-require "cognizant/system/process"
+require "cognizant/system"
 
 module Cognizant
   class Process
@@ -74,7 +74,7 @@ module Cognizant
       def send_signals(options = {})
         # Return if the process is already stopped.
         return true unless pid_running?
-        Cognizant::System::Process.send_signals(@process_pid, options)
+        Cognizant::System.send_signals(@process_pid, options)
         not pid_running?
       end
     end

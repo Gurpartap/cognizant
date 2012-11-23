@@ -4,7 +4,7 @@ require "cognizant"
 require "cognizant/logging"
 require "cognizant/process"
 require "cognizant/server/interface"
-require "cognizant/system/process"
+require "cognizant/system"
 
 module Cognizant
   module Server
@@ -224,18 +224,18 @@ module Cognizant
         if @pidfile and File.exists?(@pidfile)
           if previous_daemon_pid = File.read(@pidfile).to_i
             # Only attempt to stop automatically if the daemon will run in background.
-            if @daemonize and System::Process.pid_running?(previous_daemon_pid)
+            if @daemonize and System.pid_running?(previous_daemon_pid)
               # Ensure that the process stops within 5 seconds or force kill.
               signals = ["TERM", "KILL"]
               timeout = 2
               catch :stopped do
                 signals.each do |stop_signal|
                   # Send the stop signal and wait for it to stop.
-                  System::Process.signal(stop_signal, previous_daemon_pid)
+                  System.signal(stop_signal, previous_daemon_pid)
 
                   # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
                   ([timeout / signals.size, 2].max).times do
-                    throw :stopped unless System::Process.pid_running?(previous_daemon_pid)
+                    throw :stopped unless System.pid_running?(previous_daemon_pid)
                     sleep 1
                   end
                 end
@@ -244,7 +244,7 @@ module Cognizant
           end
 
           # Alert the user to manually stop the previous daemon, if it is [still] alive.
-          if System::Process.pid_running?(previous_daemon_pid)
+          if System.pid_running?(previous_daemon_pid)
             raise "There is already a daemon running with pid #{previous_daemon_pid}."
           else
             begin
