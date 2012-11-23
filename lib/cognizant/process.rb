@@ -9,6 +9,7 @@ require "cognizant/process/execution"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
 require "cognizant/process/condition_check"
+require "cognizant/util/symbolize_hash_keys"
 
 module Cognizant
   class Process
@@ -74,17 +75,23 @@ module Cognizant
     end
 
     def initialize(process_name = nil, options = {})
-      # Default.
-      self.autostart = true
-      self.name = process_name if process_name
+      @ticks_to_skip = 0
+      @checks = []
+      @action_mutex = Monitor.new
+      
+      self.name = process_name.to_s if process_name
+      self.autostart = true # Default.
+
+      if options.has_key?(:checks) and options[:checks].kind_of?(Array)
+        options[:checks].each do |args|
+          self.check(*args)
+        end
+      end
+      options.delete(:checks)
 
       options.each do |attribute_name, value|
         self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end
-
-      @ticks_to_skip = 0
-      @checks = []
-      @action_mutex = Monitor.new
 
       yield(self) if block_given?
 
@@ -92,8 +99,8 @@ module Cognizant
       super
     end
 
-    def on(condition_name, options, &block)
-      @checks << ConditionCheck.new(condition_name, options, &block)
+    def check(condition_name, options, &block)
+      @checks << ConditionCheck.new(condition_name, options.deep_symbolize_keys!, &block)
     end
 
     def run_checks
