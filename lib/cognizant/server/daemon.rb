@@ -86,9 +86,9 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :group
 
-      # Array of process groups being managed.
+      # Hash of processes being managed.
       # @private
-      # @return [Array]
+      # @return [Hash]
       attr_accessor :processes
 
       # Initializes and starts the cognizant daemon with the given options
@@ -122,7 +122,7 @@ module Cognizant
         @pids_dir = File.expand_path(@pids_dir)
         @logs_dir = File.expand_path(@logs_dir)
 
-        self.processes = Array.new
+        self.processes = Hash.new
 
         # Only available through a config file/stdin.
         load_processes(options[:monitor]) if options.has_key?(:monitor)
@@ -151,7 +151,7 @@ module Cognizant
 
       def monitor(process_name = nil, attributes = {}, &block)
         process = Cognizant::Process.new(process_name, attributes, &block)
-        self.processes << process
+        self.processes[process_name] = process
         process.monitor
       end
 
@@ -194,7 +194,7 @@ module Cognizant
         log.info "Starting the periodic tick..."
         EventMachine.add_periodic_timer(1) do
           System.reset_data
-          self.processes.map(&:tick)
+          self.processes.values.map(&:tick)
         end
       end
 

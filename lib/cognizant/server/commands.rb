@@ -12,7 +12,7 @@ module Cognizant
       def self.status(*args)
         output_processes = []
         if args.size > 0
-          Cognizant::Server.daemon.processes.each do |process|
+          Cognizant::Server.daemon.processes.values.each do |process|
             output_processes << process if args.include?(process.name) or args.include?(process.group)
           end
           if output_processes.size == 0
@@ -20,7 +20,7 @@ module Cognizant
             # yield("OK")
           end
         else
-          output_processes = Cognizant::Server.daemon.processes
+          output_processes = Cognizant::Server.daemon.processes.values
         end
         
         output = []
@@ -48,7 +48,7 @@ module Cognizant
               return # yield("OK")
             end
             output_processes = []
-            Cognizant::Server.daemon.processes.each do |process|
+            Cognizant::Server.daemon.processes.values.each do |process|
               if args.include?(process.name) or args.include?(process.group)
                 output_processes << process
               end
