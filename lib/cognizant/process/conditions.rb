@@ -1,4 +1,5 @@
-require "cognizant/process/conditions/condition"
+require "cognizant/process/conditions/poll_condition"
+require "cognizant/process/conditions/trigger_condition"
 
 Dir["#{File.dirname(__FILE__)}/conditions/*.rb"].each do |c|
   require c
