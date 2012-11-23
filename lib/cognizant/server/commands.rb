@@ -1,4 +1,5 @@
 require "json"
+require "cognizant/system"
 
 module Cognizant
   module Server
@@ -15,7 +16,7 @@ module Cognizant
             output_processes << process if args.include?(process.name) or args.include?(process.group)
           end
           if output_processes.size == 0
-            raise("ERR: No such process")
+            raise("ERROR: No such process")
             # yield("OK")
           end
         else
@@ -24,11 +25,15 @@ module Cognizant
         
         output = []
         output_processes.each do |process|
+          pid = process.read_pid
           output << {
             "Process" => process.name,
+            "PID"     => pid,
             "Group"   => process.group,
             "State"   => process.state,
-            "Since"   => process.last_transition_time
+            "Since"   => process.last_transition_time,
+            "% CPU"   => System.cpu_usage(pid).to_f,
+            "Memory"  => System.memory_usage(pid).to_f # in KBs.
           }
         end
         yield(output.to_json)
@@ -39,7 +44,7 @@ module Cognizant
         class_eval <<-END
           def self.#{action}(*args)
             unless args.size > 0
-              raise("ERR: Missing process name")
+              raise("ERROR: Missing process name")
               return # yield("OK")
             end
             output_processes = []
@@ -50,7 +55,7 @@ module Cognizant
             end
 
             if output_processes.size == 0
-              raise("ERR: No such process")
+              raise("ERROR: No such process")
               # yield("OK")
             else
               output_processes.each do |process|
@@ -67,7 +72,7 @@ module Cognizant
       end
 
       def self.method_missing(command, *args)
-        raise("ERR: Unknown command '#{command}'")
+        raise("ERROR: Unknown command '#{command}'")
         # yield("OK")
       end
     end
