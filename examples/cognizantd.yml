@@ -12,7 +12,25 @@ monitor: {
     start_command: /usr/local/bin/redis-server -,
     start_with_input: "daemonize no\nport 6666",
     ping_command: redis-cli -p 6666 PING,
-    stop_signals: [TERM, INT]
+    stop_signals: [TERM, INT],
+    checks: [
+      [
+        "cpu_usage", {
+          every: 3, # Seconds.
+          above: 60,
+          times: 3,
+          do: restart
+        }
+      ],
+      [
+        "memory_usage", {
+          every: 5,
+          above: 1220608,
+          times: [3, 5], # Three out of five times.
+          do: stop
+        }
+      ]
+    ]
   },
   redis-server-2: {
     group: redis,
@@ -22,6 +40,7 @@ monitor: {
     stop_command: redis-cli -p 7777 SHUTDOWN
   },
   sleep-10: {
-    start_command: sleep 10
+    start_command: sleep 10,
+    autostart: false
   }
 }

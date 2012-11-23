@@ -16,10 +16,6 @@ condition).
 And if it matters, cognizant means "having knowledge or being aware of",
 according to Apple's Dictionary.
 
-PS: Although the core works efficiently, yet conditions, notifications,
-documentation and some other features need a lot of work. Contributions
-will be overwhelmingly welcomed!
-
 Cognizant can be used to monitor any long running process, including the
 following:
 
@@ -46,6 +42,8 @@ CPU, etc.) of the application process and restart it if it matches a
 condition.
 
 ### Notifications
+
+PS: Notifications currently need work.
 
 Notifications provide a way to alert system administrator of unexpected events
 happening with the process. Notifications can use multiple gateways, including
