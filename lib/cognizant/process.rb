@@ -63,9 +63,6 @@ module Cognizant
 
       event :unmonitor do
         transition any => :unmonitored
-        # TODO: # When the user issues an unmonitor cmd, reset any triggers so that
-                # scheduled events gets cleared
-                # triggers.each { |t| t.reset! }
       end
 
       after_transition  any      => :starting,   :do => :start_process
@@ -127,6 +124,15 @@ module Cognizant
 
     def last_transition_time
       @last_transition_time || 0
+    end
+
+    def handle_user_command(command)
+      if command == "unmonitor"
+        # When the user issues an unmonitor command, reset any
+        # triggers so that scheduled events gets cleared.
+        @triggers.each { |trigger| trigger.reset! }
+      end
+      dispatch!(command.to_sym, "user initiated")
     end
 
     def dispatch!(action, reason = nil)

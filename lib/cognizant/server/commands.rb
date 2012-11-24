@@ -59,7 +59,7 @@ module Cognizant
               # yield("OK")
             else
               output_processes.each do |process|
-                process.#{action} # TODO: process.handle_user_command(#{action})
+                process.handle_user_command(#{action})
               end
             end
           end
