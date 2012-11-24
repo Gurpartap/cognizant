@@ -7,6 +7,7 @@ Gem::Specification.new do |gem|
   gem.description   = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
   gem.summary       = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
   gem.homepage      = "http://github.com/Gurpartap/cognizant"
+  gem.license       = "MIT"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
