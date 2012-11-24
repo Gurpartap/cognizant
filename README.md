@@ -41,6 +41,8 @@ process. For example, conditions can monitor the resource utilization (RAM,
 CPU, etc.) of the application process and restart it if it matches a
 condition.
 
+See examples for conditions usage.
+
 ### Notifications
 
 PS: Notifications currently need work.
@@ -109,9 +111,15 @@ To start without superuser access, specify these file and directory config varia
         ping_command: redis-cli -p 7777 PING,
         stop_command: redis-cli -p 7777 SHUTDOWN
       },
-      sleep-10: {
-        start_command: sleep 10,
-        autostart: false
+      sleep: {
+        start_command: sleep 3,
+        checks: {
+          flapping: {
+            times: 4,
+            within: 15, # Seconds.
+            retry_after: 30 # Seconds.
+          }
+        }
       }
     }
 
@@ -127,6 +135,8 @@ or
       ...
     }
     EOF
+
+Process information can also be provided via Ruby code. See `load` command below.
 
 ## Using the administration utility
 
