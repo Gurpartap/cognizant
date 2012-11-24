@@ -127,12 +127,12 @@ module Cognizant
     end
 
     def handle_user_command(command)
-      if command == "unmonitor"
+      if command == :unmonitor
         # When the user issues an unmonitor command, reset any
         # triggers so that scheduled events gets cleared.
         @triggers.each { |trigger| trigger.reset! }
       end
-      dispatch!(command.to_sym, "user initiated")
+      dispatch!(command, "user initiated")
     end
 
     def dispatch!(action, reason = nil)
