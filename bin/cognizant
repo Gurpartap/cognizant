@@ -128,9 +128,8 @@ command :shutdown do |c|
 end
 
 def connect_and_perform(global_options, task, args, &block)
-  process_name = [*args].first
   output_handler = Proc.new do |socket|
-    socket.write("#{task.to_s} #{process_name}")
+    socket.write("#{task.to_s} #{args.join(' ')}")
     socket.flush
     output = socket.gets
     if block
