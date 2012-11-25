@@ -22,15 +22,15 @@ sort_help :manually
 
 desc "The socket lock file of the daemon server"
 arg_name "FILE"
-flag :socket, :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
+flag [:s, :socket], :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
 
 desc "The server address of the daemon server"
-arg_name "ADDRESS"
-flag "bind-address", :type => String
+arg_name "ADDR"
+flag [:b, "bind-address"], :type => String
 
 desc "The server port of the daemon server"
 arg_name "PORT"
-flag :port, :type => Integer
+flag [:p, :port], :type => Integer
 
 desc "Username to use for authentication with server"
 arg_name "USERNAME"
@@ -41,10 +41,10 @@ arg_name "PASSWORD"
 flag :password, :type => String
 
 desc "Print the version number and exit"
-switch :version, :negatable => false
+switch [:v, :version], :negatable => false
 
 desc "Turn on tracing, enabling full backtrace"
-switch :trace, :negatable => false
+switch [:t, :trace], :negatable => false
 
 desc "Display status of managed process(es) or group(s)"
 arg_name "process_name", :optional
