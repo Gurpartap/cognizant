@@ -96,14 +96,16 @@ variables to where the user starting it has write access:
     # Find this file in source code for a detailed usage example.
 
 Assuming
-    
-    $ cat ./examples/cognizantd.yml # gives:
-    ---
-    socket:   ~/.cognizant/cognizantd.sock
-    pidfile:  ~/.cognizant/cognizantd.pid
-    logfile:  ~/.cognizant/cognizantd.log
-    pids_dir: ~/.cognizant/pids/
-    logs_dir: ~/.cognizant/logs/
+
+```YAML    
+$ cat ./examples/cognizantd.yml # gives:
+---
+socket:   ~/.cognizant/cognizantd.sock
+pidfile:  ~/.cognizant/cognizantd.pid
+logfile:  ~/.cognizant/cognizantd.log
+pids_dir: ~/.cognizant/pids/
+logs_dir: ~/.cognizant/logs/
+```
 
 Or
 
@@ -123,35 +125,37 @@ Or
 To specify processes to be managed, the following may be specified in the
 daemon's config file:
 
-    # see examples/cognizantd.yml
-    ---
-    monitor: {
-      redis-server-1: { # Identifying name.
-        group: redis,
-        start_command: /usr/local/bin/redis-server -,
-        start_with_input: "daemonize no\nport 6666",
-        ping_command: redis-cli -p 6666 PING,
-        stop_signals: [TERM, INT],
-        checks: {
-          memory_usage: {
-            every: 5, # Seconds.
-            above: 1048576, # Bytes.
-            times: [3, 5], # Three out of five times.
-            do: restart # Or stop.
-          }
-        }
-      },
-      sleep: {
-        start_command: sleep 3,
-        checks: {
-          flapping: {
-            times: 4,
-            within: 15, # Seconds.
-            retry_after: 30 # Seconds.
-          }
-        }
+```YAML
+# see examples/cognizantd.yml
+---
+monitor: {
+  redis-server-1: { # Identifying name.
+    group: redis,
+    start_command: /usr/local/bin/redis-server -,
+    start_with_input: "daemonize no\nport 6666",
+    ping_command: redis-cli -p 6666 PING,
+    stop_signals: [TERM, INT],
+    checks: {
+      memory_usage: {
+        every: 5, # Seconds.
+        above: 1048576, # Bytes.
+        times: [3, 5], # Three out of five times.
+        do: restart # Or stop.
       }
     }
+  },
+  sleep: {
+    start_command: sleep 3,
+    checks: {
+      flapping: {
+        times: 4,
+        within: 15, # Seconds.
+        retry_after: 30 # Seconds.
+      }
+    }
+  }
+}
+```
 
 Process information can also be provided via Ruby code. See `cognizant load`
 command in the administration utility.
@@ -220,6 +224,34 @@ Here's how you tell cognizant to start monitoring new processes:
 
     $ cognizant load ./examples/redis-server.rb
     # Find this file in source code.
+
+Assuming that the loaded file contains:
+
+```Ruby
+Cognizant.monitor("redis-server-1") do |process|
+  process.group         = "redis"
+  # process.uid         = "redis"
+  # process.gid         = "redis"
+  process.start_command = "redis-server -"
+
+  process.start_with_input = <<-heredoc
+    daemonize no
+    port 6666
+  heredoc
+
+  process.ping_command  = "redis-cli -p 6666 PING"
+
+  # process.check :always_true, :every => 2.seconds, :times => 3 do |p|
+  #   `say "Boom!"`
+  # end
+
+  process.check(:flapping, :times => 2, :within => 30.seconds, :retry_after => 7.seconds)
+  process.check(:cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart)
+  process.check(:memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5]) do |p|
+    p.restart # Restart is the default anyways.
+  end
+end
+```
 
 All of the available options and commands for `cognizant` are:
 
