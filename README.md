@@ -126,7 +126,7 @@ daemon's config file:
     # see examples/cognizantd.yml
     ---
     monitor: {
-      redis-server-1: {
+      redis-server-1: { # Identifying name.
         group: redis,
         start_command: /usr/local/bin/redis-server -,
         start_with_input: "daemonize no\nport 6666",
@@ -137,7 +137,7 @@ daemon's config file:
             every: 5, # Seconds.
             above: 1048576, # Bytes.
             times: [3, 5], # Three out of five times.
-            do: restart
+            do: restart # Or stop.
           }
         }
       },
@@ -243,13 +243,13 @@ All of the available options and commands for `cognizant` are:
     
     COMMANDS
         help [COMMAND]    Shows a list of commands or help for one command
-        status  [NAME]    Display status of managed process(es) or group(s)
-        load      FILE    Loads the process information from specified Ruby file
-        monitor   NAME    Monitor the specified process or group
+        status [NAME]     Display status of managed process(es) or group(s)
+        load FILE         Loads the process information from specified Ruby file
+        monitor NAME      Monitor the specified process or group
         unmonitor NAME    Unmonitor the specified process or group
-        start     NAME    Start the specified process or group
-        stop      NAME    Stop the specified process or group
-        restart   NAME    Restart the specified process or group
+        start NAME        Start the specified process or group
+        stop NAME         Stop the specified process or group
+        restart NAME      Restart the specified process or group
         shutdown          Stop the monitoring daemon without affecting processes
 
 ## Contributing
