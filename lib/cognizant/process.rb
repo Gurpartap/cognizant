@@ -159,6 +159,7 @@ module Cognizant
     end
 
     def notify_triggers(transition)
+      # TODO: Ignore for user initiated transitions.
       @triggers.each { |trigger| trigger.notify(transition) }
     end
 
