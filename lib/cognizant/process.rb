@@ -166,7 +166,7 @@ module Cognizant
       now = Time.now.to_i
 
       threads = @checks.collect do |check|
-        [check, Thread.new { Thread.current[:actions] = check.run(read_pid, now) }]
+        [check, Thread.new { Thread.current[:actions] = check.run(cached_pid, now) }]
       end
 
       @transitioned = false

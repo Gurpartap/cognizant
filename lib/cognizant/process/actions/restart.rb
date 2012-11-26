@@ -42,6 +42,7 @@ module Cognizant
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid unless pid_running?
+              # TODO: write_pid ?
             end
           end
           execute_action(

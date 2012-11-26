@@ -24,7 +24,7 @@ module Cognizant
         
       output = []
       output_processes.each do |process|
-        pid = process.read_pid
+        pid = process.cached_pid
         output << {
           "Process" => process.name,
           "PID"     => pid,
