@@ -160,6 +160,7 @@ module Cognizant
         log.info "Shutting down cognizantd..."
         EventMachine.next_tick do
           EventMachine.stop
+          unlink_pid
           logger.close
         end
       end
@@ -248,11 +249,7 @@ module Cognizant
           if System.pid_running?(previous_daemon_pid)
             raise "There is already a daemon running with pid #{previous_daemon_pid}."
           else
-            begin
-              File.unlink(@pidfile) if @pidfile
-            rescue Errno::ENOENT
-              nil
-            end
+            unlink_pid
           end
         end
       end
@@ -270,6 +267,14 @@ module Cognizant
         if @pidfile
           log.info "Writing the daemon pid (#{pid}) to the pidfile..."
           File.open(@pidfile, "w") { |f| f.write(pid) }
+        end
+      end
+
+      def unlink_pid
+        begin
+          File.unlink(@pidfile) if @pidfile
+        rescue Errno::ENOENT
+          nil
         end
       end
     end
