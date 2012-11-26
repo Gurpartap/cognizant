@@ -4,7 +4,6 @@ require "cognizant/commands"
 
 module Cognizant
   class Interface < EventMachine::Connection
-
     attr_accessor :authenticated, :username, :password
 
     def post_init
@@ -17,22 +16,24 @@ module Cognizant
     end
 
     def receive_data(args)
-      if not @authenticated and (Cognizant::Daemon.username and Cognizant::Daemon.password)
-        return post_authentication_challenge(args.to_s)
-      end
+      # if not @authenticated and (Cognizant::Daemon.username and Cognizant::Daemon.password)
+      #   return post_authentication_challenge(args.to_s)
+      # end
 
-      args = [*args.split]
-      command = args.shift.to_s.strip.downcase
-      if command.size > 0
-        begin
-          Commands.send(command, *args) do |response|
-            send_data "#{response}"
-          end
-        rescue => e
-          send_data "#{e.message}"
-        end
-      end
-      close_connection_after_writing
+      Cognizant::Commands.process_command(self, args)
+
+      # args = [*args.split]
+      # command = args.shift.to_s.strip.downcase
+      # if command.size > 0
+      #   begin
+      #     Commands.send(command, *args) do |response|
+      #       send_data "#{response}"
+      #     end
+      #   rescue => e
+      #     send_data "#{e.message}"
+      #   end
+      # end
+      # close_connection_after_writing
     end
 
     def unbind

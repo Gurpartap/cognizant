@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require "cognizant/version"
+require "cognizant/shell"
 require "commander/import"
 require "formatador"
+require "shellwords"
 require "socket"
-require "json"
 
 program :version, Cognizant::VERSION
 program :description, "administration utility for cognizantd"
@@ -33,16 +33,28 @@ global_option("--password", String, "Password to use for authentication with ser
   
 end
 
-default_command :status
+default_command :shell
+
+command :shell do |c|
+  c.syntax = "cognizant shell"
+  c.description = "Enter the Cognizant shell for easy control"
+  c.action do |args, options|
+    Signal.trap("INT") do
+      Cognizant::Shell.emit("\nGoodbye!")
+      exit(0)
+    end
+
+    Cognizant::Shell.new(options.socket).run
+  end
+end
+
 command :status do |c|
   c.syntax = "cognizant status [process or group name]"
   c.description = "Display status of managed process(es) or group(s)"
   c.action do |args, options|
     connect_and_perform(:status, options, args) do |output|
-      begin  
-        JSON.parse(output)
-
-        status_data = JSON.parse(output)
+      begin
+        status_data = Cognizant::Client::Transport.deserialize_message(output)
         status_data.each_with_index do |process, index|
           status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
           status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
@@ -81,8 +93,12 @@ end
 end
 
 def connect_and_perform(task, options, args, &block)
+  Cognizant::Shell.new(options.socket, false).run_command(task, args)
+  return
+  
   output_handler = Proc.new do |socket|
-    socket.write("#{task.to_s} #{args.join(' ')}")
+    command, args = parse_command("#{task.to_s} #{args.join(' ')}")
+    socket.write(Cognizant::Client::Transport.deserialize_message({'command' => command, 'args' => args}))
     socket.flush
     output = socket.gets
     if block
@@ -92,13 +108,16 @@ def connect_and_perform(task, options, args, &block)
     end
   end
 
-  options.socket ||= "/var/run/cognizant/cognizantd.sock"
-
   if options.socket
     output_handler.call(UNIXSocket.new(options.socket))
   else
     output_handler.call(TCPSocket.new(options.send("bind-address"), options.port))
   end
+end
+
+def parse_command(line)
+  command, *args = Shellwords.shellsplit(line)
+  [command, args]
 end
 
 def distance_of_time_in_words(seconds)

@@ -10,85 +10,87 @@ module Cognizant
   module Daemon
     extend self
 
-    # Whether or not to the daemon in the background.
-    # @return [true, false] Defaults to true
-    attr_accessor :daemonize
+    class << self
+      # Whether or not to the daemon in the background.
+      # @return [true, false] Defaults to true
+      attr_accessor :daemonize
 
-    # The pid lock file for the daemon.
-    # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
-    # @return [String] Defaults to /var/run/cognizant/cognizantd.pid
-    attr_accessor :pidfile
+      # The pid lock file for the daemon.
+      # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
+      # @return [String] Defaults to /var/run/cognizant/cognizantd.pid
+      attr_accessor :pidfile
 
-    # The file to log the daemon's operations information into.
-    # e.g. /Users/Gurpartap/.cognizant/cognizantd.log
-    # @return [String] Defaults to /var/log/cognizant/cognizantd.log
-    attr_accessor :logfile
+      # The file to log the daemon's operations information into.
+      # e.g. /Users/Gurpartap/.cognizant/cognizantd.log
+      # @return [String] Defaults to /var/log/cognizant/cognizantd.log
+      attr_accessor :logfile
 
-    # The level of information to log. This does not affect the log
-    # level of managed processes.
-    # @note The possible values must be one of the following:
-    #   Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR and
-    #   Logger::FATAL or 0, 1, 2, 3, 4 (respectively).
-    # @return [Logger::Severity] Defaults to Logger::INFO
-    attr_accessor :loglevel
+      # The level of information to log. This does not affect the log
+      # level of managed processes.
+      # @note The possible values must be one of the following:
+      #   Logger::DEBUG, Logger::INFO, Logger::WARN, Logger::ERROR and
+      #   Logger::FATAL or 0, 1, 2, 3, 4 (respectively).
+      # @return [Logger::Severity] Defaults to Logger::INFO
+      attr_accessor :loglevel
 
-    # The socket lock file for the server. This file is ignored if valid
-    # bind address and port are given.
-    # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
-    # @return [String] Defaults to /var/run/cognizant/cognizantd.sock
-    attr_accessor :socket
+      # The socket lock file for the server. This file is ignored if valid
+      # bind address and port are given.
+      # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
+      # @return [String] Defaults to /var/run/cognizant/cognizantd.sock
+      attr_accessor :socket
 
-    # The TCP address and port to start the server with. e.g. 8081,
-    # "127.0.0.1:8081", "0.0.0.0:8081".
-    # @return [String] Defaults to nil
-    attr_accessor :port
+      # The TCP address and port to start the server with. e.g. 8081,
+      # "127.0.0.1:8081", "0.0.0.0:8081".
+      # @return [String] Defaults to nil
+      attr_accessor :port
 
-    # Username for securing server access. e.g. "cognizant-user"
-    # @return [String] Defaults to nil
-    attr_accessor :username
+      # Username for securing server access. e.g. "cognizant-user"
+      # @return [String] Defaults to nil
+      attr_accessor :username
 
-    # Password to accompany the username.
-    # e.g. "areallyverylongpasswordbecauseitmatters"
-    # @return [String] Defaults to nil
-    attr_accessor :password
+      # Password to accompany the username.
+      # e.g. "areallyverylongpasswordbecauseitmatters"
+      # @return [String] Defaults to nil
+      attr_accessor :password
 
-    # Directory to store the pid files of managed processes, when required.
-    # e.g. /Users/Gurpartap/.cognizant/pids/
-    # @return [String] Defaults to /var/run/cognizant/pids/
-    attr_accessor :pids_dir
+      # Directory to store the pid files of managed processes, when required.
+      # e.g. /Users/Gurpartap/.cognizant/pids/
+      # @return [String] Defaults to /var/run/cognizant/pids/
+      attr_accessor :pids_dir
 
-    # Directory to store the log files of managed processes, when required.
-    # e.g. /Users/Gurpartap/.cognizant/logs/
-    # @return [String] Defaults to /var/log/cognizant/logs/
-    attr_accessor :logs_dir
+      # Directory to store the log files of managed processes, when required.
+      # e.g. /Users/Gurpartap/.cognizant/logs/
+      # @return [String] Defaults to /var/log/cognizant/logs/
+      attr_accessor :logs_dir
 
-    # Environment variables for managed processes to inherit.
-    # @return [Hash] Defaults to {}
-    attr_accessor :env
+      # Environment variables for managed processes to inherit.
+      # @return [Hash] Defaults to {}
+      attr_accessor :env
 
-    # The current working directory for the managed processes to start with.
-    # @return [String] Defaults to nil
-    attr_accessor :chdir
+      # The current working directory for the managed processes to start with.
+      # @return [String] Defaults to nil
+      attr_accessor :chdir
 
-    # Limit the permission modes for files and directories created by the
-    # daemon and the managed processes.
-    # @return [Integer] Defaults to nil
-    attr_accessor :umask
+      # Limit the permission modes for files and directories created by the
+      # daemon and the managed processes.
+      # @return [Integer] Defaults to nil
+      attr_accessor :umask
 
-    # Run the daemon and managed processes as the given user.
-    # e.g. "deploy", 1000
-    # @return [String] Defaults to nil
-    attr_accessor :user
+      # Run the daemon and managed processes as the given user.
+      # e.g. "deploy", 1000
+      # @return [String] Defaults to nil
+      attr_accessor :user
 
-    # Run the daemon and managed processes as the given user group.
-    # e.g. "deploy"
-    # @return [String] Defaults to nil
-    attr_accessor :group
+      # Run the daemon and managed processes as the given user group.
+      # e.g. "deploy"
+      # @return [String] Defaults to nil
+      attr_accessor :group
 
-    # Hash of processes being managed.
-    # @private
-    # @return [Hash]
-    attr_accessor :processes
+      # Hash of processes being managed.
+      # @private
+      # @return [Hash]
+      attr_accessor :processes
+    end
 
     # Initializes and starts the cognizant daemon with the given options
     # as instance attributes.
@@ -306,11 +308,11 @@ module Cognizant
     end
 
     def unlink_pid
-      unlink_file(@pidfile)
+      unlink_file(@pidfile) if @pidfile
     end
 
     def unlink_socket
-      unlink_file(@socket)
+      unlink_file(@socket) if @socket
     end
 
     def unlink_file(path)
