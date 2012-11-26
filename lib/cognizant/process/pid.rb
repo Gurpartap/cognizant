@@ -2,7 +2,11 @@ module Cognizant
   class Process
     module PID
       def cached_pid
-        @process_pid and @process_pid != 0 ? @process_pid : read_pid
+        if not @process_pid or @process_pid == 0
+          read_pid
+        else
+          @process_pid
+        end
       end
 
       def read_pid
