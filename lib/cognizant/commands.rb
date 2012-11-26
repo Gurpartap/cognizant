@@ -31,8 +31,8 @@ module Cognizant
           "Group"   => process.group,
           "State"   => process.state,
           "Since"   => process.last_transition_time,
-          "% CPU"   => System.cpu_usage(pid).to_f,
-          "Memory"  => System.memory_usage(pid).to_f # in KBs.
+          "% CPU"   => Cognizant::System.cpu_usage(pid).to_f,
+          "Memory"  => Cognizant::System.memory_usage(pid).to_f # in KBs.
         }
       end
       yield(output.to_json)

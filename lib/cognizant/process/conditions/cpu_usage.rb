@@ -9,7 +9,7 @@ module Cognizant
         end
 
         def run(pid)
-          System.cpu_usage(pid).to_f
+          Cognizant::System.cpu_usage(pid).to_f
         end
 
         def check(value)

@@ -12,7 +12,7 @@ module Cognizant
         end
 
         def run(pid)
-          System.memory_usage(pid).to_f
+          Cognizant::System.memory_usage(pid).to_f
         end
 
         def check(value)

@@ -30,7 +30,7 @@ module Cognizant
           child_pids
         end
 
-        def reset_data
+        def reset_data!
           store.clear unless store.empty?
         end
 

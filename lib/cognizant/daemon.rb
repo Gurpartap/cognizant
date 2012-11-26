@@ -142,7 +142,7 @@ module Cognizant
         start_periodic_ticks
         daemonize_process
         write_pid
-        load_processes(@processes_to_load)
+        load_processes(@processes_to_load) and @processes_to_load = nil
       end
     end
 
@@ -200,7 +200,7 @@ module Cognizant
     def start_periodic_ticks
       Cognizant.log.info "Starting the periodic tick..."
       EventMachine.add_periodic_timer(1) do
-        System.reset_data
+        Cognizant::System.reset_data!
         @processes.values.map(&:tick)
       end
     end
@@ -234,18 +234,18 @@ module Cognizant
       if @pidfile and File.exists?(@pidfile)
         if previous_daemon_pid = File.read(@pidfile).to_i
           # Only attempt to stop automatically if the daemon will run in background.
-          if @daemonize and System.pid_running?(previous_daemon_pid)
+          if @daemonize and Cognizant::System.pid_running?(previous_daemon_pid)
             # Ensure that the process stops within 5 seconds or force kill.
             signals = ["TERM", "KILL"]
             timeout = 2
             catch :stopped do
               signals.each do |stop_signal|
                 # Send the stop signal and wait for it to stop.
-                System.signal(stop_signal, previous_daemon_pid)
+                Cognizant::System.signal(stop_signal, previous_daemon_pid)
 
                 # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
                 ([timeout / signals.size, 2].max).times do
-                  throw :stopped unless System.pid_running?(previous_daemon_pid)
+                  throw :stopped unless Cognizant::System.pid_running?(previous_daemon_pid)
                   sleep 1
                 end
               end
@@ -254,7 +254,7 @@ module Cognizant
         end
 
         # Alert the user to manually stop the previous daemon, if it is [still] alive.
-        if System.pid_running?(previous_daemon_pid)
+        if Cognizant::System.pid_running?(previous_daemon_pid)
           raise "There is already a daemon running with pid #{previous_daemon_pid}."
         else
           unlink_pid # This will be overwritten anyways.

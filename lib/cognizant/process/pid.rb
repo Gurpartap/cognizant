@@ -18,7 +18,7 @@ module Cognizant
           str = File.read(self.pidfile).to_i
           process_pid = str unless not str or str.zero?
         end
-        process_pid = 0 unless System.pid_running?(process_pid) # If the newly fetched pid is not running, reset it.
+        process_pid = 0 unless Cognizant::System.pid_running?(process_pid) # If the newly fetched pid is not running, reset it.
         @process_pid = process_pid
       end
 
