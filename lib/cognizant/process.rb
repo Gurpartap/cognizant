@@ -130,11 +130,9 @@ module Cognizant
     end
 
     def handle_user_command(command)
-      if command == :unmonitor
-        # When the user issues an unmonitor command, reset any
-        # triggers so that scheduled events gets cleared.
-        @triggers.each { |trigger| trigger.reset! }
-      end
+      # When the user issues a command, reset any
+      # triggers so that scheduled events gets cleared.
+      @triggers.each { |trigger| trigger.reset! }
       dispatch!(command, "user initiated")
     end
 
@@ -159,7 +157,6 @@ module Cognizant
     end
 
     def notify_triggers(transition)
-      # TODO: Ignore for user initiated transitions.
       @triggers.each { |trigger| trigger.notify(transition) }
     end
 
@@ -203,11 +200,11 @@ module Cognizant
     end
 
     def pidfile
-      @pidfile || File.join(Cognizant.daemon.pids_dir, self.name + '.pid')
+      @pidfile || File.join(Cognizant::Daemon.pids_dir, self.name + '.pid')
     end
 
     def logfile
-      @logfile || File.join(Cognizant.daemon.logs_dir, self.name + '.log')
+      @logfile || File.join(Cognizant::Daemon.logs_dir, self.name + '.log')
     end
 
     private

@@ -4,14 +4,14 @@ require "cognizant/system"
 module Cognizant
   module Commands
     def self.load(config_file)
-      Cognizant.daemon.load(config_file)
+      Cognizant::Daemon.load(config_file)
       # yield("OK")
     end
 
     def self.status(*args)
       output_processes = []
       if args.size > 0
-        Cognizant.daemon.processes.values.each do |process|
+        Cognizant::Daemon.processes.values.each do |process|
           output_processes << process if args.include?(process.name) or args.include?(process.group)
         end
         if output_processes.size == 0
@@ -19,7 +19,7 @@ module Cognizant
           # yield("OK")
         end
       else
-        output_processes = Cognizant.daemon.processes.values
+        output_processes = Cognizant::Daemon.processes.values
       end
         
       output = []
@@ -47,7 +47,7 @@ module Cognizant
             return # yield("OK")
           end
           output_processes = []
-          Cognizant.daemon.processes.values.each do |process|
+          Cognizant::Daemon.processes.values.each do |process|
             if args.include?(process.name) or args.include?(process.group)
               output_processes << process
             end
@@ -66,7 +66,7 @@ module Cognizant
     end
 
     def self.shutdown
-      Cognizant.daemon.shutdown
+      Cognizant::Daemon.shutdown
       # yield("OK")
     end
 

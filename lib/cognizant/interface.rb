@@ -11,13 +11,13 @@ module Cognizant
       @authenticated = false
       @username      = nil
       @password      = nil
-      if Cognizant.daemon.username and Cognizant.daemon.password
+      if Cognizant::Daemon.username and Cognizant::Daemon.password
         post_authentication_challenge
       end
     end
 
     def receive_data(args)
-      if not @authenticated and (Cognizant.daemon.username and Cognizant.daemon.password)
+      if not @authenticated and (Cognizant::Daemon.username and Cognizant::Daemon.password)
         return post_authentication_challenge(args.to_s)
       end
 
@@ -51,14 +51,14 @@ module Cognizant
       end
 
       unless @username.to_s.size > 0
-        if Cognizant.daemon.username and Cognizant.daemon.username.size != nil
+        if Cognizant::Daemon.username and Cognizant::Daemon.username.size != nil
           send_data "Username: "
           return
         end
       end
 
       unless @password.to_s.size > 0
-        if Cognizant.daemon.password and Cognizant.daemon.password.size != nil
+        if Cognizant::Daemon.password and Cognizant::Daemon.password.size != nil
           send_data "Password: "
           return
         end
@@ -70,7 +70,7 @@ module Cognizant
     end
 
     def validate
-      @authenticated = @username == Cognizant.daemon.username and @password == Cognizant.daemon.password
+      @authenticated = @username == Cognizant::Daemon.username and @password == Cognizant::Daemon.password
       @username = nil
       @password = nil
       if @authenticated

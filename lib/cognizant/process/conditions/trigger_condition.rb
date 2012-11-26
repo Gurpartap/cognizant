@@ -41,7 +41,7 @@ module Cognizant
         end
 
         def cancel_all_events
-          puts "Canceling all scheduled events"
+          # puts "Canceling all scheduled events"
           self.mutex.synchronize do
             self.scheduled_events.each {|_, thread| thread.kill}
           end

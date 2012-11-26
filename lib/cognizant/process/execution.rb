@@ -120,7 +120,7 @@ module Cognizant
             out_r.read,
             err_r.read,
             status.exitstatus,
-            status.exitstatus.zero?
+            status.exitstatus ? status.exitstatus.zero? : false # TODO: What rare case would not have status.existatus?
           )
         end
       end
