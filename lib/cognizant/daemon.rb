@@ -122,26 +122,37 @@ module Cognizant
       @logs_dir = File.expand_path(@logs_dir)
 
       @processes = Hash.new
+      @processes_to_load = []
 
       # Only available through a config file/stdin.
-      load_processes(options[:monitor]) if options.has_key?(:monitor)
+      @processes_to_load = options[:monitor] if options.has_key?(:monitor)
     end
 
     def bootup
-      setup_prerequisites
+      setup_logging
+
+      stop_previous_daemon
+      stop_previous_socket
+
+      setup_directories
       trap_signals
-      Cognizant::Logging.log.info "Booting up cognizantd..."
+      Cognizant.log.info "Booting up cognizantd..."
       EventMachine.run do
-        start_interface_server
+        start_interface_socket
         start_periodic_ticks
         daemonize_process
         write_pid
+        load_processes(@processes_to_load)
       end
+    end
+
+    def log(*args)
+      Cognizant::Logging.log(*args)
     end
 
     def load(config_file)
       config_file = File.expand_path(config_file)
-      Cognizant::Logging.log.info "Loading config from #{config_file}..."
+      Cognizant.log.info "Loading config from #{config_file}..."
       # config = YAML.load_file(config_file)
       # config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
       # load_processes(config[:monitor]) if config.has_key?(:monitor)
@@ -156,11 +167,12 @@ module Cognizant
 
     # Stops the TCP server and the tick loop, and performs cleanup.
     def shutdown
-      Cognizant::Logging.log.info "Shutting down cognizantd..."
+      Cognizant.log.info "Shutting down cognizantd..."
       EventMachine.next_tick do
         EventMachine.stop
         unlink_pid
-        Cognizant::Logging.logger.close
+        unlink_socket
+        Cognizant.logger.close
       end
     end
 
@@ -175,44 +187,45 @@ module Cognizant
     end
 
     # Starts the TCP server with the set socket lock file or port.
-    def start_interface_server
-      stop_previous_server
+    def start_interface_socket
       if port = @port
-        Cognizant::Logging.log.info "Starting the TCP server at #{@port}..."
+        Cognizant.log.info "Starting the TCP server at #{@port}..."
         host = "127.0.0.1"
         splitted = port.to_s.split(":")
         host, port = splitted if splitted.size > 1
         EventMachine.start_server(host, port, Cognizant::Interface)
       else
-        Cognizant::Logging.log.info "Starting the UNIX domain server with socket #{@socket}..."
+        Cognizant.log.info "Starting the UNIX domain server with socket #{@socket}..."
         EventMachine.start_unix_domain_server(@socket, Cognizant::Interface)
       end
     end
 
     # Starts the loop that defines the time window for determining and acting upon process states.
     def start_periodic_ticks
-      Cognizant::Logging.log.info "Starting the periodic tick..."
+      Cognizant.log.info "Starting the periodic tick..."
       EventMachine.add_periodic_timer(1) do
         System.reset_data
         @processes.values.map(&:tick)
       end
     end
 
-    def setup_prerequisites
+    def setup_logging
+      # Setup logging.
+      Cognizant::Logging.add_log_adapter(File.open(@logfile, "a"))
+      Cognizant::Logging.add_log_adapter($stdout) unless @daemonize
+      Cognizant.log.level = if @trace then Logger::DEBUG else @loglevel end
+    end
+
+    def setup_directories
       # Create the require directories.
       [File.dirname(@pidfile), File.dirname(@logfile), @pids_dir, @logs_dir, File.dirname(@socket)].each do |directory|
         FileUtils.mkdir_p(directory)
       end
-
-      # Setup logging.
-      Cognizant::Logging.add_log_adapter(File.open(@logfile, "a"))
-      Cognizant::Logging.add_log_adapter($stdout) unless @daemonize
-      Cognizant::Logging.log.level = if @trace then Logger::DEBUG else @loglevel end
     end
 
     def trap_signals
       terminator = Proc.new do
-        Cognizant::Logging.log.info "Received signal to shutdown."
+        Cognizant.log.info "Received signal to shutdown."
         shutdown
       end
 
@@ -221,7 +234,7 @@ module Cognizant
       Signal.trap('QUIT', &terminator)
     end
 
-    def stop_previous_server
+    def stop_previous_daemon
       if @pidfile and File.exists?(@pidfile)
         if previous_daemon_pid = File.read(@pidfile).to_i
           # Only attempt to stop automatically if the daemon will run in background.
@@ -253,10 +266,37 @@ module Cognizant
       end
     end
 
+    def stop_previous_socket
+      # Socket isn't actually owned by anyone.
+      begin
+        sock = UNIXSocket.new(@socket)
+      rescue Errno::ECONNREFUSED
+        # This happens with non-socket files and when the listening
+        # end of a socket has exited.
+      rescue Errno::ENOENT
+        # Socket doesn't exist.
+        return
+      else
+        # Rats, it's still active.
+        sock.close
+        raise Errno::EADDRINUSE.new("Another process (probably another cognizantd) is listening on the Cognizant command socket at #{@socket}. If you'd like to run this cognizantd as well, pass a `-s PATH_TO_SOCKET` to change the command socket location.")
+      end
+
+      # Socket should still exist, so don't need to handle error.
+      stat = File.stat(@socket)
+      unless stat.socket?
+        raise Errno::EADDRINUSE.new("Non-socket file present at Cognizant command socket path #{@socket}. Either remove that file and restart Cognizant, or pass a `-s PATH_TO_SOCKET` to change the command socket location.")
+      end
+
+      Cognizant.log.info("Blowing away old Cognizant command socket at #{@socket}. This likely indicates a previous Cognizant worker which exited uncleanly.")
+      # Whee, blow it away.
+      unlink_socket
+    end
+
     # Daemonize the current process and save it pid in a file.
     def daemonize_process
       if @daemonize
-        Cognizant::Logging.log.info "Daemonizing into the background..."
+        Cognizant.log.info "Daemonizing into the background..."
         ::Process.daemon
       end
     end
@@ -264,15 +304,23 @@ module Cognizant
     def write_pid
       pid = ::Process.pid
       if @pidfile
-        Cognizant::Logging.log.info "Writing the daemon pid (#{pid}) to the pidfile..."
+        Cognizant.log.info "Writing the daemon pid (#{pid}) to the pidfile..."
         File.open(@pidfile, "w") { |f| f.write(pid) }
       end
     end
 
     def unlink_pid
+      unlink_file(@pidfile)
+    end
+
+    def unlink_socket
+      unlink_file(@socket)
+    end
+
+    def unlink_file(path)
       begin
-        File.unlink(@pidfile) if @pidfile
-      rescue Errno::ENOENT
+        File.unlink(path) if path
+      rescue Errno::ENOENT => e
         nil
       end
     end
