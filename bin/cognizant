@@ -1,56 +1,44 @@
 #!/usr/bin/env ruby
 
 require "cognizant/version"
-require "gli"
+require "commander/import"
 require "formatador"
 require "socket"
 require "json"
 
-include GLI::App
+program :version, Cognizant::VERSION
+program :description, "administration utility for cognizantd"
 
-# Set the process name.
-$0 = File.basename(__FILE__)
+# global_option("-c", "--config FILE", String, "Load config data") do |c|
+#   
+# end
 
-# Set to flush standard output/error immediately.
-$stdout.sync = true
-$stderr.sync = true
+global_option("-s", "--socket FILE", String, "The socket lock file of the daemon server (default: /var/run/cognizant/cognizantd.sock)") do |s|
+  
+end
 
-program_desc "administration utility for cognizantd"
-@version = Cognizant::VERSION
+global_option("-b", "--bind-address ADDR", String, "The server address of the daemon server") do |b|
+  
+end
 
-sort_help :manually
+global_option("-p", "--port PORT", Integer, "The server port of the daemon server") do |p|
+  
+end
 
-desc "The socket lock file of the daemon server"
-arg_name "FILE"
-flag [:s, :socket], :type => String, :default_value => "/var/run/cognizant/cognizantd.sock"
+global_option("--username USERNAME", String, "Username to use for authentication with server") do |username|
+  
+end
 
-desc "The server address of the daemon server"
-arg_name "ADDR"
-flag [:b, "bind-address"], :type => String
+global_option("--password", String, "Password to use for authentication with server") do |password|
+  
+end
 
-desc "The server port of the daemon server"
-arg_name "PORT"
-flag [:p, :port], :type => Integer
-
-desc "Username to use for authentication with server"
-arg_name "USERNAME"
-flag :username, :type => String
-
-desc "Password to use for authentication with server"
-arg_name "PASSWORD"
-flag :password, :type => String
-
-desc "Print the version number and exit"
-switch [:v, :version], :negatable => false
-
-desc "Turn on tracing, enabling full backtrace"
-switch [:t, :trace], :negatable => false
-
-desc "Display status of managed process(es) or group(s)"
-arg_name "process_name", :optional
+default_command :status
 command :status do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :status, args) do |output|
+  c.syntax = "cognizant status [process or group name]"
+  c.description = "Display status of managed process(es) or group(s)"
+  c.action do |args, options|
+    connect_and_perform(:status, options, args) do |output|
       begin  
         JSON.parse(output)
 
@@ -72,62 +60,27 @@ command :status do |c|
   end
 end
 
-desc "Loads the process information from specified Ruby file"
-arg_name "file"
-command :load do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :load, args)
-  end
+[
+  [:load,      "FILE",                    "Loads the process information from specified Ruby file"],
+  [:monitor,   "[PROCESS OR GROUP NAME]", "Monitor the specified process or group"],
+  [:unmonitor, "[PROCESS OR GROUP NAME]", "Unmonitor the specified process or group"],
+  [:start,     "[PROCESS OR GROUP NAME]", "Start the specified process or group"],
+  [:stop,      "[PROCESS OR GROUP NAME]", "Stop the specified process or group"],
+  [:restart,   "[PROCESS OR GROUP NAME]", "Restart the specified process or group"],
+  [:shutdown,  "",                        "Stop the monitoring daemon without affecting managed processes"]
+].each do |command, arg_name, description|
+  eval <<-heredoc
+    command "#{command}" do |c|
+      c.syntax = "cognizant #{command} #{arg_name}"
+      c.description = "#{description}"
+      c.action do |args, options|
+        connect_and_perform(:#{command}, options, args)
+      end
+    end
+  heredoc
 end
 
-desc "Monitor the specified process or group"
-arg_name "process_name"
-command :monitor do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :monitor, args)
-  end
-end
-
-desc "Unmonitor the specified process or group"
-arg_name "process_name"
-command :unmonitor do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :unmonitor, args)
-  end
-end
-
-desc "Start the specified process or group"
-arg_name "process_name"
-command :start do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :start, args)
-  end
-end
-
-desc "Stop the specified process or group"
-arg_name "process_name"
-command :stop do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :stop, args)
-  end
-end
-
-desc "Restart the specified process or group"
-arg_name "process_name"
-command :restart do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :restart, args)
-  end
-end
-
-desc "Stop the monitoring daemon without affecting processes"
-command :shutdown do |c|
-  c.action do |global_options, options, args|
-    connect_and_perform(global_options, :shutdown, args)
-  end
-end
-
-def connect_and_perform(global_options, task, args, &block)
+def connect_and_perform(task, options, args, &block)
   output_handler = Proc.new do |socket|
     socket.write("#{task.to_s} #{args.join(' ')}")
     socket.flush
@@ -139,10 +92,12 @@ def connect_and_perform(global_options, task, args, &block)
     end
   end
 
-  if global_options[:socket]
-    output_handler.call(UNIXSocket.new(global_options[:socket]))
+  options.socket ||= "/var/run/cognizant/cognizantd.sock"
+
+  if options.socket
+    output_handler.call(UNIXSocket.new(options.socket))
   else
-    output_handler.call(TCPSocket.new(global_options["bind-address"], global_options["port"]))
+    output_handler.call(TCPSocket.new(options.send("bind-address"), options.port))
   end
 end
 
@@ -175,4 +130,4 @@ def pluralize(count, singular, plural)
   "#{count || 0} " + ((count == 1 || count =~ /^1(\.0+)?$/) ? singular : plural)
 end
 
-exit run(ARGV)
+# exit run(ARGV)

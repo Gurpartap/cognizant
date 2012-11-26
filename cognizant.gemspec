@@ -26,6 +26,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency "activesupport"
 
   # cognizant
-  gem.add_dependency "gli"
+  gem.add_dependency "commander"
   gem.add_dependency "formatador"
 end
