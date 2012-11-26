@@ -119,6 +119,9 @@ module Cognizant
         # When a process changes state, we should clear the memory of all the checks.
         @checks.each { |check| check.clear_history! }
         puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+
+        # Update the pid from pidfile, since the state of process changed, if the process is managing it's own pidfile.
+        read_pid if @pidfile
       end
     end
 
@@ -199,11 +202,11 @@ module Cognizant
     end
 
     def pidfile
-      @pidfile = @pidfile || File.join(Cognizant::Server.daemon.pids_dir, self.name + '.pid')
+      @pidfile || File.join(Cognizant.daemon.pids_dir, self.name + '.pid')
     end
 
     def logfile
-      @logfile = @logfile || File.join(Cognizant.daemon.logs_dir, self.name + '.log')
+      @logfile || File.join(Cognizant.daemon.logs_dir, self.name + '.log')
     end
 
     private
