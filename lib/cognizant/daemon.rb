@@ -146,10 +146,6 @@ module Cognizant
       end
     end
 
-    def log(*args)
-      Cognizant::Logging.log(*args)
-    end
-
     def load(config_file)
       config_file = File.expand_path(config_file)
       Cognizant.log.info "Loading config from #{config_file}..."
