@@ -115,8 +115,8 @@ GLOBAL OPTIONS:
     options = config.merge(options)
   end
 
-  require "cognizant/server"
-  Cognizant::Server.start(options)
+  require "cognizant"
+  Cognizant.start_daemon(options)
 rescue => exception
   if exception.instance_of?(SystemExit)
     raise

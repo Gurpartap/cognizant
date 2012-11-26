@@ -203,7 +203,7 @@ module Cognizant
     end
 
     def logfile
-      @logfile = @logfile || File.join(Cognizant::Server.daemon.logs_dir, self.name + '.log')
+      @logfile = @logfile || File.join(Cognizant.daemon.logs_dir, self.name + '.log')
     end
 
     private
