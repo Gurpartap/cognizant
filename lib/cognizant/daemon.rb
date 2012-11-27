@@ -170,7 +170,7 @@ module Cognizant
         EventMachine.stop
         unlink_pid
         unlink_socket
-        Cognizant.logger.close
+        Cognizant::Logging.logger.close
       end
     end
 

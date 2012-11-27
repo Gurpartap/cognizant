@@ -39,13 +39,13 @@ command :shell do |c|
   c.syntax = "cognizant shell"
   c.description = "Enter the Cognizant shell for easy control"
   c.action do |args, options|
-    Signal.trap("INT") do
-      Cognizant::Shell.emit("\nGoodbye!")
-      exit(0)
-    end
-
-    Cognizant::Shell.new(options.socket, true).run do |output|
-      format_status_table(output)
+    Cognizant::Shell.new(options.socket, true).run do |output, cmd|
+      if cmd == "shutdown"
+        puts "The daemon has been shutdown successfuly."
+        exit(0)
+      else
+        format_status_table(output)
+      end
     end
   end
 end
@@ -66,8 +66,7 @@ end
   [:unmonitor, "[PROCESS OR GROUP NAME]", "Unmonitor the specified process or group"],
   [:start,     "[PROCESS OR GROUP NAME]", "Start the specified process or group"],
   [:stop,      "[PROCESS OR GROUP NAME]", "Stop the specified process or group"],
-  [:restart,   "[PROCESS OR GROUP NAME]", "Restart the specified process or group"],
-  [:shutdown,  "",                        "Stop the monitoring daemon without affecting managed processes"]
+  [:restart,   "[PROCESS OR GROUP NAME]", "Restart the specified process or group"]
 ].each do |command, arg_name, description|
   eval <<-heredoc
     command "#{command}" do |c|
@@ -82,17 +81,31 @@ end
   heredoc
 end
 
-def format_status_table(status_data)
-  status_data.each_with_index do |process, index|
-    status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
-    status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
+command "shutdown" do |c|
+  c.syntax = "cognizant shutdown"
+  c.description = "Stop the monitoring daemon without affecting managed processes"
+  c.action do |args, options|
+    connect_and_perform(:shutdown, options, args) do |output|
+      # 
+    end
   end
+end
 
-  formatador = Formatador.new
-  formatador.display_line
-  formatador.display_table(status_data, ["Process", "Group", "State", "PID", "% CPU", "Memory"])
-  formatador.display_line(Time.now)
-  formatador.display_line
+def format_status_table(status_data)
+  if status_data.is_a?(Array)
+    status_data.each_with_index do |process, index|
+      status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
+      status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
+    end
+
+    formatador = Formatador.new
+    formatador.display_line
+    formatador.display_table(status_data, ["Process", "Group", "State", "PID", "% CPU", "Memory"])
+    formatador.display_line(Time.now)
+    formatador.display_line
+  elsif status_data.is_a?(Hash)
+    puts status_data['message']
+  end
 rescue => e
   Formatador.display_line("[red]#{status_data}[/]")
 end

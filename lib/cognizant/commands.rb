@@ -79,7 +79,7 @@ EOF
     # Used by cognizant shell.
     command 'ehlo' do |conn, request|
       <<EOF
-Welcome #{request['user']}! You are speaking to Cognizant Master Process.
+Welcome #{request['user']}! You are speaking to the Cognizant Monitoring Daemon.
 EOF
     end
 
@@ -181,7 +181,7 @@ EOF
       end
     end
 
-    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do
+    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
       Cognizant::Daemon.shutdown
     end
   end

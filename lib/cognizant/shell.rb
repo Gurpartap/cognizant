@@ -11,10 +11,15 @@ module Cognizant
     def initialize(path_to_socket, is_shell = true)
       @path_to_socket = path_to_socket || "/var/run/cognizant/cognizantd.sock"
       @@is_shell = is_shell
-      reconnect
+      connect
     end
 
     def run(&block)
+      Signal.trap("INT") do
+        Cognizant::Shell.emit("\nGoodbye!")
+        exit(0)
+      end
+
       emit("Enter 'help' if you're not sure what to do.")
       emit
       emit('Type "quit" or "exit" to quit at any time')
@@ -33,23 +38,15 @@ module Cognizant
 
     def run_command(command, args, &block)
       command = command.to_s
-      attempts = 0
       begin
         response = @client.command({'command' => command, 'args' => args})
       rescue Errno::EPIPE => e
-        if attempts <= 3
-          attempts += 1
-          emit("cognizant: Error communicating with cognizantd: #{e} (#{e.class})")
-          emit("cognizant: Attempting to reconnect (attempt #{tries})...")
-          reconnect
-          retry
-        else
-          exit(1)
-        end
+        emit("cognizant: Error communicating with cognizantd: #{e} (#{e.class})")
+        exit(1)
       end
 
       if block
-        block.call(response)
+        block.call(response, command)
       elsif response.kind_of?(Hash)
         puts response['message']
       else
@@ -62,7 +59,7 @@ module Cognizant
       [command, args]
     end
 
-    def reconnect
+    def connect
       begin
         @client = Cognizant::Client.for_path(@path_to_socket)
       rescue Errno::ENOENT => e

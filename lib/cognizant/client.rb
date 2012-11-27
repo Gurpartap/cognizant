@@ -30,7 +30,7 @@ module Cognizant
       end
     end
 
-    @@responseless_commands = Set.new([:shutdown])
+    @@responseless_commands = ["shutdown"]
 
     def self.for_path(path_to_socket)
       socket = UNIXSocket.open(path_to_socket)
