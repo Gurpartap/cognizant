@@ -8,40 +8,49 @@ require "cognizant/client"
 
 module Cognizant
   class Shell
-    def initialize(path_to_socket, is_interactive = true)
+    def initialize(path_to_socket, is_shell = true)
       @path_to_socket = path_to_socket || "/var/run/cognizant/cognizantd.sock"
-      @is_interactive = is_interactive
+      @@is_shell = is_shell
       reconnect
     end
 
-    def run
+    def run(&block)
       emit("Enter 'help' if you're not sure what to do.")
       emit
       emit('Type "quit" or "exit" to quit at any time')
 
       while line = Readline.readline('> ', true)
-        command, args = parse_command(line)
-        if ['quit', 'exit'].include?(command)
-          emit("Goodbye!")
-          return
+        if line.strip.to_s.size > 0
+          command, args = parse_command(line)
+          if ['quit', 'exit'].include?(command)
+            emit("Goodbye!")
+            return
+          end
+          run_command(command, args, &block)
         end
-        run_command(command, args)
       end
     end
 
-    def run_command(command, args)
+    def run_command(command, args, &block)
       command = command.to_s
+      attempts = 0
       begin
         response = @client.command({'command' => command, 'args' => args})
       rescue Errno::EPIPE => e
-        emit("cognizant: Error communicating with cognizantd: #{e} (#{e.class})")
-        emit("cognizant: Attempting to reconnect...")
-        reconnect
-
-        retry
+        if attempts <= 3
+          attempts += 1
+          emit("cognizant: Error communicating with cognizantd: #{e} (#{e.class})")
+          emit("cognizant: Attempting to reconnect (attempt #{tries})...")
+          reconnect
+          retry
+        else
+          exit(1)
+        end
       end
 
-      if response.kind_of?(Hash)
+      if block
+        block.call(response)
+      elsif response.kind_of?(Hash)
         puts response['message']
       else
         puts "Invalid response type #{response.class}: #{response.inspect}"
@@ -81,7 +90,7 @@ EOF
     end
 
     def self.interactive?
-      $stdin.isatty and @is_interactive
+      $stdin.isatty and @@is_shell
     end
 
     def emit(*args)

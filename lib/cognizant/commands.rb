@@ -118,7 +118,10 @@ EOF
     end
 
     command("status", "Display status of managed process(es) or group(s)") do |connection, request|
-      args = request["args"]
+      format_process_or_group_status(request["args"])
+    end
+
+    def self.format_process_or_group_status(args)
       output_processes = []
       if args.size > 0
         Cognizant::Daemon.processes.values.each do |process|
@@ -174,7 +177,7 @@ EOF
             process.handle_user_command(name)
           end
         end
-        "Done."
+        format_process_or_group_status(args)
       end
     end
 

@@ -44,7 +44,9 @@ command :shell do |c|
       exit(0)
     end
 
-    Cognizant::Shell.new(options.socket).run
+    Cognizant::Shell.new(options.socket, true).run do |output|
+      format_status_table(output)
+    end
   end
 end
 
@@ -53,21 +55,7 @@ command :status do |c|
   c.description = "Display status of managed process(es) or group(s)"
   c.action do |args, options|
     connect_and_perform(:status, options, args) do |output|
-      begin
-        status_data = Cognizant::Client::Transport.deserialize_message(output)
-        status_data.each_with_index do |process, index|
-          status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
-          status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
-        end
-
-        formatador = Formatador.new
-        formatador.display_line
-        formatador.display_table(status_data, ["Process", "Group", "State", "PID", "% CPU", "Memory"])
-        formatador.display_line(Time.now)
-        formatador.display_line
-      rescue => e
-        Formatador.display_line("[red]#{output}[/]")
-      end
+      format_status_table(output)
     end
   end
 end
@@ -86,38 +74,31 @@ end
       c.syntax = "cognizant #{command} #{arg_name}"
       c.description = "#{description}"
       c.action do |args, options|
-        connect_and_perform(:#{command}, options, args)
+        connect_and_perform(:#{command}, options, args) do |output|
+          format_status_table(output)
+        end
       end
     end
   heredoc
 end
 
-def connect_and_perform(task, options, args, &block)
-  Cognizant::Shell.new(options.socket, false).run_command(task, args)
-  return
-  
-  output_handler = Proc.new do |socket|
-    command, args = parse_command("#{task.to_s} #{args.join(' ')}")
-    socket.write(Cognizant::Client::Transport.deserialize_message({'command' => command, 'args' => args}))
-    socket.flush
-    output = socket.gets
-    if block
-      block.call(output)
-    else
-      Formatador.display_line(output)
-    end
+def format_status_table(status_data)
+  status_data.each_with_index do |process, index|
+    status_data[index]["State"]  = "[green]#{process["State"]}[/] since #{distance_of_time_in_words(Time.now.to_i - process["Since"])}"
+    status_data[index]["Memory"] = number_to_human_size(process["Memory"] * 1024) # Convert kilobytes to bytes.
   end
 
-  if options.socket
-    output_handler.call(UNIXSocket.new(options.socket))
-  else
-    output_handler.call(TCPSocket.new(options.send("bind-address"), options.port))
-  end
+  formatador = Formatador.new
+  formatador.display_line
+  formatador.display_table(status_data, ["Process", "Group", "State", "PID", "% CPU", "Memory"])
+  formatador.display_line(Time.now)
+  formatador.display_line
+rescue => e
+  Formatador.display_line("[red]#{status_data}[/]")
 end
 
-def parse_command(line)
-  command, *args = Shellwords.shellsplit(line)
-  [command, args]
+def connect_and_perform(task, options, args, &block)
+  Cognizant::Shell.new(options.socket, false).run_command(task, args, &block)
 end
 
 def distance_of_time_in_words(seconds)
