@@ -91,8 +91,10 @@ EOF
     end
 
     command("load", "Loads the process information from specified Ruby file") do |connection, request|
-      Cognizant::Daemon.load(request["file"]) if request["file"]
-      nil
+      request["args"].each do |file|
+        Cognizant::Daemon.load(file)
+      end
+      format_process_or_group_status
     end
 
     command('help', 'Print out available commands') do
@@ -121,7 +123,7 @@ EOF
       format_process_or_group_status(request["args"])
     end
 
-    def self.format_process_or_group_status(args)
+    def self.format_process_or_group_status(args = [])
       output_processes = []
       if args.size > 0
         Cognizant::Daemon.processes.values.each do |process|
