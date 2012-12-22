@@ -9,6 +9,7 @@ require "cognizant/process/execution"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
 require "cognizant/process/condition_check"
+require "cognizant/process/dsl_proxy"
 require "cognizant/util/symbolize_hash_keys"
 
 module Cognizant
@@ -78,7 +79,7 @@ module Cognizant
       after_transition  any => any, :do => :record_transition
     end
 
-    def initialize(process_name = nil, options = {})
+    def initialize(process_name = nil, attributes = {}, &block)
       @ticks_to_skip = 0
       @checks = []
       @triggers = []
@@ -87,21 +88,32 @@ module Cognizant
       self.name = process_name.to_s if process_name
       self.autostart = true # Default.
 
-      if options.has_key?(:checks) and options[:checks].kind_of?(Hash)
-        options[:checks].each do |condition_name, args|
-          self.check(condition_name, args)
+      set_attributes(attributes)
+
+      if block
+        if block.arity == 0
+          dsl_proxy = Cognizant::Process::DSLProxy.new(self, &block)
+          set_attributes(dsl_proxy.attributes)
+        else
+          instance_exec(self, &block)
         end
       end
-      options.delete(:checks)
-
-      options.each do |attribute_name, value|
-        self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
-      end
-
-      yield(self) if block_given?
 
       # Let state_machine initialize as well.
       super
+    end
+
+    def set_attributes(attributes)
+      if attributes.has_key?(:checks) and attributes[:checks].kind_of?(Hash)
+        attributes[:checks].each do |condition_name, args, &block|
+          self.check(condition_name, args, &block)
+        end
+      end
+      attributes.delete(:checks)
+
+      attributes.each do |attribute_name, value|
+        self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
+      end
     end
 
     def tick
