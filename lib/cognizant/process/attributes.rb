@@ -76,6 +76,14 @@ module Cognizant
       # The command that returns the pid of the process.
       # @return [String] Defaults to nil
       attr_accessor :pid_command
+
+      def daemonize!
+        @daemonize = true
+      end
+
+      def autostart!
+        @autostart = true
+      end
     end
   end
 end
