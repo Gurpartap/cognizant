@@ -113,14 +113,18 @@ module Cognizant
       end
       attributes.delete(:checks)
 
+      if attributes.has_key?(:monitor_children) and attributes[:monitor_children].kind_of?(Hash)
+        monitor_children(attributes[:monitor_children])
+      end
+
       attributes.each do |attribute_name, value|
         self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end
     end
 
-    def monitor_children(&child_process_block)
+    def monitor_children(child_process_attributes = {}, &child_process_block)
       @monitor_children = true
-      @child_process_block = child_process_block
+      @child_process_attributes, @child_process_block = child_process_attributes, child_process_block
     end
 
     def tick
@@ -277,7 +281,7 @@ module Cognizant
       # Construct a new process wrapper for each new found children.
       new_children_pids.each do |child_pid|
         name = "<child(pid:#{child_pid})>"
-        attributes = { autostart: false } # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
+        attributes = @child_process_attributes.merge({ autostart: false }) # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
 
         child = Cognizant::Process.new(name, attributes, &@child_process_block)
         child.write_pid(child_pid)
