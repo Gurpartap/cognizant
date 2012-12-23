@@ -77,10 +77,15 @@ EOF
     end
 
     # Used by cognizant shell.
-    command 'ehlo' do |conn, request|
+    command '_ehlo' do |conn, request|
       <<EOF
 Welcome #{request['user']}! You are speaking to the Cognizant Monitoring Daemon.
 EOF
+    end
+
+    # Used by cognizant shell.
+    command '_autocomplete_keywords' do |conn, request|
+      @@commands.keys.reject { |c| c =~ /^\_.+/ } + Cognizant::Daemon.processes.keys
     end
 
     command 'help', 'Print out available commands' do
@@ -104,20 +109,20 @@ EOF
 "
     end
 
-    command('reload', 'Reload Cognizant') do |connection, _|
-      # TODO: make reload actually work (command socket reopening is
-      # an issue). Would also be nice if user got a confirmation that
-      # the reload completed, though that's not strictly necessary.
-
-      # In the normal case, this will do a write
-      # synchronously. Otherwise, the bytes will be stuck into the
-      # buffer and lost upon reload.
-      send_message(connection, 'Reloading, as commanded')
-      Cognizant.reload
-
-      # Reload should not return
-      raise "Not reachable"
-    end
+    # command('reload', 'Reload Cognizant') do |connection, _|
+    #   # TODO: make reload actually work (command socket reopening is
+    #   # an issue). Would also be nice if user got a confirmation that
+    #   # the reload completed, though that's not strictly necessary.
+    # 
+    #   # In the normal case, this will do a write
+    #   # synchronously. Otherwise, the bytes will be stuck into the
+    #   # buffer and lost upon reload.
+    #   send_message(connection, 'Reloading, as commanded')
+    #   Cognizant.reload
+    # 
+    #   # Reload should not return
+    #   raise "Not reachable"
+    # end
 
     command("status", "Display status of managed process(es) or group(s)") do |connection, request|
       format_process_or_group_status(request["args"])

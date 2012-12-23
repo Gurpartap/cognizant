@@ -11,6 +11,7 @@ module Cognizant
     def initialize(path_to_socket, is_shell = true)
       @path_to_socket = path_to_socket || "/var/run/cognizant/cognizantd.sock"
       @@is_shell = is_shell
+      @autocomplete_keywords = []
       connect
     end
 
@@ -23,6 +24,19 @@ module Cognizant
       emit("Enter 'help' if you're not sure what to do.")
       emit
       emit('Type "quit" or "exit" to quit at any time')
+
+      comp = proc { |input|
+        case input
+        when /^\//
+          Readline.completion_append_character = "/"
+          Dir[input + '*'].grep(/^#{Regexp.escape(input)}/)
+        else
+          Readline.completion_append_character = " "
+          @autocomplete_keywords.grep(/^#{Regexp.escape(input)}/)
+        end
+      }
+      Readline.completion_append_character = " "
+      Readline.completion_proc = comp
 
       while line = Readline.readline('> ', true)
         if line.strip.to_s.size > 0
@@ -75,11 +89,16 @@ EOF
         exit(1)
       end
       ehlo if interactive?
+      fetch_autocomplete_keywords
     end
 
     def ehlo
-      response = @client.command('command' => 'ehlo', 'user' => ENV['USER'])
+      response = @client.command('command' => '_ehlo', 'user' => ENV['USER'])
       emit(response['message'])
+    end
+
+    def fetch_autocomplete_keywords
+      @autocomplete_keywords = @client.command('command' => '_autocomplete_keywords')
     end
 
     def self.emit(message = nil, force = false)
