@@ -26,6 +26,10 @@ module Cognizant
       def check(condition_name, options, &block)
         @process.check(condition_name, options, &block)
       end
+
+      def monitor_children(&child_process_block)
+        @process.monitor_children(&child_process_block)
+      end
     end
   end
 end

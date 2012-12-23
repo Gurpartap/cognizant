@@ -83,10 +83,12 @@ module Cognizant
       @ticks_to_skip = 0
       @checks = []
       @triggers = []
+      @children = []
       @action_mutex = Monitor.new
+      @monitor_children =  false
+      @autostart = true
       
-      self.name = process_name.to_s if process_name
-      self.autostart = true # Default.
+      @name = process_name.to_s if process_name
 
       set_attributes(attributes)
 
@@ -116,6 +118,11 @@ module Cognizant
       end
     end
 
+    def monitor_children(&child_process_block)
+      @monitor_children = true
+      @child_process_block = child_process_block
+    end
+
     def tick
       return if skip_tick?
       @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
@@ -123,7 +130,14 @@ module Cognizant
       # Invoke the state_machine event.
       super
 
-      self.run_checks if self.running?
+      if self.running?
+        self.run_checks
+
+        if @monitor_children
+          refresh_children!
+          @children.each(&:tick)
+        end
+      end
     end
 
     def record_transition(transition)
@@ -134,6 +148,11 @@ module Cognizant
         # When a process changes state, we should clear the memory of all the checks.
         @checks.each { |check| check.clear_history! }
         puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+
+        # And we should re-populate its child list.
+        if @monitor_children
+          @children.clear
+        end
 
         # Update the pid from pidfile, since the state of process changed, if the process is managing it's own pidfile.
         read_pid if @pidfile
@@ -204,7 +223,7 @@ module Cognizant
         # Do not assume change when we're giving time to an execution by skipping ticks.
         if @ticks_to_skip > 0
           @process_running
-        elsif self.ping_command and run(self.ping_command).succeeded?
+        elsif @ping_command and run(@ping_command).succeeded?
           true
         elsif pid_running?
           true
@@ -215,11 +234,11 @@ module Cognizant
     end
 
     def pidfile
-      @pidfile || File.join(Cognizant::Daemon.pids_dir, self.name + '.pid')
+      @pidfile || File.join(Cognizant::Daemon.pids_dir, @name + '.pid')
     end
 
     def logfile
-      @logfile || File.join(Cognizant::Daemon.logs_dir, self.name + '.log')
+      @logfile || File.join(Cognizant::Daemon.logs_dir, @name + '.log')
     end
 
     private
@@ -240,6 +259,31 @@ module Cognizant
         options[attribute] = self.send(attribute)
       end
       execute(command, options.merge(action_overrides))
+    end
+
+    def refresh_children!
+      # First prune the list of dead children.
+      @children.delete_if do |child|
+        !child.process_running?
+      end
+
+      # Add new found children to the list.
+      new_children_pids = Cognizant::System.get_children(@process_pid) - @children.map { |child| child.cached_pid }
+
+      unless new_children_pids.empty?
+        Cognizant.log.info "Existing children: #{@children.collect{ |c| c.cached_pid }.join(",")}. Got new children: #{new_children_pids.inspect} for #{@process_pid}."
+      end
+
+      # Construct a new process wrapper for each new found children.
+      new_children_pids.each do |child_pid|
+        name = "<child(pid:#{child_pid})>"
+        attributes = { autostart: false } # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
+
+        child = Cognizant::Process.new(name, attributes, &@child_process_block)
+        child.write_pid(child_pid)
+        @children << child
+        child.monitor
+      end
     end
   end
 end
