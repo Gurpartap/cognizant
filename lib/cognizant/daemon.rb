@@ -144,6 +144,7 @@ module Cognizant
         start_periodic_ticks
         daemonize_process
         write_pid
+        Cognizant.log.info "Cognizant Daemon running successfully. Loading processes from configuration..."
         load_processes(@processes_to_load) and @processes_to_load = nil
       end
     end
