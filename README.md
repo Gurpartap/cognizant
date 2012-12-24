@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant)
+
 # Cognizant: system utility to supervise your processes
 
 Let us say that you have a program that is critical for your application. Any
