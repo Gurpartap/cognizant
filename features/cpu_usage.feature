@@ -28,6 +28,8 @@ Feature: CPU Usage Condition
   @daemon
   @shell
   Scenario: Check CPU usage of a process that consumes a lot of CPU
+    Given the daemon is started
+
     When I run "load monitor.rb" successfully in the shell
     Then the status of "consume_cpu" should be "stopped"
 

@@ -9,7 +9,7 @@ end
 When /^I (?:should )?see "([^"]*)" on the daemon terminal$/ do |string|
   output = ""
 
-  Timeout::timeout(10) do
+  Timeout::timeout(30) do
     while not output =~ /#{string}/
       output += @daemon_pipe.gets
     end

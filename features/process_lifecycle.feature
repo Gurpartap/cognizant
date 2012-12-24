@@ -16,30 +16,34 @@ Feature: Process Lifecycle
   @daemon
   @shell
   Scenario: Run all maintenance commands for a sample sleep process
-    Given I run "load sleep_process.rb" successfully in the shell
-    And the status of "sleep_process" is "stopped"
-    
+    Given the daemon is started
+
+    When I run "load sleep_process.rb" successfully in the shell
+    Then the status of "sleep_process" is "stopped"
+
     When I run "start sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "running"
-    
+
     When I run "stop sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
-    
+
     When I run "restart sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "running"
-    
+
     When I run "unmonitor sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "unmonitored"
-    
+
     When I run "monitor sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "running"
-    
+
     When I run "stop sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
 
   @daemon
   @shell
   Scenario: Shut down the daemon via command
+    Given the daemon is started
+
     When I run "shutdown" in the shell
     Then I should see "The daemon has been shutdown successfuly." in the shell
     And a process named "cognizantd" should not be running

@@ -16,6 +16,8 @@ Feature: Flapping Check
   @daemon
   @shell
   Scenario: Check flapping of for a process that restarts every 3 seconds
+    Given the daemon is started
+
     When I run "load monitor.rb" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
 
