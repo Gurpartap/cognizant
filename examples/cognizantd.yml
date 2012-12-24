@@ -38,6 +38,7 @@ monitor: {
     stop_command: redis-cli -p 7777 SHUTDOWN
   },
   sleep: {
+    autostart: false,
     start_command: sleep 3,
     checks: {
       flapping: {
