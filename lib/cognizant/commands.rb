@@ -99,7 +99,8 @@ EOF
       request["args"].each do |file|
         Cognizant::Daemon.load(file)
       end
-      format_process_or_group_status
+      # format_process_or_group_status
+      "OK"
     end
 
     command('help', 'Print out available commands') do
@@ -184,7 +185,8 @@ EOF
             process.handle_user_command(name)
           end
         end
-        format_process_or_group_status(args)
+        # format_process_or_group_status(args)
+        "OK"
       end
     end
 
