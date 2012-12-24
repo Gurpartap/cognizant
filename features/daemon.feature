@@ -5,8 +5,8 @@ Feature: Daemon
 
   @daemon
   Scenario: Start and stop the daemon
-    When a process named "cognizantd" is running
-    Then I should see "Cognizant Daemon running successfully." on the daemon terminal
+    When the daemon is started
+    Then a process named "cognizantd" should be running
 
     When the daemon is stopped
     Then a process named "cognizantd" should not be running

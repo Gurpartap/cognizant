@@ -29,7 +29,7 @@ When /^the status of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |name, status|
   output.should include(status)
 end
 
-When /^I (?:should|) see "([^"]*)" in the shell$/ do |string|
+When /^I (?:should )?see "([^"]*)" in the shell$/ do |string|
   sleep 0.5
   output = ""
 

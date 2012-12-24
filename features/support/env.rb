@@ -3,11 +3,7 @@ require "aruba/api"
 require "open3"
 require "fileutils"
 
-##################
-### cognizantd ###
-##################
-
-Before("@daemon") do
+Before "@daemon" do
   in_current_dir do
     FileUtils.mkdir("cognizant")
     File.open("cognizantd.yml", "w") do |f|
@@ -31,17 +27,13 @@ Before("@daemon") do
   end
 end
 
-After("@daemon") do
+After "@daemon" do
   ::Process.kill("TERM", @daemon_pipe.pid)
   sleep 0.5
   ::Process.kill("KILL", @daemon_pipe.pid)
 end
 
-#################
-### cognizant ###
-#################
-
-Before '@shell' do
+Before "@shell" do
   in_current_dir do
     cmd = "cognizant shell --socket ./cognizant/cognizantd.sock"
 
@@ -54,7 +46,7 @@ Before '@shell' do
   end
 end
 
-After("@shell") do
+After "@shell" do
   ::Process.kill("TERM", @shell_pipe.pid)
   sleep 0.5
   ::Process.kill("KILL", @shell_pipe.pid)
