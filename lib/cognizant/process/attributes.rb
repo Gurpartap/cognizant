@@ -2,6 +2,7 @@ module Cognizant
   class Process
     module Attributes
       # Unique name for the process.
+      # Note: For child processes, this value is set automatically.
       # @return [String]
       attr_accessor :name
 
@@ -18,6 +19,7 @@ module Cognizant
 
       # Whether or not to auto start the process on initial run. Afterwards,
       # this attribute is overwritten by stop or restart request.
+      # Note: For child processes, this value is automatically set to false.
       # @return [true, false] Defaults to true
       attr_accessor :autostart
 
