@@ -1,5 +1,12 @@
 #!/usr/bin/env ruby
 
+# Set the process name.
+$0 = File.basename(__FILE__)
+
+# Flush standard output/error immediately.
+$stdout.sync = true
+$stderr.sync = true
+
 require "cognizant/shell"
 require "commander/import"
 require "formatador"
