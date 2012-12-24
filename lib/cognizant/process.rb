@@ -281,9 +281,9 @@ module Cognizant
       # Construct a new process wrapper for each new found children.
       new_children_pids.each do |child_pid|
         name = "<child(pid:#{child_pid})>"
-        attributes = @child_process_attributes.merge({ autostart: false }) # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
+        attributes = @child_process_attributes.merge({ name: name, autostart: false }) # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
 
-        child = Cognizant::Process.new(name, attributes, &@child_process_block)
+        child = Cognizant::Process.new(nil, attributes, &@child_process_block)
         child.write_pid(child_pid)
         @children << child
         child.monitor
