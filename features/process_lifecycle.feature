@@ -16,7 +16,8 @@ Feature: Process Lifecycle
   @daemon
   @shell
   Scenario: Run all maintenance commands for a sample sleep process
-    Given the daemon is started
+    Given the daemon is running
+    And the shell is running
 
     When I run "load sleep_process.rb" successfully in the shell
     Then the status of "sleep_process" is "stopped"
@@ -42,7 +43,8 @@ Feature: Process Lifecycle
   @daemon
   @shell
   Scenario: Shut down the daemon via command
-    Given the daemon is started
+    Given the daemon is running
+    And the shell is running
 
     When I run "shutdown" in the shell
     Then I should see "The daemon has been shutdown successfuly." in the shell

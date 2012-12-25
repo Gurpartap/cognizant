@@ -28,7 +28,8 @@ Feature: Memory Usage Condition
   @daemon
   @shell
   Scenario: Check memory usage of a process that consumes a lot of memory
-    Given the daemon is started
+    Given the daemon is running
+    And the shell is running
 
     When I run "load monitor.rb" successfully in the shell
     Then the status of "consume_memory" should be "stopped"

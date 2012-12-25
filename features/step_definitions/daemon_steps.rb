@@ -1,4 +1,4 @@
-When /^the daemon is started$/ do
+When /^the daemon is running$/ do
   step %Q{I see "Cognizant Daemon running successfully." on the daemon terminal}
 end
 

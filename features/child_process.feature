@@ -46,7 +46,8 @@ Feature: Child Process
   @daemon
   @shell
   Scenario: Check child process memory usage
-    Given the daemon is started
+    Given the daemon is running
+    And the shell is running
 
     When I run "load monitor.rb" successfully in the shell
     Then the status of "fork_machine" should be "stopped"

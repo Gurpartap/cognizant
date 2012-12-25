@@ -5,7 +5,7 @@ Feature: Daemon
 
   @daemon
   Scenario: Start and stop the daemon
-    When the daemon is started
+    When the daemon is running
     Then a process named "cognizantd" should be running
 
     When the daemon is stopped

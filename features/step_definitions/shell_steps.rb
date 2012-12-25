@@ -1,3 +1,7 @@
+When /^the shell is running$/ do
+  step %Q{I see "You are speaking to the Cognizant Monitoring Daemon." in the shell}
+end
+
 When /^I run "([^"]*)" in the shell$/ do |string|
   @shell_pipe.puts(string)
   sleep 0.5
