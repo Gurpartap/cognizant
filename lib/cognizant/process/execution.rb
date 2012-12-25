@@ -52,6 +52,7 @@ module Cognizant
 
           # TODO: Run popen as spawned process before privileges are dropped for increased abilities?
           stdin_data = options[:input] if options[:input]
+          # TODO: gets would only get one line.
           stdin_data = IO.popen(options[:input_command]).gets if options[:input_command]
 
           if stdin_data

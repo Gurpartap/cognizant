@@ -22,7 +22,7 @@ When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |_, name, statu
       time_spent += time_step
       @shell_pipe.puts("status #{name}")
       while not output =~ /\s#{status}\s/
-        buffer = @shell_pipe.gets
+        buffer = @shell_pipe.readpartial(1)
         output += buffer if buffer
       end
     end
@@ -37,11 +37,15 @@ When /^I (?:should )?see "([^"]*)" in the shell$/ do |string|
   sleep 0.5
   output = ""
 
-  Timeout::timeout(30) do
-    while not output =~ /#{string}/
-      buffer = @shell_pipe.gets
-      output += buffer if buffer
+  begin
+    Timeout::timeout(30) do
+      while not output =~ /#{string}/
+        buffer = @shell_pipe.readpartial(1)
+        output += buffer if buffer
+      end
     end
+  rescue Timeout::Error
+    nil
   end
 
   output.should include(string)

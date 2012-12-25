@@ -9,10 +9,14 @@ end
 When /^I (?:should )?see "([^"]*)" on the daemon terminal$/ do |string|
   output = ""
 
-  Timeout::timeout(30) do
-    while not output =~ /#{string}/
-      output += @daemon_pipe.gets
+  begin
+    Timeout::timeout(30) do
+      while not output =~ /#{string}/
+        output += @daemon_pipe.readpartial(1)
+      end
     end
+  rescue Timeout::Error
+    nil
   end
 
   output.should include(string)
