@@ -21,7 +21,7 @@ Feature: Child Process
         data = ''
         Timeout::timeout(60) do
           loop do
-            data *= 1024
+            data += '*' * 100
           end
         end
         data = nil
@@ -37,7 +37,7 @@ Feature: Child Process
         daemonize!
         stop_signals ['TERM']
         monitor_children do
-          check :memory_usage, :every => 2.seconds, :above => 50.megabytes, :times => 3, :do => :stop
+          check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => 3, :do => :stop
           stop_signals ['INT']
         end
       end
