@@ -15,7 +15,7 @@ When /^I (?:should )?see "([^"]*)" on the daemon terminal$/ do |string|
         output += @daemon_pipe.readpartial(1)
       end
     end
-  rescue Timeout::Error
+  rescue Timeout::Error, EOFError
     nil
   end
 

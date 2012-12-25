@@ -26,7 +26,7 @@ When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |_, name, statu
         output += buffer if buffer
       end
     end
-  rescue Timeout::Error => e
+  rescue Timeout::Error, EOFError
     retry unless time_spent > timeout
   end
 
@@ -44,7 +44,7 @@ When /^I (?:should )?see "([^"]*)" in the shell$/ do |string|
         output += buffer if buffer
       end
     end
-  rescue Timeout::Error
+  rescue Timeout::Error, EOFError
     nil
   end
 
