@@ -42,7 +42,7 @@ Before "@shell" do
     announcer.cmd(cmd)
 
     @shell_pipe = IO.popen(cmd, "w+")
-    sleep 0.5
+    sleep 1
   end
 end
 
