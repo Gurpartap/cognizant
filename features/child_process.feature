@@ -21,7 +21,7 @@ Feature: Child Process
         data = ''
         Timeout::timeout(60) do
           loop do
-            data += '*' * 1024
+            data *= 1024
           end
         end
         data = nil
