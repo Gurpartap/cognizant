@@ -6,9 +6,9 @@ When /^I run (cognizant) `([^`]*)`$/ do |_, cmd|
 end
 
 When /^a process named "([^"]*)" (?:should be|is) running$/ do |name|
-  `ps -eo comm | grep ^#{name}`.size.should > 0
+  `ps -eo command | grep ^#{name}`.size.should > 0
 end
 
 When /^a process named "([^"]*)" (?:should not be|is not) running$/ do |name|
-  `ps -eo comm | grep ^#{name}`.size.should == 0
+  `ps -eo command | grep ^#{name}`.size.should == 0
 end
