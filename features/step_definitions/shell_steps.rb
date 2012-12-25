@@ -8,7 +8,7 @@ When /^I run "([^"]*)" successfully in the shell$/ do |cmd|
   step %Q{I should see "OK" in the shell}
 end
 
-When /^the status of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |name, status|
+When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |_, name, status|
   output = ""
   time_step = 0.5
   time_spent = 0

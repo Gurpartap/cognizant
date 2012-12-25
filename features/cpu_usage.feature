@@ -8,9 +8,9 @@ Feature: CPU Usage Condition
       require 'timeout'
       $0 = File.basename(__FILE__) # Useful identification when debugging.
       data = ''
-      Timeout::timeout(30) do
+      Timeout::timeout(60) do
         loop do
-          data = '0' * 102400
+          data += '*' * 100
         end
       end
       data = nil

@@ -8,9 +8,9 @@ Feature: Memory Usage Condition
       require 'timeout'
       $0 = File.basename(__FILE__) # Useful identification when debugging.
       data = ''
-      Timeout::timeout(30) do
+      Timeout::timeout(60) do
         loop do
-          data = '0' * 102400
+          data += '*' * 100
         end
       end
       data = nil
@@ -21,7 +21,7 @@ Feature: Memory Usage Condition
         name 'consume_memory'
         start_command 'ruby ./consume_memory.rb'
         autostart false
-        check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => [2, 3], :do => :stop
+        check :memory_usage, :every => 2.seconds, :above => 50.megabytes, :times => [2, 3], :do => :stop
       end
       """
 
