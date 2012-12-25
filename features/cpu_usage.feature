@@ -10,7 +10,7 @@ Feature: CPU Usage Condition
       data = ''
       Timeout::timeout(60) do
         loop do
-          data += '*' * 100
+          data += '*' * 1024
         end
       end
       data = nil
