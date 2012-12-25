@@ -5,14 +5,18 @@ module Cognizant
     module Conditions
       class CpuUsage < PollCondition
         def initialize(options = {})
+          # Accept a custom argument for condition. e.g. threshold.
           @above = options[:above].to_f
         end
 
         def run(pid)
+          # Check for current value for the given process pid.
           Cognizant::System.cpu_usage(pid).to_f
         end
 
         def check(value)
+          # Evaluate the value with threshold.
+          # The result of this decides condition invoking.
           value > @above
         end
       end

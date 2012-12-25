@@ -15,7 +15,7 @@
       #{slaveof}
     heredoc
 
-    # process.check :always_true, :every => 2.seconds, :times => 3 do |p|
+    # process.check(:always_true, :every => 2.seconds, :times => 3) do |p|
     #   `say "Boom!"`
     # end
 
