@@ -102,7 +102,7 @@ module Cognizant
       end
 
       # Let state_machine initialize as well.
-      super
+      initialize_state_machines
     end
 
     def set_attributes(attributes)
