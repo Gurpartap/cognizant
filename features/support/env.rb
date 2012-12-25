@@ -23,7 +23,7 @@ Before "@daemon" do
     announcer.cmd(cmd)
 
     @daemon_pipe = IO.popen(cmd, "r")
-    sleep 0.5
+    sleep 1
   end
 end
 
