@@ -299,8 +299,10 @@ workflow:
 ## Compatibility
 
 Cognizant was developed and tested under MRI Ruby 1.9.2-p290 and 1.9.3p194.
-Tests pass on current ruby 2.0.0dev (2012-12-01 trunk 38126) as well. Cognizant
-is incompatible with Ruby 1.8 and all its variants.
+Tests pass on current Ruby 2.0.0-dev as well as Rubinius 2.0.0-dev in 1.9 mode.
+JRuby is currently unsupported.
+
+Cognizant is incompatible with Ruby 1.8.
 
 ## Similar programs
 
