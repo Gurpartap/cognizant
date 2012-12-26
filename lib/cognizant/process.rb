@@ -128,8 +128,8 @@ module Cognizant
       # Invoke the state_machine event.
       super
 
-      if self.running?
-        self.run_conditions
+      if running?
+        run_conditions
 
         if @monitor_children
           refresh_children!
@@ -206,7 +206,7 @@ module Cognizant
     def set_attributes(attributes)
       if attributes.has_key?(:checks) and attributes[:checks].kind_of?(Hash)
         attributes[:checks].each do |check_name, args, &block|
-          self.check(check_name, args, &block)
+          check(check_name, args, &block)
         end
       end
       attributes.delete(:checks)
@@ -258,7 +258,7 @@ module Cognizant
         actions
       end.each do |(action, reason)|
         break if @transitioned
-        self.dispatch!(action, reason)
+        dispatch!(action, reason)
       end
     end
 
