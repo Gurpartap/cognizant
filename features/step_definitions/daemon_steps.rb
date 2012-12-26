@@ -3,6 +3,8 @@ When /^the daemon is running$/ do
 end
 
 When /^the daemon is stopped$/ do
+  Process.kill("TERM", @daemon_pipe.pid)
+  sleep 1
   Process.kill("KILL", @daemon_pipe.pid)
 end
 
