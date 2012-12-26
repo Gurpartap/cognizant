@@ -3,15 +3,16 @@ require "cognizant/util/rotational_array"
 
 module Cognizant
   class Process
-    class ConditionCheck
+    class ConditionDelegate
       class HistoryValue < Struct.new(:value, :critical); end
 
       # No need to recreate one every tick.
       EMPTY_ARRAY = [].freeze
 
-      attr_accessor :condition_name
-      def initialize(condition_name, options = {}, &block)
-        @condition_name = condition_name
+      attr_accessor :name
+
+      def initialize(name, options = {}, &block)
+        @name = name
 
         if block
           @do = Array(block)
@@ -26,7 +27,9 @@ module Cognizant
 
         clear_history!
 
-        @condition = Cognizant::Process::Conditions[@condition_name].new(options)
+        @condition = Cognizant::Process::Conditions[@name].new(options)
+        # # TODO: This is hackish even though it keeps condition implementations simple.
+        # @condition.instance_variable_set(:@delegate, self)
       end
 
       def run(pid, tick_number = Time.now.to_i)
@@ -52,7 +55,7 @@ module Cognizant
 
       def to_s
         data = @history.collect { |v| v and "#{v.value}#{'*' unless v.critical}" }.join(", ")
-        "#{@condition_name}: [#{data}]\n"
+        "#{@name}: [#{data}]\n"
       end
     end
   end

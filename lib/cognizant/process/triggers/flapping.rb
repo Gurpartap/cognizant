@@ -2,14 +2,14 @@ require "cognizant/util/rotational_array"
 
 module Cognizant
   class Process
-    module Conditions
-      class Flapping < TriggerCondition
+    module Triggers
+      class Flapping < Trigger
         TRIGGER_STATES = [:starting, :restarting]
 
         attr_accessor :times, :within, :retry_after
         attr_reader :timeline
 
-        def initialize(process, options = {})
+        def initialize(options = {})
           options = { :times => 5, :within => 1, :retry_after => 5 }.merge(options)
 
           options.each_pair do |name, value|
@@ -17,7 +17,6 @@ module Cognizant
           end
 
           @timeline = Util::RotationalArray.new(@times)
-          super
         end
 
         def notify(transition)
@@ -29,7 +28,6 @@ module Cognizant
 
         def reset!
           @timeline.clear
-          super
         end
 
         def check_flapping
@@ -42,8 +40,10 @@ module Cognizant
           if duration
             puts "Flapping detected: retrying in #{self.retry_after} seconds"
 
-            self.schedule_event(:start, self.retry_after) unless self.retry_after == 0 # retry_after zero means "do not retry, ever".
-            self.schedule_event(:unmonitor, 0)
+            # @delegate is set by TriggerDelegate.
+            # retry_after = 0 means do not retry.
+            @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
+            @delegate.schedule_event(:unmonitor, 0)
 
             @timeline.clear
 

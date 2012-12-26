@@ -1,12 +1,12 @@
-require "cognizant/process/conditions/poll_condition"
+require "cognizant/process/triggers/trigger"
 
-Dir["#{File.dirname(__FILE__)}/conditions/*.rb"].each do |condition|
-  require condition
+Dir["#{File.dirname(__FILE__)}/triggers/*.rb"].each do |trigger|
+  require trigger
 end
 
 module Cognizant
   class Process
-    module Conditions
+    module Triggers
       def self.[](name)
         begin
           const_get(name.to_s.camelcase)

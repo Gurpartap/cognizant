@@ -3,13 +3,16 @@ require "thread"
 
 require "state_machine"
 
+require "cognizant/process/dsl_proxy"
 require "cognizant/process/pid"
 require "cognizant/process/status"
 require "cognizant/process/execution"
 require "cognizant/process/attributes"
 require "cognizant/process/actions"
-require "cognizant/process/condition_check"
-require "cognizant/process/dsl_proxy"
+require "cognizant/process/conditions"
+require "cognizant/process/condition_delegate"
+require "cognizant/process/triggers"
+require "cognizant/process/trigger_delegate"
 require "cognizant/util/symbolize_hash_keys"
 
 module Cognizant
@@ -81,7 +84,7 @@ module Cognizant
 
     def initialize(process_name = nil, attributes = {}, &block)
       @ticks_to_skip = 0
-      @checks = []
+      @conditions = []
       @triggers = []
       @children = []
       @action_mutex = Monitor.new
@@ -105,26 +108,17 @@ module Cognizant
       initialize_state_machines
     end
 
-    def set_attributes(attributes)
-      if attributes.has_key?(:checks) and attributes[:checks].kind_of?(Hash)
-        attributes[:checks].each do |condition_name, args, &block|
-          self.check(condition_name, args, &block)
-        end
-      end
-      attributes.delete(:checks)
-
-      if attributes.has_key?(:monitor_children) and attributes[:monitor_children].kind_of?(Hash)
-        monitor_children(attributes[:monitor_children])
-      end
-
-      attributes.each do |attribute_name, value|
-        self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
-      end
-    end
-
     def monitor_children(child_process_attributes = {}, &child_process_block)
       @monitor_children = true
       @child_process_attributes, @child_process_block = child_process_attributes, child_process_block
+    end
+
+    def check(check_name, options, &block)
+      if klass = Cognizant::Process::Conditions[check_name]
+        @conditions << ConditionDelegate.new(check_name, options.deep_symbolize_keys!, &block)
+      elsif klass = Cognizant::Process::Triggers[check_name]
+        @triggers << TriggerDelegate.new(check_name, self, options.deep_symbolize_keys!)
+      end
     end
 
     def tick
@@ -135,36 +129,13 @@ module Cognizant
       super
 
       if self.running?
-        self.run_checks
+        self.run_conditions
 
         if @monitor_children
           refresh_children!
           @children.each(&:tick)
         end
       end
-    end
-
-    def record_transition(transition)
-      unless transition.loopback?
-        @transitioned = true
-        @last_transition_time = Time.now.to_i
-
-        # When a process changes state, we should clear the memory of all the checks.
-        @checks.each { |check| check.clear_history! }
-        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
-
-        # And we should re-populate its child list.
-        if @monitor_children
-          @children.clear
-        end
-
-        # Update the pid from pidfile, since the state of process changed, if the process is managing it's own pidfile.
-        read_pid if @pidfile
-      end
-    end
-
-    def last_transition_time
-      @last_transition_time || 0
     end
 
     def handle_user_command(command)
@@ -181,44 +152,6 @@ module Cognizant
         else
           self.send("#{action}")
         end
-      end
-    end
-
-    def check(condition_name, options, &block)
-      klass = Cognizant::Process::Conditions[condition_name]
-      case klass.superclass.name.split("::").last
-      when "TriggerCondition"
-        @triggers << klass.new(self, options.deep_symbolize_keys!)
-      when "PollCondition"
-        @checks << ConditionCheck.new(condition_name, options.deep_symbolize_keys!, &block)
-      end
-    end
-
-    def notify_triggers(transition)
-      @triggers.each { |trigger| trigger.notify(transition) }
-    end
-
-    def run_checks
-      now = Time.now.to_i
-
-      threads = @checks.collect do |check|
-        [check, Thread.new { Thread.current[:actions] = check.run(cached_pid, now) }]
-      end
-
-      @transitioned = false
-
-      threads.inject([]) do |actions, (check, thread)|
-        thread.join
-        if thread[:actions].size > 0
-          puts "#{check.condition_name} dispatched: #{thread[:actions].join(',')}"
-          thread[:actions].each do |action|
-            actions << [action, check.to_s]
-          end
-        end
-        actions
-      end.each do |(action, reason)|
-        break if @transitioned
-        self.dispatch!(action, reason)
       end
     end
 
@@ -247,6 +180,46 @@ module Cognizant
 
     private
 
+    def record_transition(transition)
+      unless transition.loopback?
+        @transitioned = true
+        @last_transition_time = Time.now.to_i
+
+        # When a process changes state, we should clear the memory of all the conditions.
+        @conditions.each { |condition| condition.clear_history! }
+        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+
+        # And we should re-populate its child list.
+        if @monitor_children
+          @children.clear
+        end
+
+        # Update the pid from pidfile, since the state of process changed, if the process is managing it's own pidfile.
+        read_pid if @pidfile
+      end
+    end
+
+    def last_transition_time
+      @last_transition_time || 0
+    end
+
+    def set_attributes(attributes)
+      if attributes.has_key?(:checks) and attributes[:checks].kind_of?(Hash)
+        attributes[:checks].each do |check_name, args, &block|
+          self.check(check_name, args, &block)
+        end
+      end
+      attributes.delete(:checks)
+
+      if attributes.has_key?(:monitor_children) and attributes[:monitor_children].kind_of?(Hash)
+        monitor_children(attributes[:monitor_children])
+      end
+
+      attributes.each do |attribute_name, value|
+        self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
+      end
+    end
+
     def skip_ticks_for(skips)
       # Accept negative skips with the result being >= 0.
       @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
@@ -263,6 +236,34 @@ module Cognizant
         options[attribute] = self.send(attribute)
       end
       execute(command, options.merge(action_overrides))
+    end
+
+    def run_conditions
+      now = Time.now.to_i
+
+      threads = @conditions.collect do |condition|
+        [condition, Thread.new { Thread.current[:actions] = condition.run(cached_pid, now) }]
+      end
+
+      @transitioned = false
+
+      threads.inject([]) do |actions, (condition, thread)|
+        thread.join
+        if thread[:actions].size > 0
+          puts "#{condition.name} dispatched: #{thread[:actions].join(',')}"
+          thread[:actions].each do |action|
+            actions << [action, condition.to_s]
+          end
+        end
+        actions
+      end.each do |(action, reason)|
+        break if @transitioned
+        self.dispatch!(action, reason)
+      end
+    end
+
+    def notify_triggers(transition)
+      @triggers.each { |trigger| trigger.notify(transition) }
     end
 
     def refresh_children!
