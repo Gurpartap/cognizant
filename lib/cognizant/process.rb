@@ -178,6 +178,10 @@ module Cognizant
       @logfile || File.join(Cognizant::Daemon.logs_dir, @name + '.log')
     end
 
+    def last_transition_time
+      @last_transition_time || 0
+    end
+
     private
 
     def record_transition(transition)
@@ -197,10 +201,6 @@ module Cognizant
         # Update the pid from pidfile, since the state of process changed, if the process is managing it's own pidfile.
         read_pid if @pidfile
       end
-    end
-
-    def last_transition_time
-      @last_transition_time || 0
     end
 
     def set_attributes(attributes)
