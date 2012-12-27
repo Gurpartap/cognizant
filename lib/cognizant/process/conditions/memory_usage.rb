@@ -7,16 +7,12 @@ module Cognizant
         MB_LABEL = "MB"
         KB_LABEL = "KB"
 
-        def initialize(options = {})
-          @above = options[:above].to_f
-        end
-
         def run(pid)
           Cognizant::System.memory_usage(pid).to_f
         end
 
         def check(value)
-          value.kilobytes > @above
+          value.kilobytes > @options[:above].to_f
         end
 
         def format_value(value)
