@@ -19,3 +19,12 @@ Feature: Shell
     When the daemon is stopped
     And I run "help" in the shell
     Then I should see "Error communicating with cognizantd" in the shell
+
+  @daemon
+  @shell
+  Scenario: Shell should prompt about an unrecognized command
+    Given the daemon is running
+    And the shell is running
+
+    When I run "test" in the shell
+    Then I should see "Unrecognized command" in the shell
