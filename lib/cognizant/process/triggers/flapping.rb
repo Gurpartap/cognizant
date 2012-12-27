@@ -13,7 +13,9 @@ module Cognizant
           options = { :times => 5, :within => 1, :retry_after => 5, :retries => 0 }.merge(options)
 
           options.each_pair do |name, value|
-            self.send("#{name}=", value) if self.respond_to?("#{name}=")
+            if self.respond_to?("#{name}=")
+              self.send("#{name}=", value)
+            end
           end
 
           @timeline = Util::RotationalArray.new(@times)
