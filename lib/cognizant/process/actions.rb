@@ -52,9 +52,6 @@ module Cognizant
 
           # Action callback.
           result_handler.call(result) if result_handler.respond_to?(:call)
-
-          # Kill self.
-          Thread.kill
         end
 
         # We skip so that we're not reinformed about the required transition by the tick.

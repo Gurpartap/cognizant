@@ -27,17 +27,14 @@ module Cognizant
           drop_privileges(options)
 
           if options[:daemonize]
-            # Create a new session to detach from the controlling terminal.
-            unless ::Process.setsid
-              # raise Koth::RuntimeException.new('cannot detach from controlling terminal')
-            end
+            # # Create a new session to detach from the controlling terminal.
+            # unless ::Process.setsid
+            #   # raise Cognizant::RuntimeException.new('cannot detach from controlling terminal')
+            # end
 
             # TODO: Set pgroup: true so that the spawned process is the group leader, and it's death would kill all children as well.
 
-            # Prevent inheriting signals from parent process.
-            Signal.trap('TERM', 'SIG_DFL')
-            Signal.trap('INT',  'SIG_DFL')
-            Signal.trap('HUP',  'SIG_DFL')
+            setup_execution_traps
 
             # Give the process a name.
             $0 = options[:name] if options[:name]
@@ -52,8 +49,7 @@ module Cognizant
 
           # TODO: Run popen as spawned process before privileges are dropped for increased abilities?
           stdin_data = options[:input] if options[:input]
-          # TODO: gets would only get one line. Rescue EOFError if using readpartial.
-          stdin_data = IO.popen(options[:input_command]).gets if options[:input_command]
+          stdin_data = IO.popen(options[:input_command]).read if options[:input_command]
 
           if stdin_data
             stdin, stdin_w = IO.pipe
@@ -164,6 +160,13 @@ module Cognizant
       end
 
       private
+
+      def setup_execution_traps
+        # Prevent inheriting signals from parent process.
+        Signal.trap('TERM', 'SIG_DFL')
+        Signal.trap('INT',  'SIG_DFL')
+        Signal.trap('HUP',  'SIG_DFL')
+      end
 
       def construct_spawn_options(options, overrides = {})
         spawn_options = {}
