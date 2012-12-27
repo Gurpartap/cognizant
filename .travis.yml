@@ -1,8 +1,8 @@
 ---
 language: ruby
-before_script:
-  - bundle exec cognizantd
-  - bundle exec cognizant shutdown
+# before_script:
+#   - bundle exec cognizantd
+#   - bundle exec cognizant shutdown
 rvm:
   - 1.9.2
   - 1.9.3
