@@ -3,6 +3,21 @@ require "cognizant/system"
 module Cognizant
   class Process
     module Status
+      def process_running?
+        @process_running = begin
+          # Do not assume change when we're giving time to an execution by skipping ticks.
+          if @ticks_to_skip > 0
+            @process_running
+          elsif @ping_command and run(@ping_command).succeeded?
+            true
+          elsif pid_running?
+            true
+          else
+            false
+          end
+        end
+      end
+
       def pid_running?
         Cognizant::System.pid_running?(cached_pid)
       end
