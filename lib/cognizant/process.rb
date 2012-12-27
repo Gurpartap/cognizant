@@ -69,14 +69,16 @@ module Cognizant
         transition any => :unmonitored
       end
 
-      before_transition any      => :starting,   :do => lambda { |p| p.autostart = true }
-      after_transition  any      => :starting,   :do => :start_process
+      before_transition any      => :starting,    :do => lambda { |p| p.autostart = true }
+      after_transition  any      => :starting,    :do => :start_process
 
-      before_transition :running => :stopping,   :do => lambda { |p| p.autostart = false }
-      after_transition  any      => :stopping,   :do => :stop_process
+      before_transition any      => :stopping,    :do => lambda { |p| p.autostart = false }
+      after_transition  :running => :stopping,    :do => :stop_process
 
-      before_transition any      => :restarting, :do => lambda { |p| p.autostart = true }
-      after_transition  any      => :restarting, :do => :restart_process
+      before_transition any      => :restarting,  :do => lambda { |p| p.autostart = true }
+      after_transition  any      => :restarting,  :do => :restart_process
+
+      before_transition any      => :unmonitored, :do => lambda { |p| p.autostart = false }
 
       before_transition any => any, :do => :notify_triggers
       after_transition  any => any, :do => :record_transition
@@ -182,6 +184,11 @@ module Cognizant
       @last_transition_time || 0
     end
 
+    def skip_ticks_for(skips)
+      # Accept negative skips with the result being >= 0.
+      @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
+    end
+
     private
 
     def record_transition(transition)
@@ -191,7 +198,7 @@ module Cognizant
 
         # When a process changes state, we should clear the memory of all the conditions.
         @conditions.each { |condition| condition.clear_history! }
-        puts "#{name} changing from #{transition.from_name} => #{transition.to_name}"
+        puts "#{name}(#{cached_pid}) changing from #{transition.from_name} => #{transition.to_name}"
 
         # And we should re-populate its child list.
         if @monitor_children
@@ -218,11 +225,6 @@ module Cognizant
       attributes.each do |attribute_name, value|
         self.send("#{attribute_name}=", value) if self.respond_to?("#{attribute_name}=")
       end
-    end
-
-    def skip_ticks_for(skips)
-      # Accept negative skips with the result being >= 0.
-      @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
     end
 
     def skip_tick?
