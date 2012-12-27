@@ -24,25 +24,15 @@ module Cognizant
           result = false
           queue = Queue.new
           thread = Thread.new do
-            if before_command and not success = run(before_command).succeeded?
-              queue.push(success)
-              Thread.exit
-            end
+            # If before_command succeeds, we move to the next command.
+            (before_command and not success = run(before_command).succeeded?) or
+            # If the command is available and it succeeds, we stop here.
+            (command and success = run(command, options) and success.succeeded?) or
+            # As a last try, check for signals. If the action has set signals, then it can handle it's result.
+            (success = send_signals(signals: signals, timeout: timeout))
 
-            if (command and success = run(command, options) and success.succeeded?)
-              run(after_command) if after_command
-              queue.push(success)
-              Thread.exit
-            end
-
-            # If the caller has attempted to set signals, then it can handle it's result.
-            if success = send_signals(signals: signals, timeout: timeout)
-              run(after_command) if after_command
-              queue.push(success)
-              Thread.exit
-            end
-
-            queue.push(false)
+            run(after_command) if success and after_command
+            queue.push(success)
             Thread.exit
           end
 
