@@ -6,17 +6,18 @@ module Cognizant
       class Flapping < Trigger
         TRIGGER_STATES = [:starting, :restarting]
 
-        attr_accessor :times, :within, :retry_after
+        attr_accessor :times, :within, :retry_after, :retries
         attr_reader :timeline
 
         def initialize(options = {})
-          options = { :times => 5, :within => 1, :retry_after => 5 }.merge(options)
+          options = { :times => 5, :within => 1, :retry_after => 5, :retries => 0 }.merge(options)
 
           options.each_pair do |name, value|
             self.send("#{name}=", value) if self.respond_to?("#{name}=")
           end
 
           @timeline = Util::RotationalArray.new(@times)
+          @num_of_tries = 0
         end
 
         def notify(transition)
@@ -28,6 +29,7 @@ module Cognizant
 
         def reset!
           @timeline.clear
+          @num_of_tries = 0
         end
 
         def check_flapping
@@ -38,14 +40,20 @@ module Cognizant
           duration = (@timeline.last - @timeline.first) <= self.within
 
           if duration
-            puts "Flapping detected: retrying in #{self.retry_after} seconds"
+            puts "Flapping detected (#{@num_of_tries}): retrying in #{self.retry_after} seconds"
 
-            # @delegate is set by TriggerDelegate.
-            # retry_after = 0 means do not retry.
-            @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
             @delegate.schedule_event(:unmonitor, 0)
 
+            # @delegate is set by TriggerDelegate.
+            # retries = 0 means always retry.
+            if self.retries == 0 or (self.retries > 0 and @num_of_tries < self.retries)
+              # retry_after = 0 means do not retry.
+              @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
+            end
+
             @timeline.clear
+
+            @num_of_tries += 1
 
             # This will prevent a transition from happening in the process state_machine.
             throw :halt
