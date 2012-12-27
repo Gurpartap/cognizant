@@ -251,20 +251,20 @@ module Cognizant
 
       @transitioned = false
 
-      result_actions = threads.inject([]) do |actions, (condition, thread)|
-        thread.join
-        if thread[:actions].size > 0
-          # puts "#{name}(pid:#{cached_pid}) #{condition.name} dispatched: #{thread[:actions].join(',')}"
-          thread[:actions].each do |action|
-            actions << [action, condition.to_s]
-          end
-        end
-        actions
-      end
-
-      result_actions.each do |(action, reason)|
+      collect_conditions_actions(threads).each do |(action, reason)|
         break if @transitioned
         dispatch!(action, reason)
+      end
+    end
+
+    def collect_conditions_actions(threads)
+      threads.inject([]) do |actions, (condition, thread)|
+        thread.join
+        # puts "#{name}(pid:#{cached_pid}) #{condition.name} dispatched: #{thread[:actions].join(',')}"
+        thread[:actions].each do |action|
+          actions << [action, condition.to_s]
+        end
+        actions
       end
     end
 
