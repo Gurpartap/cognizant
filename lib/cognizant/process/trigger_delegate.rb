@@ -25,7 +25,7 @@ module Cognizant
       end
 
       def dispatch!(event)
-        @process.dispatch!(event, self.class.name.split("::").last)
+        @process.dispatch!(event, @name)
       end
 
       def schedule_event(event, delay)
