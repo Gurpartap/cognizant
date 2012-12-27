@@ -9,7 +9,7 @@ Feature: Flapping Check
         name 'sleep_process'
         start_command 'sleep 4'
         autostart false
-        check :flapping, times: 2, within: 30, retry_after: 15
+        check :flapping, times: 2, within: 30, retry_after: 15, retries: 0
       end
       """
 
