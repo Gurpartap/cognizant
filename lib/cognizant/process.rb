@@ -13,6 +13,7 @@ require "cognizant/process/conditions"
 require "cognizant/process/condition_delegate"
 require "cognizant/process/triggers"
 require "cognizant/process/trigger_delegate"
+require "cognizant/process/children"
 require "cognizant/util/symbolize_hash_keys"
 
 module Cognizant
@@ -22,6 +23,7 @@ module Cognizant
     include Cognizant::Process::Execution
     include Cognizant::Process::Attributes
     include Cognizant::Process::Actions
+    include Cognizant::Process::Children
 
     state_machine :initial => :unmonitored do
       # These are the idle states, i.e. only an event (either external or internal) will trigger a transition.
@@ -266,31 +268,6 @@ module Cognizant
 
     def notify_triggers(transition)
       @triggers.each { |trigger| trigger.notify(transition) }
-    end
-
-    def refresh_children!
-      # First prune the list of dead children.
-      @children.delete_if do |child|
-        !child.process_running?
-      end
-
-      # Add new found children to the list.
-      new_children_pids = Cognizant::System.get_children(@process_pid) - @children.map { |child| child.cached_pid }
-
-      unless new_children_pids.empty?
-        Cognizant.log.info "Existing children: #{@children.collect{ |c| c.cached_pid }.join(",")}. Got new children: #{new_children_pids.inspect} for #{@process_pid}."
-      end
-
-      # Construct a new process wrapper for each new found children.
-      new_children_pids.each do |child_pid|
-        name = "<child(pid:#{child_pid})>"
-        attributes = @child_process_attributes.merge({ name: name, autostart: false }) # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state.
-
-        child = Cognizant::Process.new(nil, attributes, &@child_process_block)
-        child.write_pid(child_pid)
-        @children << child
-        child.monitor
-      end
     end
   end
 end
