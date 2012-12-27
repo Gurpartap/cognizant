@@ -7,9 +7,9 @@ Feature: Flapping Check
       """ruby
       Cognizant.monitor do
         name 'sleep_process'
-        start_command 'sleep 2'
+        start_command 'sleep 4'
         autostart false
-        check :flapping, times: 2, within: 30, retry_after: 15
+        check :flapping, times: 2, within: 30, retry_after: 12
       end
       """
 
