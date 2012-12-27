@@ -13,23 +13,18 @@ module Cognizant
 
       def initialize(name, options = {}, &block)
         @name = name
-
-        if block
-          @do = Array(block)
-        else
-          @do = options.has_key?(:do) ? Array(options.delete(:do)) : [:restart]
-        end
-
         @every = options.delete(:every).to_i
-        @times = options.delete(:times) || [1, 1]
+
+        @times = options.delete(:times) || 1
         @times = [@times, @times] unless @times.is_a?(Array) # handles :times => 5
         @times.map(&:to_i)
+
+        @do = options.has_key?(:do) ? [options.delete(:do)] : [:restart]
+        @do = [block] if block
 
         clear_history!
 
         @condition = Cognizant::Process::Conditions[@name].new(options)
-        # # TODO: This is hackish even though it keeps condition implementations simple.
-        # @condition.instance_variable_set(:@delegate, self)
       end
 
       def run(pid, tick_number = Time.now.to_i)
