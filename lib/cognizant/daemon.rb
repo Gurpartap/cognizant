@@ -96,38 +96,8 @@ module Cognizant
     # as instance attributes.
     # @param [Hash] options A hash of instance attributes and their values.
     def init(options = {})
-      # Daemon config.
-      @daemonize = options.has_key?(:daemonize) ? options[:daemonize] : true
-      @pidfile   = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
-      @logfile   = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
-      @loglevel  = options[:loglevel].to_i || Logger::INFO
-      @socket    = options[:socket]        || "/var/run/cognizant/cognizantd.sock"
-      @port      = options[:port]          || nil
-      @username  = options[:username]      || nil
-      @password  = options[:password]      || nil
-      @trace     = options[:trace]         || nil
-
-      # Processes config.                            
-      @pids_dir = options[:pids_dir] || "/var/run/cognizant/pids/"
-      @logs_dir = options[:logs_dir] || "/var/log/cognizant/logs/"
-      @env      = options[:env]      || {}
-      @chdir    = options[:chdir]    || nil
-      @umask    = options[:umask]    || nil
-      @user     = options[:user]     || nil
-      @group    = options[:group]    || nil
-
-      # Expand paths.
-      @socket   = File.expand_path(@socket)
-      @pidfile  = File.expand_path(@pidfile)
-      @logfile  = File.expand_path(@logfile)
-      @pids_dir = File.expand_path(@pids_dir)
-      @logs_dir = File.expand_path(@logs_dir)
-
-      @processes = Hash.new
-      @processes_to_load = []
-
-      # Only available through a config file/stdin.
-      @processes_to_load = options[:monitor] if options.has_key?(:monitor)
+      init_daemon_defaults
+      init_processes_defaults
     end
 
     def bootup
@@ -176,6 +146,46 @@ module Cognizant
     end
 
     private
+
+    def init_daemon_defaults
+      @daemonize = options.has_key?(:daemonize) ? options[:daemonize] : true
+      @pidfile   = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
+      @logfile   = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
+      @loglevel  = options[:loglevel].to_i || Logger::INFO
+      @socket    = options[:socket]        || "/var/run/cognizant/cognizantd.sock"
+      @port      = options[:port]          || nil
+      @username  = options[:username]      || nil
+      @password  = options[:password]      || nil
+      @trace     = options[:trace]         || nil
+    end
+
+    def init_processes_defaults
+      # Processes config.                            
+      @pids_dir = options[:pids_dir] || "/var/run/cognizant/pids/"
+      @logs_dir = options[:logs_dir] || "/var/log/cognizant/logs/"
+      @env      = options[:env]      || {}
+      @chdir    = options[:chdir]    || nil
+      @umask    = options[:umask]    || nil
+      @user     = options[:user]     || nil
+      @group    = options[:group]    || nil
+
+      @processes = Hash.new
+
+      # Only available through a config file/stdin.
+      if options.has_key?(:monitor)
+        @processes_to_load = options[:monitor]
+      else
+        @processes_to_load = []
+      end
+    end
+
+    def expand_paths
+      @socket   = File.expand_path(@socket)
+      @pidfile  = File.expand_path(@pidfile)
+      @logfile  = File.expand_path(@logfile)
+      @pids_dir = File.expand_path(@pids_dir)
+      @logs_dir = File.expand_path(@logs_dir)
+    end
 
     def load_processes(processes_to_load)
       if processes_to_load
