@@ -200,7 +200,7 @@ module Cognizant
 
         # When a process changes state, we should clear the memory of all the conditions.
         @conditions.each { |condition| condition.clear_history! }
-        puts "#{name}(#{cached_pid}) changing from #{transition.from_name} => #{transition.to_name}"
+        puts "#{name}(pid:#{cached_pid}) changing from #{transition.from_name} => #{transition.to_name}"
 
         # And we should re-populate its child list.
         if @monitor_children
@@ -251,16 +251,18 @@ module Cognizant
 
       @transitioned = false
 
-      threads.inject([]) do |actions, (condition, thread)|
+      result_actions = threads.inject([]) do |actions, (condition, thread)|
         thread.join
         if thread[:actions].size > 0
-          puts "#{condition.name} dispatched: #{thread[:actions].join(',')}"
+          # puts "#{name}(pid:#{cached_pid}) #{condition.name} dispatched: #{thread[:actions].join(',')}"
           thread[:actions].each do |action|
             actions << [action, condition.to_s]
           end
         end
         actions
-      end.each do |(action, reason)|
+      end
+
+      result_actions.each do |(action, reason)|
         break if @transitioned
         dispatch!(action, reason)
       end
