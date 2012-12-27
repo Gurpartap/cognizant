@@ -32,7 +32,7 @@ module Cognizant
         # TODO: Maybe wrap this in a ScheduledEvent class with methods like cancel.
         thread = Thread.new(self) do |trigger|
           begin
-            sleep delay.to_f
+            sleep(delay)
             trigger.dispatch!(event)
             trigger.mutex.synchronize do
               trigger.scheduled_events.delete_if { |_, thread| thread == Thread.current }
