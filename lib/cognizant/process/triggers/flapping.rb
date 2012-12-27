@@ -37,25 +37,18 @@ module Cognizant
           return unless (@timeline.compact.length == self.times)
 
           # Check if the incident happend within the timeframe.
-          duration = (@timeline.last - @timeline.first) <= self.within
-
-          if duration
+          if duration = (@timeline.last - @timeline.first) <= self.within
             @num_of_tries += 1
 
             puts "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
 
-            # @delegate.process.stop
             @delegate.schedule_event(:unmonitor, 0)
 
             # @delegate is set by TriggerDelegate.
             # retries = 0 means always retry.
             if self.retries == 0 or (self.retries > 0 and @num_of_tries <= self.retries)
               # retry_after = 0 means do not retry.
-              unless self.retry_after == 0
-                # @delegate.process.skip_ticks_for(self.retry_after)
-                # @delegate.process.autostart = true
-                @delegate.schedule_event(:start, self.retry_after)
-              end
+              @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
             end
 
             @timeline.clear
