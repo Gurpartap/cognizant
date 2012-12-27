@@ -25,28 +25,27 @@ module Cognizant
       emit
       emit('Type "quit" or "exit" to quit at any time')
 
-      comp = proc { |input|
+      setup_readline(&block)
+    end
+
+    def setup_readline(&block)
+      Readline.completion_proc = Proc.new do |input|
         case input
         when /^\//
+          # Handle file and directory name autocompletion.
           Readline.completion_append_character = "/"
           Dir[input + '*'].grep(/^#{Regexp.escape(input)}/)
         else
+          # Handle commands and process name autocompletion.
           Readline.completion_append_character = " "
           @autocomplete_keywords.grep(/^#{Regexp.escape(input)}/)
         end
-      }
-      Readline.completion_append_character = " "
-      Readline.completion_proc = comp
+      end
 
-      while line = Readline.readline('> ', true)
-        if line.strip.to_s.size > 0
-          command, args = parse_command(line)
-          if ['quit', 'exit'].include?(command)
-            emit("Goodbye!")
-            return
-          end
-          run_command(command, args, &block)
-        end
+      while (line = Readline.readline('> ', true).strip.to_s).size > 0
+        command, args = parse_command(line)
+        return emit("Goodbye!") if ['quit', 'exit'].include?(command)
+        run_command(command, args, &block)
       end
     end
 
