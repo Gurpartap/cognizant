@@ -9,7 +9,7 @@ Feature: Flapping Check
         name 'sleep_process'
         start_command 'sleep 2'
         autostart false
-        check :flapping, times: 2, within: 30, retry_after: 10
+        check :flapping, times: 2, within: 30, retry_after: 15
       end
       """
 
@@ -24,7 +24,7 @@ Feature: Flapping Check
 
     When I run "start sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "running"
-    Then the status of "sleep_process" should be "unmonitored"
+    Then the status of "sleep_process" should be "unmonitored" for 10 seconds
     Then the status of "sleep_process" should be "running"
 
     When I run "stop sleep_process" successfully in the shell

@@ -16,6 +16,46 @@ When /^I run "([^"]*)" successfully in the shell$/ do |cmd|
   step %Q{I should see "OK" in the shell}
 end
 
+# Once we have the required status, it should stay the same in the given next n seconds.
+When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)" for (\d+) seconds$/ do |_, name, status, timeframe|
+  step %Q{the status of "#{name}" should be "#{status}"}
+
+  output = ""
+
+  begin
+    Timeout::timeout(timeframe.to_i) do
+      catch :stop do
+        loop do
+          buffer = ""
+          @shell_pipe.puts("status #{name}")
+          while not buffer =~ /\s#{name}\s.*since/
+            begin
+              buffer << @shell_pipe.readpartial(1)
+            rescue EOFError
+              retry
+            end
+          end
+          # We need just the line where it tells name and status.
+          output = buffer.split("\n").last
+          if buffer =~ /\s#{status}\s/
+            # Take rest before next check.
+            sleep 0.2
+          else
+            # Otherwise stop checking and report output in error.
+            throw :stop
+          end
+        end
+      end
+    end
+  rescue Timeout::Error
+    # We spent the time gracefully as required.
+    nil
+  end
+
+  # Successful if we reach here.
+  output.should include(status)
+end
+
 When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |_, name, status|
   output = ""
   time_step = 0.5
