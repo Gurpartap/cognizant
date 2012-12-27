@@ -40,20 +40,25 @@ module Cognizant
           duration = (@timeline.last - @timeline.first) <= self.within
 
           if duration
-            puts "Flapping detected (#{@num_of_tries}): retrying in #{self.retry_after} seconds"
+            @num_of_tries += 1
 
+            puts "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
+
+            # @delegate.process.stop
             @delegate.schedule_event(:unmonitor, 0)
 
             # @delegate is set by TriggerDelegate.
             # retries = 0 means always retry.
-            if self.retries == 0 or (self.retries > 0 and @num_of_tries < self.retries)
+            if self.retries == 0 or (self.retries > 0 and @num_of_tries <= self.retries)
               # retry_after = 0 means do not retry.
-              @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
+              unless self.retry_after == 0
+                # @delegate.process.skip_ticks_for(self.retry_after)
+                # @delegate.process.autostart = true
+                @delegate.schedule_event(:start, self.retry_after)
+              end
             end
 
             @timeline.clear
-
-            @num_of_tries += 1
 
             # This will prevent a transition from happening in the process state_machine.
             throw :halt
