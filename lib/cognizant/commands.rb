@@ -32,17 +32,17 @@ module Cognizant
       begin
         request = Cognizant::Client::Transport.deserialize_message(command)
       rescue ArgumentError => e
-        return {
-          'message' => "Could not parse command: #{e}"
-        }
+        return { 'message' => "Could not parse command: #{e}" }
       end
 
       unless command_name = request['command']
-        return {
-          'message' => 'No "command" parameter provided; not sure what you want me to do.'
-        }
+        return { 'message' => 'No "command" parameter provided; not sure what you want me to do.' }
       end
 
+      run_command(connection, request, command, command_name)
+    end
+
+    def self.run_command(connection, request, command, command_name)
       if command_spec = @@commands[command_name]
         Cognizant.log.debug("Received command: #{command.inspect}")
         begin
@@ -99,7 +99,7 @@ EOF
       request["args"].each do |file|
         Cognizant::Daemon.load(file)
       end
-      # format_process_or_group_status
+      # send_process_or_group_status
       "OK"
     end
 
@@ -126,22 +126,24 @@ EOF
     # end
 
     command("status", "Display status of managed process(es) or group(s)") do |connection, request|
-      format_process_or_group_status(request["args"])
+      send_process_or_group_status(request["args"])
     end
 
-    def self.format_process_or_group_status(args = [])
+    def self.send_process_or_group_status(args = [])
       output_processes = []
       if args.size > 0
         Cognizant::Daemon.processes.values.each do |process|
           output_processes << process if args.include?(process.name) or args.include?(process.group)
         end
-        if output_processes.size == 0
-          raise("No such process")
-        end
+        raise "No such process" if output_processes.size == 0
       else
         output_processes = Cognizant::Daemon.processes.values
       end
 
+      format_process_or_group_status(output_processes)
+    end
+
+    def self.format_process_or_group_status(output_processes)
       output = []
       output_processes.each do |process|
         pid = process.cached_pid
@@ -185,7 +187,7 @@ EOF
             process.handle_user_command(name)
           end
         end
-        # format_process_or_group_status(args)
+        # send_process_or_group_status(args)
         "OK"
       end
     end
