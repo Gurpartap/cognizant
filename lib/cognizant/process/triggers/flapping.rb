@@ -35,7 +35,7 @@ module Cognizant
           (@timeline.last - @timeline.first) <= self.within
         end
 
-        def should_retry?
+        def can_retry?
           # retry_after = 0 means do not retry.
           self.retry_after > 0 and
           # retries = 0 means always retry.
