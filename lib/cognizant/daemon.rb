@@ -96,8 +96,9 @@ module Cognizant
     # as instance attributes.
     # @param [Hash] options A hash of instance attributes and their values.
     def init(options = {})
-      init_daemon_defaults
-      init_processes_defaults
+      init_daemon_defaults(options)
+      init_processes_defaults(options)
+      expand_paths
     end
 
     def bootup
@@ -147,7 +148,7 @@ module Cognizant
 
     private
 
-    def init_daemon_defaults
+    def init_daemon_defaults(options = {})
       @daemonize = options.has_key?(:daemonize) ? options[:daemonize] : true
       @pidfile   = options[:pidfile]       || "/var/run/cognizant/cognizantd.pid"
       @logfile   = options[:logfile]       || "/var/log/cognizant/cognizantd.log"
@@ -159,7 +160,7 @@ module Cognizant
       @trace     = options[:trace]         || nil
     end
 
-    def init_processes_defaults
+    def init_processes_defaults(options = {})
       # Processes config.                            
       @pids_dir = options[:pids_dir] || "/var/run/cognizant/pids/"
       @logs_dir = options[:logs_dir] || "/var/log/cognizant/logs/"
