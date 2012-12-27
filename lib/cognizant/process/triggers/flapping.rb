@@ -10,13 +10,10 @@ module Cognizant
         attr_reader :timeline
 
         def initialize(options = {})
-          options = { :times => 5, :within => 1, :retry_after => 5, :retries => 0 }.merge(options)
-
-          options.each_pair do |name, value|
-            if self.respond_to?("#{name}=")
-              self.send("#{name}=", value)
-            end
-          end
+          @times       = options[:times]       || 5
+          @within      = options[:within]      || 1
+          @retry_after = options[:retry_after] || 5
+          @retries     = options[:retries]     || 0
 
           @timeline = Util::RotationalArray.new(@times)
           @num_of_tries = 0
