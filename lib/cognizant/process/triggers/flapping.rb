@@ -52,8 +52,9 @@ module Cognizant
 
             puts "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
 
+            # 0.1 to ensure the state isn't randomly caught in throw :halt below.
+            @delegate.schedule_event(:unmonitor, [0.1, self.retry_after].min)
             @delegate.schedule_event(:start, self.retry_after) if can_retry?
-            @delegate.schedule_event(:unmonitor, 0)
 
             @timeline.clear
 
