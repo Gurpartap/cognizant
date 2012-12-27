@@ -15,15 +15,6 @@ Feature: Commands
 
   @daemon
   @shell
-  Scenario: Run the help command
-    Given the daemon is running
-    And the shell is running
-
-    When I run "help" in the shell
-    Then I should see "You can run the following commands" in the shell
-
-  @daemon
-  @shell
   Scenario: Run all maintenance commands for a sample sleep process
     Given the daemon is running
     And the shell is running
@@ -48,6 +39,15 @@ Feature: Commands
 
     When I run "stop sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
+
+  @daemon
+  @shell
+  Scenario: Run the help command
+    Given the daemon is running
+    And the shell is running
+
+    When I run "help" in the shell
+    Then I should see "You can run the following commands" in the shell
 
   @daemon
   @shell
