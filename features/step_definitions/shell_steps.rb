@@ -58,7 +58,7 @@ end
 
 When /^the (status) of "([^"]*)" (?:should be|is) "([^"]*)"$/ do |_, name, status|
   output = ""
-  time_step = 0.5
+  time_step = 0.25
   time_spent = 0
   timeout = 30
   begin
