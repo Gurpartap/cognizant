@@ -34,24 +34,29 @@ module Cognizant
           @num_of_tries = 0
         end
 
+        def within_duration?
+          (@timeline.last - @timeline.first) <= self.within
+        end
+
+        def should_retry?
+          # retry_after = 0 means do not retry.
+          self.retry_after > 0 and
+          # retries = 0 means always retry.
+          (self.retries == 0 or (self.retries > 0 and @num_of_tries <= self.retries))
+        end
+
         def check_flapping
           # The process has not flapped if we haven't encountered enough incidents.
           return unless (@timeline.compact.length == self.times)
 
           # Check if the incident happend within the timeframe.
-          if duration = (@timeline.last - @timeline.first) <= self.within
+          if within_duration?
             @num_of_tries += 1
 
             puts "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
 
             @delegate.schedule_event(:unmonitor, 0)
-
-            # @delegate is set by TriggerDelegate.
-            # retries = 0 means always retry.
-            if self.retries == 0 or (self.retries > 0 and @num_of_tries <= self.retries)
-              # retry_after = 0 means do not retry.
-              @delegate.schedule_event(:start, self.retry_after) unless self.retry_after == 0
-            end
+            @delegate.schedule_event(:start, self.retry_after) unless if can_retry?
 
             @timeline.clear
 
