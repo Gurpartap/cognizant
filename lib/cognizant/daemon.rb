@@ -102,12 +102,12 @@ module Cognizant
     end
 
     def bootup
+      setup_directories
       setup_logging
 
       stop_previous_daemon
       stop_previous_socket
 
-      setup_directories
       trap_signals
       Cognizant.log.info "Booting up cognizantd..."
       EventMachine.run do
