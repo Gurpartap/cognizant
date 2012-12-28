@@ -129,12 +129,49 @@ EOF
       send_process_or_group_status(request["args"])
     end
 
+    [
+      ["monitor",   "Monitor the specified process or group"],
+      ["unmonitor", "Unmonitor the specified process or group"],
+      ["start",     "Start the specified process or group"],
+      ["stop",      "Stop the specified process or group"],
+      ["restart",   "Restart the specified process or group"]
+    ].each do |(name, description)|
+      command(name, description) do |connection, request|
+        args = request["args"]
+        unless args.size > 0
+          raise("Missing process name")
+          return
+        end
+        output_processes = []
+        output_processes = processes_for_name_or_group(args)
+        if output_processes.size == 0
+          raise("No such process")
+        else
+          output_processes.each do |process|
+            process.handle_user_command(name)
+          end
+        end
+        # send_process_or_group_status(args)
+        "OK"
+      end
+    end
+
+    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
+      Cognizant::Daemon.shutdown
+    end
+
+    def self.processes_for_name_or_group(args)
+      processes = []
+      Cognizant::Daemon.processes.values.each do |process|
+        processes << process if args.include?(process.name) or args.include?(process.group)
+      end
+      processes
+    end
+
     def self.send_process_or_group_status(args = [])
       output_processes = []
       if args.size > 0
-        Cognizant::Daemon.processes.values.each do |process|
-          output_processes << process if args.include?(process.name) or args.include?(process.group)
-        end
+        output_processes = processes_for_name_or_group(args)
         raise "No such process" if output_processes.size == 0
       else
         output_processes = Cognizant::Daemon.processes.values
@@ -158,42 +195,6 @@ EOF
         }
       end
       output
-    end
-
-    [
-      ["monitor",   "Monitor the specified process or group"],
-      ["unmonitor", "Unmonitor the specified process or group"],
-      ["start",     "Start the specified process or group"],
-      ["stop",      "Stop the specified process or group"],
-      ["restart",   "Restart the specified process or group"]
-    ].each do |(name, description)|
-      command(name, description) do |connection, request|
-        args = request["args"]
-        unless args.size > 0
-          raise("Missing process name")
-          return
-        end
-        output_processes = []
-        Cognizant::Daemon.processes.values.each do |process|
-          if args.include?(process.name) or args.include?(process.group)
-            output_processes << process
-          end
-        end
-
-        if output_processes.size == 0
-          raise("No such process")
-        else
-          output_processes.each do |process|
-            process.handle_user_command(name)
-          end
-        end
-        # send_process_or_group_status(args)
-        "OK"
-      end
-    end
-
-    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
-      Cognizant::Daemon.shutdown
     end
   end
 end
