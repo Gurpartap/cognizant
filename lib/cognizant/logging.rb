@@ -11,13 +11,13 @@ module Cognizant
     end
 
     def log
-      @files ||= Array.new($stdout)
-      @logger ||= Logger.new(Files.new(*@files))
+      @files ||= Array.new
+      @logger ||= Logger.new(Files.new(@files))
     end
     alias :logger :log
 
     class Files
-      def initialize(*files)
+      def initialize(files)
         @files = files
       end
 
