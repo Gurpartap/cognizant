@@ -185,7 +185,7 @@ module Cognizant
 
         # When a process changes state, we should clear the memory of all the conditions.
         @conditions.each { |condition| condition.clear_history! }
-        Logging.logger[self].debug "Changing state of #{name}(pid:#{cached_pid}) from #{transition.from_name} => #{transition.to_name}"
+        Log[self].debug "Changing state of #{name} from #{transition.from_name} => #{transition.to_name}"
 
         # And we should re-populate its child list.
         if @monitor_children
@@ -245,7 +245,8 @@ module Cognizant
     def collect_conditions_actions(threads)
       threads.inject([]) do |actions, (condition, thread)|
         thread.join
-        Logging.logger[self].debug "#{name}(pid:#{cached_pid}) #{condition.name} dispatched: #{thread[:actions].join(',')}"
+        actions_names = thread[:actions].join(', ')
+        Log[self].debug "Dispatching [#{actions_names}] to #{name} for #{condition.name}."
         thread[:actions].each do |action|
           actions << [action, condition.to_s]
         end

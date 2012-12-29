@@ -15,7 +15,7 @@ module Cognizant
       if !response.nil?
         send_message(connection, response)
       else
-        Logging.logger[self].debug("Got back nil response, so not responding to command.")
+        Log[self].debug("Got back nil response, so not responding to command.")
       end
       # connection.close_connection_after_writing
     end
@@ -44,16 +44,16 @@ module Cognizant
 
     def self.run_command(connection, request, command, command_name)
       if command_spec = @@commands[command_name]
-        Logging.logger[self].debug("Received command: #{command.inspect}")
+        Log[self].debug("Received command: #{command.inspect}")
         begin
           return command_spec[:block].call(connection, request)
         rescue StandardError => e
           msg = "Error while processing command #{command_name.inspect}: #{e} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
-          Logging.logger[self].error(msg)
+          Log[self].error(msg)
           return msg
         end
       else
-        Logging.logger[self].debug("Received unrecognized command: #{command.inspect}")
+        Log[self].debug("Received unrecognized command: #{command.inspect}")
         return unrecognized_command(connection, request)
       end
     end

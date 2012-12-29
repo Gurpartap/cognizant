@@ -71,7 +71,7 @@ module Cognizant
 
           # Spawn a process to execute the command.
           process_pid = ::Process.spawn(options[:env], command, spawn_options)
-          # Logging.logger[self].debug "process_pid: #{process_pid} (#{command})"
+          # Log[self].debug "process_pid: #{process_pid} (#{command})"
           pid_w.write(process_pid)
 
           if options[:daemonize]
