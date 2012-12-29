@@ -117,23 +117,22 @@ module Cognizant
         daemonize_process
         write_pid
         Log[self].info "Cognizant Daemon running successfully. Loading processes from configuration..."
-        load_processes(@processes_to_load) and @processes_to_load = nil
+        @monitor.each { |name, attributes| monitor(name, attributes) }
+        @load.each { |file| load(file) }
       end
+    end
+
+    def monitor(process_name = nil, attributes = {}, &block)
+      process = Cognizant::Process.new(process_name, attributes, &block)
+      # TODO: Unmonitor and deallocate existing process with this name first, if any.
+      @processes[process.name] = process
+      process.monitor
     end
 
     def load(config_file)
       config_file = File.expand_path(config_file)
       Log[self].info "Loading config from #{config_file}..."
-      # config = YAML.load_file(config_file)
-      # config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
-      # load_processes(config[:monitor]) if config.has_key?(:monitor)
       Kernel.load(config_file)
-    end
-
-    def monitor(process_name = nil, attributes = {}, &block)
-      process = Cognizant::Process.new(process_name, attributes, &block)
-      @processes[process.name] = process
-      process.monitor
     end
 
     # Stops the TCP server and the tick loop, and performs cleanup.
@@ -172,14 +171,11 @@ module Cognizant
       @user     = options[:user]     || nil
       @group    = options[:group]    || nil
 
-      @processes = Hash.new
-
       # Only available through a config file/stdin.
-      if options.has_key?(:monitor)
-        @processes_to_load = options[:monitor]
-      else
-        @processes_to_load = []
-      end
+      @monitor = options[:monitor] || []
+      @load    = options[:load] || []
+
+      @processes = Hash.new
     end
 
     def expand_paths
@@ -188,14 +184,6 @@ module Cognizant
       @logfile  = File.expand_path(@logfile)
       @pids_dir = File.expand_path(@pids_dir)
       @logs_dir = File.expand_path(@logs_dir)
-    end
-
-    def load_processes(processes_to_load)
-      if processes_to_load
-        processes_to_load.each do |name, attributes|
-          monitor(name, attributes)
-        end
-      end
     end
 
     # Starts the TCP server with the set socket lock file or port.

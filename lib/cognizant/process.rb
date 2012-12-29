@@ -245,9 +245,9 @@ module Cognizant
     def collect_conditions_actions(threads)
       threads.inject([]) do |actions, (condition, thread)|
         thread.join
-        actions_names = thread[:actions].join(', ')
-        Log[self].debug "Dispatching [#{actions_names}] to #{name} for #{condition.name}."
         thread[:actions].each do |action|
+          action_name = action.respond_to?(:call) ? "call to custom block" : action
+          Log[self].debug "Dispatching #{action_name} to #{name} for #{condition.to_s}."
           actions << [action, condition.to_s]
         end
         actions

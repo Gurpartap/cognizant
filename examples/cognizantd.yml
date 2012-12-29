@@ -6,6 +6,8 @@ socket: ~/.cognizant/cognizantd.sock
 pids_dir: ~/.cognizant/pids/
 logs_dir: ~/.cognizant/logs/
 
+load: [examples/redis-server.rb]
+
 monitor: {
   redis-server-1: {
     autostart: false,
