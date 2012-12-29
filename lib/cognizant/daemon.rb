@@ -2,7 +2,6 @@ require "eventmachine"
 require "logging"
 
 require "cognizant"
-require "cognizant/logging"
 require "cognizant/process"
 require "cognizant/interface"
 require "cognizant/system"
