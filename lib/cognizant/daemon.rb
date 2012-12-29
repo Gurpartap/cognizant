@@ -1,5 +1,4 @@
 require "eventmachine"
-require "logging"
 
 require "cognizant"
 require "cognizant/log"
@@ -223,20 +222,20 @@ module Cognizant
     end
 
     def setup_logging
-      Logging.logger.root.level = if @trace then :debug else @loglevel end
+      Cognizant::Log.logger.root.level = if @trace then :debug else @loglevel end
 
       unless @daemonize
-        stdout_appender = Logging.appenders.stdout
-        Logging.logger.root.add_appenders(stdout_appender)
+        stdout_appender = Cognizant::Log.stdout
+        Cognizant::Log.logger.root.add_appenders(stdout_appender)
       end
 
       if @syslog
         # TODO: Choose a non-default facility? (default: LOG_USR).
-        syslog_appender = Logging.appenders.syslog("cognizantd")
-        Logging.logger.root.add_appenders(syslog_appender)
+        syslog_appender = Cognizant::Log.syslog("cognizantd")
+        Cognizant::Log.logger.root.add_appenders(syslog_appender)
       elsif @logfile
-        logfile_appender = Logging.appenders.file(@logfile)
-        Logging.logger.root.add_appenders(logfile_appender)
+        logfile_appender = Cognizant::Log.file(@logfile)
+        Cognizant::Log.logger.root.add_appenders(logfile_appender)
       end
     end
 
