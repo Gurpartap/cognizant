@@ -1,66 +1,13 @@
-# Cognizant: system utility to supervise your processes
+# Cognizant: supervise your processes
 [![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Gurpartap/cognizant)
 
-Let us say that you have a program that is critical for your application. Any
-downtime for the processes of this program would hurt your business. You want
-to make sure these processes are always up and working. If anything unexpected
-happens to their state, you want it to be fixed, and to be notified about it.
+Cognizant is a process management framework written in Ruby. It is a system
+utility that supervises your processes, monitoring and ensuring their state
+based on a customizable criteria.
 
-Enter Cognizant. Cognizant is a system utility that supervises your processes,
-monitoring and ensuring their state based on a flexible criteria.
-
-In simpler terms, it keeps your processes up and running. It also ensures
-that something (like restart) is done when the process being monitored matches
-a certain condition (like CPU usage, memory usage or a custom condition).
-
-Cognizant can be used to monitor any long running process, including the
-following commonly used programs:
-
-- Web servers (Nginx, Apache httpd, WebSocket, etc.)
-- Databases (Redis, MongoDB, MySQL, PostgreSQL, etc.)
-- Job workers (Resque, Sidekiq, Qless, etc.)
-- Message queue applications (RabbitMQ, Beanstalkd, etc.)
-- Logs collection daemons
-- Or any other program that needs to keep running
-
-And if it matters, cognizant means "having knowledge or being aware of",
-according to Apple's Dictionary.
-
-## Features
-
-### Monitoring
-
-Cognizant can be used to monitor an application process' state so that it
-is running at all times. When cognizant is instructed to monitor a process,
-by default, the process will automatically be started. These processes are
-automatically monitored for their state. i.e. a process is automatically
-started again if it stops unexpectedly.
-
-### Conditions
-
-Conditions provide a way to monitor and act on more than just the state of a
-process. For example, conditions can monitor the resource utilization (RAM,
-CPU, etc.) of the application process and restart it if it matches a
-condition.
-
-See examples for conditions usage.
-
-### Notifications
-
-Note: Notifications are not currently implemented.
-
-Notifications provide a way to alert system administrator of unexpected events
-happening with the process. Notifications can use multiple gateways, including
-email and twitter [direct message].
-
-## Getting started
-
-Cognizant is written in the Ruby programming language, and hence depends on
-it. Ensure that you have Ruby 1.9+ installed and run:
-
-    $ gem install cognizant
-
-## Architecture overview
+Since cognizant administration and process monitoring are two separate
+concerns, they are serviced by separate applications, `cognizant` and
+`cognizantd`, respectively.
 
                                                           _____
                                                  ___________   |
@@ -73,192 +20,48 @@ it. Ensure that you have Ruby 1.9+ installed and run:
      `cognizant`           `cognizantd`         |___________|  |
                                                           _____|
 
-Since cognizant administration and process monitoring are two separate
-concerns, they are serviced by separate applications, `cognizant` and
-`cognizantd`, respectively.
 
-## Starting the monitoring daemon
+### Monitoring and Automation
 
-Cognizant runs the monitoring essentials through the `cognizantd` daemon
-application, which also maintains a server for accepting commands from the
-`cognizant` administration utility.
+The `cognizantd` daemon provides continuous process monitoring, automation
+through conditions and triggers, and a command socket for communication.
 
-The daemon, with it's default options, requires superuser access to certain
-system directories for storing logs and pid files. It can be started as
-follows:
+The daemon starts with a run loop, polling the managed processes for their
+state and properties. It also provides a command socket to accept commands
+through the administration utility.
 
-    $ sudo cognizantd    # On ubuntu, debian, os x, etc.
-    $ su -c 'cognizantd' # On amazon linux, centos, rhel, etc.
+#### Conditions
 
-To start without superuser access, specify these file and directory config
-variables to where the user starting it has write access:
+Conditions provide actions based on any properties or criteria of a process.
+For example, continuous usage of a high amount of system memory would restart
+the process.
 
-    $ cognizantd ./examples/cognizantd.yml # YAML formatted.
-    # Find this file in source code for a detailed usage example.
+#### Triggers
 
-Assuming
+Triggers provide actions based on changes in state of a process. For example,
+repeated restarting of a process, known as "flapping". Triggers can also be
+used to notify administrators when a state changes.
 
-```YAML    
-$ cat ./examples/cognizantd.yml # gives:
----
-socket:   ~/.cognizant/cognizantd.sock
-pidfile:  ~/.cognizant/cognizantd.pid
-logfile:  ~/.cognizant/cognizantd.log
-pids_dir: ~/.cognizant/pids/
-logs_dir: ~/.cognizant/logs/
-```
-
-Or
-
-    # Pass config directly into the daemon's STDIN.
-    $ echo <<EOF | cognizantd -
-    ---
-    socket:   ~/.cognizant/cognizantd.sock
-    ...
-    monitor: {
-      ...
-      ...
-    }
-    EOF
-
-### Preload process information
-
-To specify processes to be managed, the following may be specified in the
-daemon's config file:
-
-```YAML
-# see examples/cognizantd.yml
----
-monitor: {
-  redis-server-1: { # Identifying name.
-    group: redis,
-    start_command: /usr/local/bin/redis-server -,
-    start_with_input: "daemonize no\nport 6666",
-    ping_command: redis-cli -p 6666 PING,
-    stop_signals: [TERM, INT],
-    checks: {
-      memory_usage: {
-        every: 5, # Seconds.
-        above: 1048576, # Bytes.
-        times: [3, 5], # Three out of five times.
-        do: restart # Or stop.
-      }
-    }
-  },
-  sleep: {
-    start_command: sleep 3,
-    checks: {
-      flapping: {
-        times: 4,
-        within: 15, # Seconds.
-        retry_after: 30 # Seconds.
-      }
-    }
-  }
-}
-```
-
-Process information can also be provided via Ruby code. See `cognizant load`
-command in the administration utility.
-
-## Using the administration utility
+### Administration
 
 Cognizant can be administered using the `cognizant` command line utility. This
-is an application for performing administration tasks like monitoring,
-starting, stopping processes or loading configuration and processes'
-information.
+is an application for performing administration tasks like enabling monitoring,
+starting, stopping processes, loading process configurations, etc.
 
-Here are some basic operational commands:
+The `cognizant` utility provides a command line interface and a shell to
+administer processes. It communicates with the daemon process through its
+command socket.
 
-    $ cognizant monitor redis # by group name
-    $ cognizant restart redis-server-1 # by process name
+## Quick start
 
-To get cognizant to ignore a particular process' state:
-
-    $ cognizant unmonitor sleep-10
-
-Now check status of all managed processes:
-
-    $ cognizant status
-    +----------------+-------+--------------------------------------+-------+-------+---------+
-    | Process        | Group | State                                | PID   | % CPU | Memory  |
-    +----------------+-------+--------------------------------------+-------+-------+---------+
-    | redis-server-1 | redis | running since 1 minute               | 23442 | 10.70 | 3.7 MB  |
-    +----------------+-------+--------------------------------------+-------+-------+---------+
-    | redis-server-2 | redis | running since 2 minutes              | 23444 | 0.0   | 1.7 MB  |
-    +----------------+-------+--------------------------------------+-------+-------+---------+
-    | sleep-10       |       | unmonitored since less than a minute |       | 0.0   | 0 Bytes |
-    +----------------+-------+--------------------------------------+-------+-------+---------+
-    2012-11-23 01:16:18 +0530
-
-Here's how you tell cognizant to start monitoring new processes:
-
-    $ cognizant load ./examples/redis-server.rb
-    # Find this file in source code.
-
-Assuming that the loaded file contains:
-
-```Ruby
-Cognizant.monitor("redis-server-1") do |process|
-  process.group         = "redis"
-  # process.uid         = "redis"
-  # process.gid         = "redis"
-  process.start_command = "redis-server -"
-
-  process.start_with_input = <<-heredoc
-    daemonize no
-    port 6666
-  heredoc
-
-  process.ping_command  = "redis-cli -p 6666 PING"
-
-  # process.check :always_true, :every => 2.seconds, :times => 3 do |p|
-  #   `say "Boom!"`
-  # end
-
-  process.check(:flapping, :times => 2, :within => 30.seconds, :retry_after => 7.seconds)
-  process.check(:cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart)
-  process.check(:memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5]) do |p|
-    p.restart # Restart is the default anyways.
-  end
-end
+```bash
+$ gem install cognizant
+$ cognizantd --help
+$ cognizant --help
 ```
 
-## Contributing
-
-Contributions are definitely welcome. To contribute, just follow the usual
-workflow:
-
-1. Fork Cognizant
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Github pull request
-
-## Compatibility
-
-Cognizant was developed and tested under MRI Ruby 1.9.2-p290 and 1.9.3p194.
-Tests pass on current Ruby 2.0.0-dev as well as Rubinius 2.0.0-dev in 1.9 mode.
-JRuby is currently unsupported.
-
-Cognizant is incompatible with Ruby 1.8.
-
-## Similar programs
-
-- God (Ruby)
-- Bluepill (Ruby)
-- Supervisord (Python)
-- Monit
-- Upstart
-- Systemd
-- Launchd
-- SysV Init
-
-### Links
-
-- Documentation: http://rubydoc.info/github/Gurpartap/cognizant/frames
-- Source: https://github.com/Gurpartap/cognizant
-- Rubygems: https://rubygems.org/gems/cognizant
+Cognizant is extensively documented in its
+[wiki](https://github.com/Gurpartap/cognizant/wiki).
 
 ## About
 
