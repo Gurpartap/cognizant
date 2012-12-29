@@ -79,14 +79,6 @@ GLOBAL OPTIONS:
       options[:socket] = value
     end
 
-    opts.on("-b ADDRESS", "--bind-address ADDRESS", String, "The interface to bind the TCP server to.") do |value|
-      options[:bind_address] = value
-    end
-
-    opts.on("-p PORT", "--port PORT", Integer, "The TCP port to start the server with.") do |value|
-      options[:port] = value
-    end
-
     opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
       options[:trace] = true
     end

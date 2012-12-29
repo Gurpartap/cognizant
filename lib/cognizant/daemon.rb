@@ -33,16 +33,10 @@ module Cognizant
       # @return [Logger::Severity] Defaults to Logger::INFO
       attr_accessor :loglevel
 
-      # The socket lock file for the server. This file is ignored if valid
-      # bind address and port are given.
+      # The socket lock file for the server.
       # e.g. /Users/Gurpartap/.cognizant/cognizant-server.sock
       # @return [String] Defaults to /var/run/cognizant/cognizantd.sock
       attr_accessor :socket
-
-      # The TCP address and port to start the server with. e.g. 8081,
-      # "127.0.0.1:8081", "0.0.0.0:8081".
-      # @return [String] Defaults to nil
-      attr_accessor :port
 
       # Directory to store the pid files of managed processes, when required.
       # e.g. /Users/Gurpartap/.cognizant/pids/
@@ -126,7 +120,7 @@ module Cognizant
       Kernel.load(config_file)
     end
 
-    # Stops the TCP server and the tick loop, and performs cleanup.
+    # Stops the socket server and the tick loop, and performs cleanup.
     def shutdown
       Log[self].info "Shutting down cognizantd..."
       EventMachine.next_tick do
@@ -146,7 +140,6 @@ module Cognizant
       @logfile   = options[:logfile]  || "/var/log/cognizant/cognizantd.log"
       @loglevel  = options[:loglevel] || Logging::LEVELS["INFO"]
       @socket    = options[:socket]   || "/var/run/cognizant/cognizantd.sock"
-      @port      = options[:port]     || nil
       @trace     = options[:trace]    || nil
     end
 
@@ -175,18 +168,10 @@ module Cognizant
       @logs_dir = File.expand_path(@logs_dir)
     end
 
-    # Starts the TCP server with the set socket lock file or port.
+    # Starts the socket server with the set socket lock file.
     def start_interface_socket
-      if port = @port
-        Log[self].info "Starting the TCP server at #{@port}..."
-        hostname = "127.0.0.1"
-        splitted = port.to_s.split(":")
-        hostname, port = splitted if splitted.size > 1
-        EventMachine.start_server(hostname, port, Cognizant::Interface)
-      else
-        Log[self].info "Starting the UNIX domain server with socket #{@socket}..."
-        EventMachine.start_unix_domain_server(@socket, Cognizant::Interface)
-      end
+      Log[self].info "Starting the UNIX domain server with socket #{@socket}..."
+      EventMachine.start_unix_domain_server(@socket, Cognizant::Interface)
     end
 
     # Starts the loop that defines the time window for determining and acting upon process states.
@@ -269,14 +254,7 @@ module Cognizant
     def stop_previous_socket
       # Socket isn't actually owned by anyone.
       begin
-        if port = @port
-          hostname = "127.0.0.1"
-          splitted = port.to_s.split(":")
-          hostname, port = splitted if splitted.size > 1
-          sock = TCPSocket.new(hostname, port)
-        else
-          sock = UNIXSocket.new(@socket)
-        end
+        sock = UNIXSocket.new(@socket)
       rescue Errno::ECONNREFUSED
         # This happens with non-socket files and when the listening
         # end of a socket has exited.

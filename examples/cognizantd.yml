@@ -3,7 +3,6 @@ daemonize: false
 pidfile: ~/.cognizant/cognizantd.pid
 logfile: ~/.cognizant/cognizantd.log
 socket: ~/.cognizant/cognizantd.sock
-port: 127.0.0.1:43210
 pids_dir: ~/.cognizant/pids/
 logs_dir: ~/.cognizant/logs/
 

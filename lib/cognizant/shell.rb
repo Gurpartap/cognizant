@@ -9,12 +9,6 @@ require "cognizant/client"
 module Cognizant
   class Shell
     def initialize(options = {})
-      @hostname = nil
-      @hostname = options[:hostname] if options.has_key?(:hostname) and options[:hostname].to_s.size > 0
-
-      @port = 0
-      @port = options[:port].to_i if options.has_key?(:port) and options[:port].to_i > 0
-
       @path_to_socket = "/var/run/cognizant/cognizantd.sock"
       @path_to_socket = options[:socket] if options.has_key?(:socket) and options[:socket].to_s.size > 0
 
@@ -84,11 +78,7 @@ module Cognizant
 
     def connect
       begin
-        if @port > 0
-          @client = Cognizant::Client.for_port(@hostname, @port)
-        else
-          @client = Cognizant::Client.for_path(@path_to_socket)
-        end
+        @client = Cognizant::Client.for_path(@path_to_socket)
       rescue Errno::ENOENT => e
         # TODO: The exit here is a biit of a layering violation.
         Cognizant::Shell.emit(<<EOF, true)
@@ -97,7 +87,7 @@ Could not connect to Cognizant daemon process:
   #{e}
 
 HINT: Are you sure you are running the Cognizant daemon?  If so, you
-should pass cognizant the socket or tcp arguments provided to cognizantd.
+should pass cognizant the socket argument provided to cognizantd.
 EOF
         exit(1)
       end
