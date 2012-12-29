@@ -60,7 +60,7 @@ $ cognizantd --help
 $ cognizant --help
 ```
 
-Cognizant is extensively documented in its
+Cognizant is **extensively documented** in its
 [wiki](https://github.com/Gurpartap/cognizant/wiki).
 
 ## About
