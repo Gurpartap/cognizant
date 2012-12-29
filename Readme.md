@@ -1,12 +1,12 @@
 # Cognizant: supervise your processes
 [![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Gurpartap/cognizant)
 
-Cognizant is a process management framework written in Ruby. It is a system
-utility that supervises your processes, monitoring and ensuring their state
-based on a customizable criteria.
+Cognizant is a process management framework written in Ruby. In other words, it
+is a system utility that supervises your processes, monitoring and ensuring
+their state based on a customizable criteria.
 
-Since cognizant administration and process monitoring are two separate
-concerns, they are serviced by separate applications, `cognizant` and
+Since cognizant administration, and process monitoring and automation are two
+separate concerns, they are serviced by separate applications, `cognizant` and
 `cognizantd`, respectively.
 
                                                           _____
@@ -21,7 +21,7 @@ concerns, they are serviced by separate applications, `cognizant` and
                                                           _____|
 
 
-### Monitoring and Automation
+## Monitoring and Automation
 
 The `cognizantd` daemon provides continuous process monitoring, automation
 through conditions and triggers, and a command socket for communication.
@@ -30,19 +30,19 @@ The daemon starts with a run loop, polling the managed processes for their
 state and properties. It also provides a command socket to accept commands
 through the administration utility.
 
-#### Conditions
+### Conditions
 
 Conditions provide actions based on any properties or criteria of a process.
 For example, continuous usage of a high amount of system memory would restart
 the process.
 
-#### Triggers
+### Triggers
 
 Triggers provide actions based on changes in state of a process. For example,
 repeated restarting of a process, known as "flapping". Triggers can also be
 used to notify administrators when a state changes.
 
-### Administration
+## Administration
 
 Cognizant can be administered using the `cognizant` command line utility. This
 is an application for performing administration tasks like enabling monitoring,
