@@ -161,36 +161,6 @@ monitor: {
 Process information can also be provided via Ruby code. See `cognizant load`
 command in the administration utility.
 
-All of the available options and commands for `cognizantd` are:
-
-    $ cognizantd --help
-    
-    NAME
-        cognizantd - system utility daemon to supervise your processes
-
-    SYNOPSIS:
-        cognizantd [GLOBAL OPTIONS] [CONFIG FILE | -]
-
-    GLOBAL OPTIONS:
-            --[no-]daemonize        Whether or not to daemonize cognizantd into background.
-            --pidfile FILE          The pid (process identifier) lock file for the daemon.
-            --logfile FILE          The file to log the daemon's operational information into.
-            --loglevel LEVEL        The level of information to log.
-            --env ENV               Environment variables for managed processes to inherit.
-            --chdir DIRECTORY       The current working directory for the managed processes to start with.
-            --umask UMASK           Permission mode limitations for file and directory creation.
-            --user USER             Run the daemon and managed processes as the given user.
-            --group GROUP           Run the daemon and managed processes as the given user group.
-            --pids-dir DIRECTORY    Directory to store the pid files of managed processes, when required.
-            --logs-dir DIRECTORY    Directory to store the log files of managed processes, when required.
-        -s, --socket FILE           The socket lock file for the server
-        -b, --bind-address ADDR     The interface to bind the TCP server to.
-        -p, --port PORT             The TCP port to start the server with.
-            --username USERNAME     Username for securing server access.
-            --password PASSWORD     Password to accompany the username.
-        -t, --trace                 Turn on tracing, enable full backtrace.
-        -v, --version               Print the version number and exit.
-
 ## Using the administration utility
 
 Cognizant can be administered using the `cognizant` command line utility. This
@@ -253,37 +223,6 @@ Cognizant.monitor("redis-server-1") do |process|
   end
 end
 ```
-
-All of the available options and commands for `cognizant` are:
-
-    $ cognizant --help
-    
-    NAME
-        cognizant - administration utility for cognizantd
-    
-    SYNOPSIS
-        cognizant [GLOBAL OPTIONS] COMMAND [ARGUMENTS...]
-    
-    GLOBAL OPTIONS
-        -s, --socket FILE          The socket lock file of the daemon server (default: /var/run/cognizant/cognizantd.sock)
-        -b, --bind-address ADDR    The server address of the daemon server (default: none)
-        -p, --port PORT            The server port of the daemon server (default: none)
-            --username USERNAME    Username to use for authentication with server (default: none)
-            --password PASSWORD    Password to use for authentication with server (default: none)
-        -v, --version              Print the version number and exit
-        -t, --trace                Turn on tracing, enabling full backtrace
-            --help                 Show this message
-    
-    COMMANDS
-        help [COMMAND]    Shows a list of commands or help for one command
-        status [NAME]     Display status of managed process(es) or group(s)
-        load FILE         Loads the process information from specified Ruby file
-        monitor NAME      Monitor the specified process or group
-        unmonitor NAME    Unmonitor the specified process or group
-        start NAME        Start the specified process or group
-        stop NAME         Stop the specified process or group
-        restart NAME      Restart the specified process or group
-        shutdown          Stop the monitoring daemon without affecting processes
 
 ## Contributing
 
