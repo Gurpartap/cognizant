@@ -1,4 +1,3 @@
-require 'set'
 require 'uri'
 require 'yaml'
 require 'socket'
@@ -31,6 +30,11 @@ module Cognizant
     end
 
     @@responseless_commands = ["shutdown"]
+
+    def self.for_port(hostname = "127.0.0.1", port)
+      socket = TCPSocket.open(hostname, port)
+      self.new(socket)
+    end
 
     def self.for_path(path_to_socket)
       socket = UNIXSocket.open(path_to_socket)

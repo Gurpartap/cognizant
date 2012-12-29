@@ -44,15 +44,6 @@ module Cognizant
       # @return [String] Defaults to nil
       attr_accessor :port
 
-      # Username for securing server access. e.g. "cognizant-user"
-      # @return [String] Defaults to nil
-      attr_accessor :username
-
-      # Password to accompany the username.
-      # e.g. "areallyverylongpasswordbecauseitmatters"
-      # @return [String] Defaults to nil
-      attr_accessor :password
-
       # Directory to store the pid files of managed processes, when required.
       # e.g. /Users/Gurpartap/.cognizant/pids/
       # @return [String] Defaults to /var/run/cognizant/pids/
@@ -156,8 +147,6 @@ module Cognizant
       @loglevel  = options[:loglevel] || Logging::LEVELS["INFO"]
       @socket    = options[:socket]   || "/var/run/cognizant/cognizantd.sock"
       @port      = options[:port]     || nil
-      @username  = options[:username] || nil
-      @password  = options[:password] || nil
       @trace     = options[:trace]    || nil
     end
 
@@ -190,10 +179,10 @@ module Cognizant
     def start_interface_socket
       if port = @port
         Log[self].info "Starting the TCP server at #{@port}..."
-        host = "127.0.0.1"
+        hostname = "127.0.0.1"
         splitted = port.to_s.split(":")
-        host, port = splitted if splitted.size > 1
-        EventMachine.start_server(host, port, Cognizant::Interface)
+        hostname, port = splitted if splitted.size > 1
+        EventMachine.start_server(hostname, port, Cognizant::Interface)
       else
         Log[self].info "Starting the UNIX domain server with socket #{@socket}..."
         EventMachine.start_unix_domain_server(@socket, Cognizant::Interface)
@@ -280,7 +269,14 @@ module Cognizant
     def stop_previous_socket
       # Socket isn't actually owned by anyone.
       begin
-        sock = UNIXSocket.new(@socket)
+        if port = @port
+          hostname = "127.0.0.1"
+          splitted = port.to_s.split(":")
+          hostname, port = splitted if splitted.size > 1
+          sock = TCPSocket.new(hostname, port)
+        else
+          sock = UNIXSocket.new(@socket)
+        end
       rescue Errno::ECONNREFUSED
         # This happens with non-socket files and when the listening
         # end of a socket has exited.

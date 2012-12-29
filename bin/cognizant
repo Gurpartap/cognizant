@@ -25,18 +25,10 @@ global_option("-s", "--socket FILE", String, "The socket lock file of the daemon
 end
 
 global_option("-b", "--bind-address ADDR", String, "The server address of the daemon server") do |b|
-  
+
 end
 
 global_option("-p", "--port PORT", Integer, "The server port of the daemon server") do |p|
-  
-end
-
-global_option("--username USERNAME", String, "Username to use for authentication with server") do |username|
-  
-end
-
-global_option("--password", String, "Password to use for authentication with server") do |password|
   
 end
 
@@ -46,7 +38,7 @@ command :shell do |c|
   c.syntax = "cognizant shell"
   c.description = "Enter the Cognizant shell for easy control"
   c.action do |args, options|
-    Cognizant::Shell.new(options.socket, true).run do |output, cmd|
+    Cognizant::Shell.new(hostname: options.bind_address, port: options.port, socket: options.socket, shell: true).run do |output, cmd|
       if cmd == "shutdown"
         # TODO: Use Shell#emit instead of puts.
         puts "The daemon has been shutdown successfuly."
@@ -119,7 +111,7 @@ rescue => e
 end
 
 def connect_and_perform(task, options, args, &block)
-  Cognizant::Shell.new(options.socket, false).run_command(task, args, &block)
+  Cognizant::Shell.new(hostname: options.bind_address, port: options.port, socket: options.socket, shell: false).run_command(task, args, &block)
 end
 
 def distance_of_time_in_words(seconds)

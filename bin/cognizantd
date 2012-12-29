@@ -87,14 +87,6 @@ GLOBAL OPTIONS:
       options[:port] = value
     end
 
-    opts.on("--username USERNAME", String, "Username for securing server access.") do |value|
-      options[:username] = value
-    end
-
-    opts.on("--password PASSWORD", String, "Password to accompany the username.") do |value|
-      options[:password] = value
-    end
-
     opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
       options[:trace] = true
     end
@@ -106,7 +98,14 @@ GLOBAL OPTIONS:
     end
   end.parse!
 
-  if config_file = ARGV.shift
+  default_config_file = "/etc/cognizantd/cognizantd.yml"
+  if arg = ARGV.shift
+    config_file = arg
+  elsif File.exists?(default_config_file)
+    config_file = default_config_file
+  end
+
+  if config_file
     require "cognizant/util/symbolize_hash_keys"
 
     if config_file.eql?("-")

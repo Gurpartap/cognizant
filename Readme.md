@@ -50,7 +50,8 @@ starting, stopping processes, loading process configurations, etc.
 
 The `cognizant` utility provides a command line interface and a shell to
 administer processes. It communicates with the daemon process through its
-command socket.
+command socket. That means the `cognizantd` daemon must already be running
+before you can use the `cognizant` administration utility.
 
 ## Quick start
 

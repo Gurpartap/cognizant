@@ -24,6 +24,7 @@
 
     process.check(:cpu_usage, :every => 5.seconds, :above => 60, :times => [3, 5], :do => :restart)
     process.check(:memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5]) do |p|
+      # Send email or something.
       p.restart # Restart is the default anyways.
     end
   end
