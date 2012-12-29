@@ -17,17 +17,21 @@ Gem::Specification.new do |gem|
   gem.version       = Cognizant::VERSION
 
   gem.add_development_dependency "rake"
-  gem.add_development_dependency "kramdown"
+
+  # Documentation.
   gem.add_development_dependency "yard"
+  gem.add_development_dependency "kramdown"
+
+  # Testing.
   gem.add_development_dependency "aruba"
 
   # cognizantd
   gem.add_dependency "eventmachine"
   gem.add_dependency "state_machine"
   gem.add_dependency "activesupport"
+  gem.add_dependency "logging"
 
   # cognizant
-  gem.add_dependency "logging"
   gem.add_dependency "commander"
   gem.add_dependency "formatador"
 end

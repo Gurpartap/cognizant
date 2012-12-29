@@ -1,5 +1,5 @@
 # Cognizant: system utility to supervise your processes
-[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Gurpartap/cognizant)
+[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Gurpartap/cognizant)
 
 Let us say that you have a program that is critical for your application. Any
 downtime for the processes of this program would hurt your business. You want
