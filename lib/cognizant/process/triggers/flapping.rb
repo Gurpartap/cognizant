@@ -50,7 +50,7 @@ module Cognizant
           if within_duration?
             @num_of_tries += 1
 
-            puts "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
+            Logging.logger[self].debug "Flapping detected (##{@num_of_tries}) for #{@delegate.process.name}(pid:#{@delegate.process.cached_pid})."
 
             # 0.1 to ensure the state isn't randomly caught in throw :halt below.
             @delegate.schedule_event(:unmonitor, [0.1, self.retry_after].min)

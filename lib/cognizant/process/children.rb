@@ -11,7 +11,7 @@ module Cognizant
         new_children_pids = Cognizant::System.get_children(@process_pid) - @children.map(&:cached_pid)
 
         unless new_children_pids.empty?
-          Cognizant.log.info "Existing children: #{@children.collect{ |c| c.cached_pid }.join(",")}. Got new children: #{new_children_pids.inspect} for #{@process_pid}."
+          Logging.logger[self].info "Existing children: #{@children.collect{ |c| c.cached_pid }.join(",")}. Got new children: #{new_children_pids.inspect} for #{@process_pid}."
         end
 
         # Construct a new process wrapper for each new found children.

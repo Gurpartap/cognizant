@@ -35,7 +35,11 @@ GLOBAL OPTIONS:
       options[:pidfile] = value
     end
 
-    opts.on("--logfile FILE", String, "The file to log the daemon's operational information into.") do |value|
+    opts.on("--syslog", String, "Log the daemon's operational information into syslog.") do |_|
+      options[:syslog] = true
+    end
+
+    opts.on("--logfile FILE", String, "Log the daemon's operational information into a file.") do |value|
       options[:logfile] = value
     end
 

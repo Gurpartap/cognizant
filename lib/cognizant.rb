@@ -5,8 +5,4 @@ module Cognizant
   def self.monitor(process_name = nil, attributes = {}, &block)
     Cognizant::Daemon.monitor(process_name, attributes, &block)
   end
-
-  def self.log(*args)
-    Cognizant::Logging.log(*args)
-  end
 end

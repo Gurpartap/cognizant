@@ -34,6 +34,7 @@ module Cognizant
 
             # TODO: Set pgroup: true so that the spawned process is the group leader, and it's death would kill all children as well.
 
+            # Prevent inheriting signals from parent process.
             setup_execution_traps
 
             # Give the process a name.
@@ -70,7 +71,7 @@ module Cognizant
 
           # Spawn a process to execute the command.
           process_pid = ::Process.spawn(options[:env], command, spawn_options)
-          # puts "process_pid: #{process_pid} (#{command})"
+          # Logging.logger[self].debug "process_pid: #{process_pid} (#{command})"
           pid_w.write(process_pid)
 
           if options[:daemonize]
@@ -162,9 +163,9 @@ module Cognizant
       private
 
       def setup_execution_traps
-        # Prevent inheriting signals from parent process.
         Signal.trap('TERM', 'SIG_DFL')
         Signal.trap('INT',  'SIG_DFL')
+        Signal.trap('QUIT', 'SIG_DFL')
         Signal.trap('HUP',  'SIG_DFL')
       end
 
