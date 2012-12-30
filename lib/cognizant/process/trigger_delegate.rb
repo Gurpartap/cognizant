@@ -5,12 +5,12 @@ module Cognizant
     class TriggerDelegate
       attr_accessor :name, :process, :mutex, :scheduled_events
 
-      def initialize(name, process, options = {})
+      def initialize(name, process, options = {}, &block)
         @name, @process = name, process
         @mutex = Mutex.new
         @scheduled_events = []
 
-        @trigger = Cognizant::Process::Triggers[@name].new(options)
+        @trigger = Cognizant::Process::Triggers[@name].new(options, &block)
         # TODO: This is hackish even though it keeps trigger implementations simple.
         @trigger.instance_variable_set(:@delegate, self)
       end

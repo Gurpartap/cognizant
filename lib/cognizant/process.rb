@@ -121,7 +121,7 @@ module Cognizant
       if klass = Cognizant::Process::Conditions[check_name]
         @conditions << ConditionDelegate.new(check_name, options.deep_symbolize_keys!, &block)
       elsif klass = Cognizant::Process::Triggers[check_name]
-        @triggers << TriggerDelegate.new(check_name, self, options.deep_symbolize_keys!)
+        @triggers << TriggerDelegate.new(check_name, self, options.deep_symbolize_keys!, &block)
       end
     end
 
@@ -132,7 +132,7 @@ module Cognizant
       # Invoke the state_machine event.
       super
 
-      if running?
+      if self.running? # State machine method.
         run_conditions
 
         if @monitor_children
