@@ -10,7 +10,7 @@ module Cognizant
 
         def notify(transition)
           if @from.include?(transition.from_name) and @to.include?(transition.to_name)
-            @do.call if @do and @do.respond_to?(:call)
+            @do.call(@delegate.process) if @do and @do.respond_to?(:call)
           end
         end
 
