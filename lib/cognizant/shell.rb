@@ -27,7 +27,7 @@ module Cognizant
 
       emit("Enter 'help' if you're not sure what to do.")
       emit
-      emit('Type "quit" or "exit" to quit at any time')
+      emit("Type 'quit' or 'exit' to quit at any time.")
 
       setup_readline(&block)
     end
@@ -42,14 +42,16 @@ module Cognizant
         else
           # Handle commands and process name autocompletion.
           Readline.completion_append_character = " "
-          @autocomplete_keywords.grep(/^#{Regexp.escape(input)}/)
+          (@autocomplete_keywords + ['quit', 'exit']).grep(/^#{Regexp.escape(input)}/)
         end
       end
 
-      while (line = Readline.readline('> ', true).strip.to_s).size > 0
-        command, args = parse_command(line)
-        return emit("Goodbye!") if ['quit', 'exit'].include?(command)
-        run_command(command, args, &block)
+      while line = Readline.readline('> ', true).to_s.strip
+        if line.size > 0
+          command, args = parse_command(line)
+          return emit("Goodbye!") if ['quit', 'exit'].include?(command)
+          run_command(command, args, &block)
+        end
       end
     end
 
@@ -69,6 +71,8 @@ module Cognizant
       else
         puts "Invalid response type #{response.class}: #{response.inspect}"
       end
+
+      fetch_autocomplete_keywords
     end
 
     def parse_command(line)
