@@ -16,12 +16,7 @@ require "socket"
 program :version, Cognizant::VERSION
 program :description, "administration utility for cognizantd"
 
-# global_option("-c", "--config FILE", String, "Load config data") do |c|
-#   
-# end
-
-global_option("-s", "--socket FILE", String, "The socket lock file of the daemon server (default: /var/run/cognizant/cognizantd.sock)") do |s|
-end
+global_option("-s", "--socket FILE", String, "The socket lock file of the daemon server (default: /var/run/cognizant/cognizantd.sock)")
 
 default_command :shell
 
