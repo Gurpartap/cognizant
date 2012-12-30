@@ -27,10 +27,10 @@ module Cognizant
           drop_privileges(options)
 
           if options[:daemonize]
-            # # Create a new session to detach from the controlling terminal.
-            # unless ::Process.setsid
-            #   # raise Cognizant::RuntimeException.new('cannot detach from controlling terminal')
-            # end
+            # Create a new session to detach from the controlling terminal.
+            unless ::Process.setsid
+              Log[self].warn "Cannot detach #{options[:name]} from controlling terminal"
+            end
 
             # TODO: Set pgroup: true so that the spawned process is the group leader, and it's death would kill all children as well.
 
