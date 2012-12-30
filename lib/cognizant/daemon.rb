@@ -144,7 +144,7 @@ module Cognizant
     end
 
     def init_processes_defaults(options = {})
-      # Processes config.                            
+      # Processes config.
       @pids_dir = options[:pids_dir] || "/var/run/cognizant/pids/"
       @logs_dir = options[:logs_dir] || "/var/log/cognizant/logs/"
       @env      = options[:env]      || {}
@@ -179,12 +179,12 @@ module Cognizant
       Log[self].info "Starting the periodic tick..."
       EventMachine.add_periodic_timer(1) do
         Cognizant::System.reset_data!
-        @processes.values.map(&:tick)
+        @processes.values.each(&:tick)
       end
     end
 
     def setup_logging
-      Cognizant::Log.logger.root.level = if @trace then :debug else @loglevel end
+      Cognizant::Log.logger.root.level = if @trace then Logging::LEVELS["DEBUG"] else @loglevel end
 
       unless @daemonize
         stdout_appender = Cognizant::Log.stdout
