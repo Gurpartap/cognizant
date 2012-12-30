@@ -23,7 +23,6 @@
       `say "Boom!"`
     end
 
-
     # :retry_after => 0 means do not retry.
     process.check(:flapping, :times => 5, :within => 30.seconds, :retry_after => 7.seconds)
 

@@ -8,13 +8,13 @@ Before "@daemon" do
     FileUtils.mkdir("cognizant")
     File.open("cognizantd.yml", "w") do |f|
       f.write <<-heredoc
-      daemonize: false
-      pidfile:  ./cognizant/cognizantd.pid
-      logfile:  ./cognizant/cognizantd.log
-      socket:   ./cognizant/cognizantd.sock
-      pids_dir: ./cognizant/pids/
-      logs_dir: ./cognizant/logs/
-  heredoc
+        daemonize: false
+        pidfile:  ./cognizant/cognizantd.pid
+        logfile:  ./cognizant/cognizantd.log
+        socket:   ./cognizant/cognizantd.sock
+        pids_dir: ./cognizant/pids/
+        logs_dir: ./cognizant/logs/
+      heredoc
     end
 
     cmd = "cognizantd cognizantd.yml"
@@ -23,7 +23,7 @@ Before "@daemon" do
     announcer.cmd(cmd)
 
     @daemon_pipe = IO.popen(cmd, "r")
-    sleep 1
+    sleep 2
   end
 end
 
