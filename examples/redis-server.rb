@@ -1,5 +1,4 @@
 Cognizant.application("redis-example") do |app|
-  app.sockfile = "~/.cognizant/redis-example/redis-example.sock"
   app.pids_dir = "~/.cognizant/redis-example/pids/"
   app.logs_dir = "~/.cognizant/redis-example/logs/"
 

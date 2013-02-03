@@ -12,6 +12,8 @@ module Cognizant
     # @return [true, false] Defaults to true
     attr_accessor :daemonize
 
+    attr_accessor :sockfile
+
     # The pid lock file for the daemon.
     # e.g. /Users/Gurpartap/.cognizant/cognizantd.pid
     # @return [String] Defaults to /var/run/cognizant/cognizantd.pid
@@ -38,6 +40,9 @@ module Cognizant
     # @return [Hash]
     attr_accessor :applications
 
+    # @private
+    attr_accessor :socket
+
     def load(options = {})
       self.reset!
 
@@ -52,10 +57,15 @@ module Cognizant
         self.send("#{key}=", options.delete(key)) if self.respond_to?("#{key}=")
       end
 
+      self.sockfile = File.expand_path(self.sockfile)
+      self.pidfile  = File.expand_path(self.pidfile)
+      self.logfile  = File.expand_path(self.logfile)
+
       Log[self].info "Booting up Cognizant daemon..."
       setup_directories
       setup_logging
       stop_previous_daemon
+      stop_previous_socket
       trap_signals
       daemonize_process
       write_pid
@@ -70,6 +80,8 @@ module Cognizant
         [*files].each do |file|
           load_file(file)
         end
+
+        EventMachine.start_unix_domain_server(self.sockfile, Cognizant::Interface)
 
         EventMachine.add_periodic_timer(1) do
           Cognizant::System.reset_data!
@@ -86,6 +98,7 @@ module Cognizant
 
     def reset!
       self.daemonize    = true
+      self.sockfile     = "/var/run/cognizant/cognizantd.sock"
       self.pidfile      = "/var/run/cognizant/cognizantd.pid"
       self.syslog       = false
       self.logfile      = "/var/log/cognizant/cognizantd.log"
@@ -120,7 +133,7 @@ module Cognizant
 
     def setup_directories
       # Create the require directories.
-      System.mkdir(File.dirname(self.pidfile), File.dirname(self.logfile))
+      System.mkdir(File.dirname(self.sockfile), File.dirname(self.pidfile), File.dirname(self.logfile))
     end
 
     # Stops the socket server and the tick loop, and performs cleanup.
@@ -177,6 +190,34 @@ module Cognizant
       end
     end
 
+    def stop_previous_socket
+      # Socket isn't actually owned by anyone.
+      begin
+        sock = UNIXSocket.new(self.sockfile)
+      rescue Errno::ECONNREFUSED
+        # This happens with non-socket files and when the listening
+        # end of a socket has exited.
+      rescue Errno::ENOENT
+        # Socket doesn't exist.
+        return
+      else
+        # Rats, it's still active.
+        sock.close
+        raise Errno::EADDRINUSE.new("Another process or application is likely already listening on the socket at #{self.sockfile}.")
+      end
+    
+      # Socket should still exist, so don't need to handle error.
+      stat = File.stat(self.sockfile)
+      unless stat.socket?
+        raise Errno::EADDRINUSE.new("Non-socket file present at socket file path #{self.sockfile}. Either remove that file and restart Cognizant, or change the socket file path.")
+      end
+    
+      Log[self].info("Blowing away old socket file at #{self.sockfile}. This likely indicates a previous Cognizant application which did not shutdown gracefully.")
+
+      # Whee, blow it away.
+      unlink_sockfile
+    end
+
     # Daemonize the current process and save it pid in a file.
     def daemonize_process
       if self.daemonize
@@ -195,6 +236,10 @@ module Cognizant
 
     def unlink_pid
       Cognizant::System.unlink_file(self.pidfile) if self.pidfile
+    end
+
+    def unlink_sockfile
+      Cognizant::System.unlink_file(self.sockfile) if self.sockfile
     end
   end
 end

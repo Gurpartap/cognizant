@@ -18,7 +18,6 @@ Feature: Memory Usage Condition
     Given a file named "monitor.rb" with:
       """ruby
       Cognizant.application 'memory_usage_app' do
-        sockfile './cognizant/features.sock'
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'consume_memory' do

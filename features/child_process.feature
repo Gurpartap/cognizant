@@ -31,7 +31,6 @@ Feature: Child Process
     Given a file named "monitor.rb" with:
       """ruby
       Cognizant.application 'child_process_app' do
-        sockfile './cognizant/features.sock'
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'fork_machine' do

@@ -11,8 +11,8 @@ module Cognizant
   end
 
   class Application
-    attr_accessor :name, :sockfile, :pids_dir, :logs_dir
-    attr_accessor :socket, :processes
+    attr_accessor :name, :pids_dir, :logs_dir
+    attr_accessor :processes
 
     def initialize(name = nil, options = {}, &block)
       self.load({ name: name }.merge(options), &block)
@@ -36,7 +36,6 @@ module Cognizant
       raise "Application processes are missing. Aborting." unless self.processes.keys.size > 0
 
       self.setup_directories
-      self.start_socket
     end
 
     def set_attributes(attributes)
@@ -73,31 +72,13 @@ module Cognizant
     end
 
     def reset!
-      self.stop_previous_socket
-
       self.name      = nil
-      self.sockfile  = nil
       self.pids_dir  = nil
       self.logs_dir  = nil
       self.processes.values.each(&:reset!) if self.processes.is_a?(Hash)
       self.processes = {}
     end
-
-    def shutdown!
-      EventMachine.stop_server(@socket_signature)
-      # Give the server some time to shutdown.
-      EventMachine.add_timer(0.1) do
-        reset!
-      end
-    end
-
-    def sockfile
-      if @sockfile and expanded_path = File.expand_path(@sockfile)
-        expanded_path
-      else
-        "/var/run/cognizant/#{self.name}/#{self.name}.sock"
-      end
-    end
+    alias :shutdown! :reset!
 
     def pids_dir
       if @pids_dir and expanded_path = File.expand_path(@pids_dir)
@@ -126,45 +107,9 @@ module Cognizant
       self.processes.values.each(&:tick)
     end
 
-    def start_socket
-      @socket_signature = EventMachine.start_unix_domain_server(self.sockfile, Cognizant::Interface)
-    end
-
-    def stop_previous_socket
-      # Socket isn't actually owned by anyone.
-      begin
-        sock = UNIXSocket.new(self.sockfile)
-      rescue Errno::ECONNREFUSED
-        # This happens with non-socket files and when the listening
-        # end of a socket has exited.
-      rescue Errno::ENOENT
-        # Socket doesn't exist.
-        return
-      else
-        # Rats, it's still active.
-        sock.close
-        raise Errno::EADDRINUSE.new("Another process or application is likely already listening on the socket at #{self.sockfile}.")
-      end
-    
-      # Socket should still exist, so don't need to handle error.
-      stat = File.stat(self.sockfile)
-      unless stat.socket?
-        raise Errno::EADDRINUSE.new("Non-socket file present at socket file path #{self.sockfile}. Either remove that file and restart Cognizant, or change the socket file path.")
-      end
-    
-      Log[self].info("Blowing away old socket file at #{self.sockfile}. This likely indicates a previous Cognizant application which did not shutdown gracefully.")
-
-      # Whee, blow it away.
-      unlink_sockfile
-    end
-
     def setup_directories
       # Create the require directories.
-      Cognizant::System.mkdir(self.pids_dir, self.logs_dir, File.dirname(self.sockfile))
-    end
-
-    def unlink_sockfile
-      Cognizant::System.unlink_file(self.sockfile) if self.sockfile
+      Cognizant::System.mkdir(self.pids_dir, self.logs_dir)
     end
   end
 end

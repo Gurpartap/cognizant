@@ -1,7 +1,5 @@
 ---
 daemonize: false
-pidfile: ~/.cognizant/cognizantd.pid
-logfile: ~/.cognizant/cognizantd.log
 loglevel: debug
 
 # load:
@@ -10,10 +8,6 @@ loglevel: debug
 
 applications: {
   example: {
-    sockfile: ~/.cognizant/example/example.sock,
-    pids_dir: ~/.cognizant/example/pids/,
-    logs_dir: ~/.cognizant/example/logs/,
-
     monitor: {
       redis-server-6666: {
         autostart: false,

@@ -12,7 +12,7 @@ module Cognizant
       @app = ""
       @app = options[:app] if options.has_key?(:app) and options[:app].to_s.size > 0
 
-      @path_to_socket = ""
+      @path_to_socket = "/var/run/cognizant/cognizantd.sock"
       @path_to_socket = options[:socket] if options.has_key?(:socket) and options[:socket].to_s.size > 0
 
       @@is_shell = true

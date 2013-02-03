@@ -6,7 +6,6 @@ Feature: Flapping Check
     Given a file named "monitor.rb" with:
       """ruby
       Cognizant.application 'sleep_app' do
-        sockfile './cognizant/features.sock'
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'sleep_process' do

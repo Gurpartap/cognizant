@@ -9,11 +9,11 @@ Before "@daemon" do
     File.open("cognizantd.yml", "w") do |f|
       f.write <<-heredoc
         daemonize: false
+        sockfile: ./cognizant/cognizantd.sock
         pidfile: ./cognizant/cognizantd.pid
         logfile: ./cognizant/cognizantd.log
         applications: {
           features: {
-            sockfile: ./cognizant/features.sock,
             pids_dir: ./cognizant/pids/,
             logs_dir: ./cognizant/logs/,
             processes: {
@@ -44,7 +44,7 @@ end
 
 Before "@shell" do
   in_current_dir do
-    cmd = "cognizant shell --socket ./cognizant/features.sock"
+    cmd = "cognizant shell --socket ./cognizant/cognizantd.sock"
 
     Aruba.config.hooks.execute(:before_cmd, self, cmd)
     announcer.dir(Dir.pwd)

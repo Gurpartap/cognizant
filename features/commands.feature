@@ -7,7 +7,6 @@ Feature: Commands
     Given a file named "sleep_process.rb" with:
       """ruby
       Cognizant.application 'sleep_app' do
-        sockfile './cognizant/features.sock'
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'sleep_process' do
