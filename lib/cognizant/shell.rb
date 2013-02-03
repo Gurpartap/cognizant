@@ -9,7 +9,10 @@ require "cognizant/client"
 module Cognizant
   class Shell
     def initialize(options = {})
-      @path_to_socket = "/var/run/cognizant/cognizantd.sock"
+      @app = ""
+      @app = options[:app] if options.has_key?(:app) and options[:app].to_s.size > 0
+
+      @path_to_socket = ""
       @path_to_socket = options[:socket] if options.has_key?(:socket) and options[:socket].to_s.size > 0
 
       @@is_shell = true
@@ -46,7 +49,7 @@ module Cognizant
         end
       end
 
-      while line = Readline.readline('> ', true).to_s.strip
+      while line = Readline.readline("(#{@app})> ", true).to_s.strip
         if line.size > 0
           command, args = parse_command(line)
           return emit("Goodbye!") if ['quit', 'exit'].include?(command)
@@ -57,12 +60,15 @@ module Cognizant
 
     def run_command(command, args, &block)
       command = command.to_s
+
       begin
-        response = @client.command({'command' => command, 'args' => args})
+        response = @client.command({'command' => command, 'args' => args, 'app' => @app})
       rescue Errno::EPIPE => e
         emit("cognizant: Error communicating with cognizantd: #{e} (#{e.class})")
         exit(1)
       end
+
+      @app = response["use"] if response.is_a?(Hash) and response.has_key?("use")
 
       if block
         block.call(response, command)
@@ -100,12 +106,14 @@ EOF
     end
 
     def ehlo
-      response = @client.command('command' => '_ehlo', 'user' => ENV['USER'])
+      response = @client.command('command' => '_ehlo', 'user' => ENV['USER'], 'app' => @app)
+      @app = response["use"] if response.is_a?(Hash) and response.has_key?("use")
+
       emit(response['message'])
     end
 
     def fetch_autocomplete_keywords
-      @autocomplete_keywords = @client.command('command' => '_autocomplete_keywords')
+      @autocomplete_keywords = @client.command('command' => '_autocomplete_keywords', 'app' => @app)
     end
 
     def self.emit(message = nil, force = false)

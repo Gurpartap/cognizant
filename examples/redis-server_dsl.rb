@@ -1,29 +1,55 @@
-# 2 slave instances to master at port 6000.
-3.times do |i|
-  slaveof = i == 0 ? "" : "slaveof 127.0.0.1 6000" # Any custom code has to be outside the monitor block.
+# Cognizant.application "example2" do
+#   sockfile "~/.cognizant/example2/example2.sock"
+#   pids_dir "~/.cognizant/example2/pids/"
+#   logs_dir "~/.cognizant/example2/logs/"
+# 
+#   monitor "redis-server-7000" do
+#     autostart!
+#     group "redis"
+#     start_command "/usr/local/bin/redis-server -"
+#     start_with_input "daemonize no\nport 6666"
+#     ping_command "redis-cli -p 6666 PING"
+#   end
+# end
 
-  Cognizant.monitor do
-    name "redis-server-600#{i}"
-    group "redis"
-    start_command "redis-server -"
-    ping_command "redis-cli -p 600#{i} PING"
+# Not using dsl for app to use some Ruby in the immediate block.
+Cognizant.application "example2" do |app|
+  app.sockfile = "~/.cognizant/example2/example2.sock"
+  app.pids_dir = "~/.cognizant/example2/pids/"
+  app.logs_dir = "~/.cognizant/example2/logs/"
 
-    start_with_input <<-heredoc
-      daemonize no
-      port 600#{i}
-      #{slaveof}
-    heredoc
+  # 2 slave instances to master at port 7000.
+  3.times do |i|
+    slaveof = i == 0 ? "" : "slaveof 127.0.0.1 7000" # Any custom code has to be outside the monitor block.
 
-    # check :always_true, :every => 2.seconds, :times => 3 do |p|
-    #   `say "Boom!"`
-    # end
+    app.monitor do
+      autostart!
+      name "redis-server-700#{i}"
+      group "redis"
+      start_command "redis-server -"
+      ping_command "redis-cli -p 700#{i} PING"
 
-    check :flapping, :times => 5, :within => 30.seconds, :retry_after => 7.seconds
+      start_with_input <<-heredoc
+        daemonize no
+        port 700#{i}
+        #{slaveof}
+      heredoc
 
-    check :cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart
-    check :memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5] do |p|
-      # Send email or something.
-      p.restart # Restart is the default anyways.
+      # check :always_true, :every => 2.seconds, :times => 3 do |p|
+      #   `say "Boom!"`
+      # end
+
+      check :transition, :from => :running, :to => :stopped do
+        `say --rate 250 "A process has stopped!"`
+      end
+
+      check :flapping, :times => 5, :within => 30.seconds, :retry_after => 7.seconds
+
+      check :cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart
+      check :memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5] do |p|
+        # Send email or something.
+        p.restart # Restart is the default anyways.
+      end
     end
   end
 end

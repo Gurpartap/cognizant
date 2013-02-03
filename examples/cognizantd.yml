@@ -2,51 +2,61 @@
 daemonize: false
 pidfile: ~/.cognizant/cognizantd.pid
 logfile: ~/.cognizant/cognizantd.log
-socket: ~/.cognizant/cognizantd.sock
-pids_dir: ~/.cognizant/pids/
-logs_dir: ~/.cognizant/logs/
+loglevel: debug
 
-load: [examples/redis-server.rb]
+# load:
+#   - ./examples/redis-server.rb
+#   - ./examples/redis-server_dsl.rb
 
-monitor: {
-  redis-server-1: {
-    autostart: false,
-    group: redis,
-    start_command: /usr/local/bin/redis-server -,
-    start_with_input: "daemonize no\nport 6666",
-    ping_command: redis-cli -p 6666 PING,
-    stop_signals: [TERM, INT],
-    checks: {
-      cpu_usage: {
-        every: 3,
-        above: 60,
-        times: 3,
-        do: restart
+applications: {
+  example: {
+    sockfile: ~/.cognizant/example/example.sock,
+    pids_dir: ~/.cognizant/example/pids/,
+    logs_dir: ~/.cognizant/example/logs/,
+
+    monitor: {
+      redis-server-6666: {
+        autostart: false,
+        group: redis,
+        start_command: /usr/local/bin/redis-server -,
+        start_with_input: "daemonize no\nport 6666",
+        ping_command: redis-cli -p 6666 PING,
+        stop_signals: [TERM, INT],
+        checks: {
+          cpu_usage: {
+            every: 3,
+            above: 60,
+            times: 3,
+            do: restart
+          },
+          memory_usage: {
+            every: 5, # Seconds.
+            above: 1220608, # Bytes.
+            times: [3, 5], # Three out of five times.
+            do: stop # Defaults to restart.
+          }
+        }
       },
-      memory_usage: {
-        every: 5, # Seconds.
-        above: 1220608, # Bytes.
-        times: [3, 5], # Three out of five times.
-        do: stop # Defaults to restart.
-      }
-    }
-  },
-  redis-server-2: {
-    autostart: false,
-    group: redis,
-    start_command: /usr/local/bin/redis-server -,
-    start_with_input: "daemonize no\nport 7777",
-    ping_command: redis-cli -p 7777 PING,
-    stop_command: redis-cli -p 7777 SHUTDOWN
-  },
-  sleep: {
-    autostart: false,
-    start_command: sleep 3,
-    checks: {
-      flapping: {
-        times: 4,
-        within: 15, # Seconds.
-        retry_after: 30 # Seconds.
+      redis-server-7777: {
+        autostart: false,
+        group: redis,
+        start_command: /usr/local/bin/redis-server -,
+        start_with_input: "daemonize no\nport 7777",
+        ping_command: redis-cli -p 7777 PING,
+        stop_command: redis-cli -p 7777 SHUTDOWN
+      },
+      sleep: {
+        autostart: false,
+        start_command: sleep 3,
+        uid: nobody,
+        gid: nobody,
+        checks: {
+          flapping: {
+            times: 4,
+            within: 15, # Seconds.
+            retry_after: 30 # Seconds.
+          }
+        }
       }
     }
   }

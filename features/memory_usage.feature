@@ -17,11 +17,15 @@ Feature: Memory Usage Condition
       """
     Given a file named "monitor.rb" with:
       """ruby
-      Cognizant.monitor do
-        name 'consume_memory'
-        start_command 'ruby ./consume_memory.rb'
-        autostart false
-        check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => [2, 3], :do => :stop
+      Cognizant.application 'memory_usage_app' do
+        sockfile './cognizant/features.sock'
+        pids_dir './cognizant/pids/'
+        logs_dir './cognizant/logs/'
+        monitor 'consume_memory' do
+          start_command 'ruby ./consume_memory.rb'
+          autostart false
+          check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => [2, 3], :do => :stop
+        end
       end
       """
 
@@ -32,6 +36,7 @@ Feature: Memory Usage Condition
     And the shell is running
 
     When I run "load monitor.rb" successfully in the shell
+    And I run "use memory_usage_app" successfully in the shell
     Then the status of "consume_memory" should be "stopped"
 
     When I run "start consume_memory" successfully in the shell

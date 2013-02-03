@@ -25,6 +25,7 @@ module Cognizant
         attributes = @child_process_attributes.merge({ name: name, autostart: false }) # We do not have control over child process' lifecycle, so avoid even attempting to maintain its state with autostart.
 
         child = Cognizant::Process.new(nil, attributes, &@child_process_block)
+        child.instance_variable_set(:@application, @application)
         child.write_pid(child_pid)
         @children << child
         child.monitor

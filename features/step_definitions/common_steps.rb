@@ -1,9 +1,9 @@
 require "aruba/api"
 
-When /^I run (cognizant) `([^`]*)`$/ do |_, cmd|
-  cmd = "cognizant #{cmd} --socket ./cognizant/cognizantd.sock"
-  step "I run `#{cmd}`"
-end
+# When /^I run (cognizant) `([^`]*)`$/ do |_, cmd|
+#   cmd = "cognizant #{cmd} --socket ./example"
+#   step "I run `#{cmd}`"
+# end
 
 When /^a process named "([^"]*)" (?:should be|is) running$/ do |name|
   `ps -eo command | grep ^#{name}`.should include(name)

@@ -6,10 +6,14 @@ Feature: Commands
   Background:
     Given a file named "sleep_process.rb" with:
       """ruby
-      Cognizant.monitor do
-        name 'sleep_process'
-        start_command 'sleep 60'
-        autostart false
+      Cognizant.application 'sleep_app' do
+        sockfile './cognizant/features.sock'
+        pids_dir './cognizant/pids/'
+        logs_dir './cognizant/logs/'
+        monitor 'sleep_process' do
+          start_command 'sleep 60'
+          autostart false
+        end
       end
       """
 
@@ -20,6 +24,7 @@ Feature: Commands
     And the shell is running
 
     When I run "load sleep_process.rb" successfully in the shell
+    And I run "use sleep_app" successfully in the shell
     Then the status of "sleep_process" is "stopped"
 
     When I run "start sleep_process" successfully in the shell

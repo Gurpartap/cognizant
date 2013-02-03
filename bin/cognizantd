@@ -10,6 +10,8 @@ $stderr.sync = true
 begin
   require "optparse"
   require "cognizant/version"
+  require "cognizant/controller"
+  require "cognizant/util/transform_hash_keys"
 
   options = {}
 
@@ -47,38 +49,6 @@ GLOBAL OPTIONS:
       options[:loglevel] = value
     end
 
-    opts.on("--env ENV", String, "Environment variables for managed processes to inherit.") do |value|
-      options[:env] = value
-    end
-
-    opts.on("--chdir DIRECTORY", String, "The current working directory for the managed processes to start with.") do |value|
-      options[:chdir] = value
-    end
-
-    opts.on("--umask UMASK", String, "Permission mode limitations for file and directory creation.") do |value|
-      options[:umask] = value
-    end
-
-    opts.on("--user USER", String, "Run the daemon and managed processes as the given user.") do |value|
-      options[:user] = value
-    end
-
-    opts.on("--group GROUP", String, "Run the daemon and managed processes as the given user group.") do |value|
-      options[:group] = value
-    end
-
-    opts.on("--pids-dir DIRECTORY", String, "Directory to store the pid files of managed processes, when required.") do |value|
-      options[:pids_dir] = value
-    end
-
-    opts.on("--logs-dir DIRECTORY", String, "Directory to store the log files of managed processes, when required.") do |value|
-      options[:logs_dir] = value
-    end
-
-    opts.on("-s FILE", "--socket FILE", String, "The socket lock file for the server") do |value|
-      options[:socket] = value
-    end
-
     opts.on("-t", "--trace", "Turn on tracing, enable full backtrace.") do
       options[:trace] = true
     end
@@ -90,36 +60,32 @@ GLOBAL OPTIONS:
     end
   end.parse!
 
-  default_config_file = "/etc/cognizantd/cognizantd.yml"
-  if arg = ARGV.shift
-    config_file = arg
-  elsif File.exists?(default_config_file)
-    config_file = default_config_file
+  config = {}
+  config_file = ARGV.shift
+
+  if config_file == "-"
+    config = YAML.load(ARGF.read)
+
+  elsif File.exists?(config_file)
+    config = YAML.load_file(config_file)
+
+  elsif File.exists?(default_config_file = "/etc/cognizant/cognizantd.yml")
+    config = YAML.load_file(default_config_file)
   end
 
-  if config_file
-    require "cognizant/util/symbolize_hash_keys"
+  config.deep_symbolize_keys!
+  config = config.merge(options)
+  trace = config[:trace]
 
-    if config_file.eql?("-")
-      config = YAML.load(ARGF.read)
-    else
-      config = YAML.load_file(config_file)
-    end
-    config = config.inject({}) { |c,(k,v)| c[k.gsub("-", "_").to_sym] = v; c }
-    config.deep_symbolize_keys!
-    options = config.merge(options)
-  end
-
-  require "cognizant/daemon"
-  Cognizant::Daemon.init(options)
-  Cognizant::Daemon.bootup
+  Cognizant::Controller.load_daemon(config)
 rescue => exception
   if exception.instance_of?(SystemExit)
     raise
   else
     $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
     $stderr.puts "    #{exception.message}\n\n"
-    if options[:trace]
+
+    if trace
       $stderr.puts exception.backtrace.join("\n")
       $stderr.puts "\n(See usage by running #{$0} with --help)"
     else

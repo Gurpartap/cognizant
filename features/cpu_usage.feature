@@ -17,11 +17,15 @@ Feature: CPU Usage Condition
       """
     Given a file named "monitor.rb" with:
       """ruby
-      Cognizant.monitor do
-        name 'consume_cpu'
-        start_command 'ruby ./consume_cpu.rb'
-        autostart false
-        check :cpu_usage, :every => 2.seconds, :above => 60, :times => [2, 3], :do => :stop
+      Cognizant.application 'cpu_usage_app' do
+        sockfile './cognizant/features.sock'
+        pids_dir './cognizant/pids/'
+        logs_dir './cognizant/logs/'
+        monitor 'consume_cpu' do
+          start_command 'ruby ./consume_cpu.rb'
+          autostart false
+          check :cpu_usage, :every => 2.seconds, :above => 60, :times => [2, 3], :do => :stop
+        end
       end
       """
 
@@ -32,6 +36,7 @@ Feature: CPU Usage Condition
     And the shell is running
 
     When I run "load monitor.rb" successfully in the shell
+    And I run "use cpu_usage_app" successfully in the shell
     Then the status of "consume_cpu" should be "stopped"
 
     When I run "start consume_cpu" successfully in the shell

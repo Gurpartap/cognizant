@@ -16,7 +16,8 @@ require "socket"
 program :version, Cognizant::VERSION
 program :description, "administration utility for cognizantd"
 
-global_option("-s", "--socket FILE", String, "The socket lock file of the daemon server (default: /var/run/cognizant/cognizantd.sock)")
+global_option("-a", "--app NAME", String, "The name of the application container (required)")
+global_option("-s", "--socket FILE", String, "The socket lock file of the application server (required)")
 
 default_command :shell
 
@@ -24,7 +25,7 @@ command :shell do |c|
   c.syntax = "cognizant shell"
   c.description = "Enter the Cognizant shell for easy control"
   c.action do |args, options|
-    Cognizant::Shell.new(socket: options.socket, shell: true).run do |output, cmd|
+    Cognizant::Shell.new(app: options.app, socket: options.socket, shell: true).run do |output, cmd|
       if cmd == "shutdown"
         # TODO: Use Shell#emit instead of puts.
         puts "The daemon has been shutdown successfuly."
@@ -97,7 +98,7 @@ rescue => e
 end
 
 def connect_and_perform(task, options, args, &block)
-  Cognizant::Shell.new(socket: options.socket, shell: false).run_command(task, args, &block)
+  Cognizant::Shell.new(app: options.app, socket: options.socket, shell: false).run_command(task, args, &block)
 end
 
 def distance_of_time_in_words(seconds)
@@ -128,5 +129,3 @@ end
 def pluralize(count, singular, plural)
   "#{count || 0} " + ((count == 1 || count =~ /^1(\.0+)?$/) ? singular : plural)
 end
-
-# exit run(ARGV)

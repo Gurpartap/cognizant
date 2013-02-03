@@ -78,14 +78,22 @@ EOF
 
     # Used by cognizant shell.
     command '_ehlo' do |conn, request|
-      <<EOF
+      if request["app"].to_s.size > 0 and Cognizant::Controller.daemon.applications.has_key?(request["app"].to_sym)
+        use = request["app"]
+      else
+        use = Cognizant::Controller.daemon.applications.keys.first
+      end
+
+      message = <<EOF
 Welcome #{request['user']}! You are speaking to the Cognizant Monitoring Daemon.
 EOF
+
+      { "message" => message, "use" => use }
     end
 
     # Used by cognizant shell.
     command '_autocomplete_keywords' do |conn, request|
-      @@commands.keys.reject { |c| c =~ /^\_.+/ } + Cognizant::Daemon.processes.keys
+      @@commands.keys.reject { |c| c =~ /^\_.+/ } + Cognizant::Controller.daemon.applications.keys + Cognizant::Controller.daemon.applications[request["app"].to_sym].processes.keys
     end
 
     command 'help', 'Print out available commands' do
@@ -97,9 +105,8 @@ EOF
 
     command("load", "Loads the process information from specified Ruby file") do |connection, request|
       request["args"].each do |file|
-        Cognizant::Daemon.load(file)
+        Cognizant::Controller.daemon.load_file(file)
       end
-      # send_process_or_group_status
       "OK"
     end
 
@@ -126,7 +133,7 @@ EOF
     # end
 
     command("status", "Display status of managed process(es) or group(s)") do |connection, request|
-      send_process_or_group_status(request["args"])
+      send_process_or_group_status(request["app"], request["args"])
     end
 
     [
@@ -143,7 +150,7 @@ EOF
           return
         end
         output_processes = []
-        output_processes = processes_for_name_or_group(args)
+        output_processes = processes_for_name_or_group(request["app"], args)
         if output_processes.size == 0
           raise("No such process")
         else
@@ -151,30 +158,42 @@ EOF
             process.handle_user_command(name)
           end
         end
-        # send_process_or_group_status(args)
+        # send_process_or_group_status(request["app"], args)
         "OK"
       end
     end
 
-    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
-      Cognizant::Daemon.shutdown
+    command("use", "Switch the current application for use with process maintenance commands") do |connection, request|
+      puts "Cognizant::Controller.daemon.applications.keys: #{Cognizant::Controller.daemon.applications.keys}"
+      if request["args"].size > 0 and request["args"].first.to_s.size > 0 and Cognizant::Controller.daemon.applications.has_key?(request["args"].first.to_sym)
+        app = request["args"].first
+        message = "OK"
+      else
+        app = request["app"]
+        message = "No such application: #{request["args"].first}"
+      end
+      { "use" => app, "message" => message }
     end
 
-    def self.processes_for_name_or_group(args)
+    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
+      Cognizant::Controller.daemon.shutdown!
+    end
+
+    def self.processes_for_name_or_group(app, args)
       processes = []
-      Cognizant::Daemon.processes.values.each do |process|
+      Cognizant::Controller.daemon.applications[app.to_sym].processes.values.each do |process|
         processes << process if args.include?(process.name) or args.include?(process.group)
       end
       processes
     end
 
-    def self.send_process_or_group_status(args = [])
+    def self.send_process_or_group_status(app, args = [])
       output_processes = []
       if args.size > 0
-        output_processes = processes_for_name_or_group(args)
+        output_processes = processes_for_name_or_group(app, args)
         raise "No such process" if output_processes.size == 0
       else
-        output_processes = Cognizant::Daemon.processes.values
+        output_processes = Cognizant::Controller.daemon.applications[app.to_sym].processes.values
       end
 
       format_process_or_group_status(output_processes)

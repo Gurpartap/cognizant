@@ -30,15 +30,19 @@ Feature: Child Process
       """
     Given a file named "monitor.rb" with:
       """ruby
-      Cognizant.monitor do
-        name 'fork_machine'
-        start_command 'ruby ./fork_machine.rb'
-        autostart false
-        daemonize!
-        stop_signals ['TERM']
-        monitor_children do
-          check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => 3, :do => :stop
-          stop_signals ['INT']
+      Cognizant.application 'child_process_app' do
+        sockfile './cognizant/features.sock'
+        pids_dir './cognizant/pids/'
+        logs_dir './cognizant/logs/'
+        monitor 'fork_machine' do
+          start_command 'ruby ./fork_machine.rb'
+          autostart false
+          daemonize!
+          stop_signals ['TERM']
+          monitor_children do
+            check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => 3, :do => :stop
+            stop_signals ['INT']
+          end
         end
       end
       """
@@ -50,6 +54,7 @@ Feature: Child Process
     And the shell is running
 
     When I run "load monitor.rb" successfully in the shell
+    And I run "use child_process_app" successfully in the shell
     Then the status of "fork_machine" should be "stopped"
 
     When I run "start fork_machine" successfully in the shell

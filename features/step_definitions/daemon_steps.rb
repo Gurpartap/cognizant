@@ -1,5 +1,5 @@
 When /^the daemon is running$/ do
-  step %Q{I see "Cognizant Daemon running successfully." on the daemon terminal}
+  step %Q{I see "Cognizant daemon running successfully." on the daemon terminal}
 end
 
 When /^the daemon is stopped$/ do

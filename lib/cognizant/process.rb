@@ -14,7 +14,7 @@ require "cognizant/process/condition_delegate"
 require "cognizant/process/triggers"
 require "cognizant/process/trigger_delegate"
 require "cognizant/process/children"
-require "cognizant/util/symbolize_hash_keys"
+require "cognizant/util/transform_hash_keys"
 
 module Cognizant
   class Process
@@ -87,14 +87,8 @@ module Cognizant
     end
 
     def initialize(process_name = nil, attributes = {}, &block)
-      @ticks_to_skip = 0
-      @conditions = []
-      @triggers = []
-      @children = []
-      @action_mutex = Monitor.new
-      @monitor_children =  false
-      @autostart = true
-      
+      reset!
+
       @name = process_name.to_s if process_name
 
       set_attributes(attributes)
@@ -108,13 +102,22 @@ module Cognizant
         end
       end
 
+      raise "Process name is missing. Aborting." unless self.name
+
       # Let state_machine initialize as well.
       initialize_state_machines
     end
 
-    def monitor_children(child_process_attributes = {}, &child_process_block)
-      @monitor_children = true
-      @child_process_attributes, @child_process_block = child_process_attributes, child_process_block
+    def reset!
+      reset_attributes!
+
+      @application = nil
+      @ticks_to_skip = 0
+      @conditions = []
+      @triggers = []
+      @children = []
+      @action_mutex = Monitor.new
+      @monitor_children = false
     end
 
     def check(check_name, options, &block)
@@ -125,6 +128,11 @@ module Cognizant
       end
     end
 
+    def monitor_children(child_process_attributes = {}, &child_process_block)
+      @monitor_children = true
+      @child_process_attributes, @child_process_block = child_process_attributes, child_process_block
+    end
+
     def tick
       return if skip_tick?
       @action_thread.kill if @action_thread # TODO: Ensure if this is really needed.
@@ -132,7 +140,7 @@ module Cognizant
       # Invoke the state_machine event.
       super
 
-      if self.running? # State machine method.
+      if self.running? # State method.
         run_conditions
 
         if @monitor_children
@@ -140,6 +148,23 @@ module Cognizant
           @children.each(&:tick)
         end
       end
+    end
+
+    def skip_ticks_for(skips)
+      # Accept negative skips with the result being >= 0.
+      @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
+    end
+
+    def pidfile
+      @pidfile || File.join(@application.pids_dir, @name + '.pid')
+    end
+
+    def logfile
+      @logfile || File.join(@application.logs_dir, @name + '.log')
+    end
+
+    def last_transition_time
+      @last_transition_time || 0
     end
 
     def handle_user_command(command)
@@ -157,23 +182,6 @@ module Cognizant
           self.send("#{action}")
         end
       end
-    end
-
-    def pidfile
-      @pidfile || File.join(Cognizant::Daemon.pids_dir, @name + '.pid')
-    end
-
-    def logfile
-      @logfile || File.join(Cognizant::Daemon.logs_dir, @name + '.log')
-    end
-
-    def last_transition_time
-      @last_transition_time || 0
-    end
-
-    def skip_ticks_for(skips)
-      # Accept negative skips with the result being >= 0.
-      @ticks_to_skip = [@ticks_to_skip + (skips.to_i + 1), 0].max # +1 so that we don't have to >= and ensure 0 in "skip_tick?".
     end
 
     private

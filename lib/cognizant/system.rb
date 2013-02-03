@@ -1,3 +1,5 @@
+require "fileutils"
+
 require "cognizant/system/signal"
 require "cognizant/system/ps"
 
@@ -23,6 +25,20 @@ module Cognizant
     else
       # Possibly running.
       true
+    end
+
+    def unlink_file(path)
+      begin
+        File.unlink(path) if path
+      rescue Errno::ENOENT
+        nil
+      end
+    end
+
+    def mkdir(*directories)
+      [*directories].each do |directory|
+        FileUtils.mkdir_p(directory)
+      end
     end
   end
 end

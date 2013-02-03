@@ -7,6 +7,7 @@ module Cognizant
       attr_accessor :name
 
       # Group classification for the process.
+      # Note: This is not system process group. See `gid` attribute instead.
       # @return [String] Defaults to nil
       attr_accessor :group
 
@@ -17,11 +18,22 @@ module Cognizant
       # @return [true, false] Defaults to true
       attr_accessor :daemonize
 
-      # Whether or not to auto start the process on initial run. Afterwards,
-      # this attribute is overwritten by stop or restart request.
+      # Whether or not to auto start the process when beginning monitoring.
+      # Afterwards, auto start is automatically managed based on user initiated
+      # stop or restart requests.
       # Note: For child processes, this value is automatically set to false.
       # @return [true, false] Defaults to true
       attr_accessor :autostart
+
+      # The command to check the running status of the process with. The exit
+      # status of the command is used to determine the status.
+      # e.g. "/usr/bin/redis-cli PING"
+      # @return [String] Defaults to nil
+      attr_accessor :ping_command
+
+      # The command that returns the pid of the process.
+      # @return [String] Defaults to nil
+      attr_accessor :pid_command
 
       # The pid lock file for the process. Required when daemonize is set to
       # false.
@@ -69,22 +81,31 @@ module Cognizant
       # @return [Array] Defaults to []
       attr_accessor :groups
 
-      # The command to check the running status of the process with. The exit
-      # status of the command is used to determine the status.
-      # e.g. "/usr/bin/redis-cli PING"
-      # @return [String] Defaults to nil
-      attr_accessor :ping_command
-
-      # The command that returns the pid of the process.
-      # @return [String] Defaults to nil
-      attr_accessor :pid_command
-
       def daemonize!
         @daemonize = true
       end
 
       def autostart!
         @autostart = true
+      end
+
+      # @private
+      def reset_attributes!
+        self.name = nil
+        self.group = nil
+        self.daemonize = false
+        self.autostart = false
+        self.ping_command = nil
+        self.pid_command = nil
+        self.pidfile = nil
+        self.logfile = nil
+        self.errfile = nil
+        self.env = {}
+        self.chroot = nil
+        self.chdir = nil
+        self.uid = nil
+        self.gid = nil
+        self.groups = []
       end
     end
   end
