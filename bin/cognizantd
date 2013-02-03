@@ -33,6 +33,10 @@ GLOBAL OPTIONS:
       options[:daemonize] = value
     end
 
+    opts.on("--sockfile FILE", String, "The socket lock file of the command server.") do |value|
+      options[:pidfile] = value
+    end
+
     opts.on("--pidfile FILE", String, "The pid (process identifier) lock file for the daemon.") do |value|
       options[:pidfile] = value
     end
