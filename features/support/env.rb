@@ -12,17 +12,6 @@ Before "@daemon" do
         sockfile: ./cognizant/cognizantd.sock
         pidfile: ./cognizant/cognizantd.pid
         logfile: ./cognizant/cognizantd.log
-        applications: {
-          features: {
-            pids_dir: ./cognizant/pids/,
-            logs_dir: ./cognizant/logs/,
-            processes: {
-              sleep-10: {
-                start_command: sleep 10
-              }
-            }
-          }
-        }
       heredoc
     end
 
