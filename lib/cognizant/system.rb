@@ -37,7 +37,7 @@ module Cognizant
 
     def mkdir(*directories)
       [*directories].each do |directory|
-        FileUtils.mkdir_p(directory)
+        FileUtils.mkdir_p(File.expand_path(directory))
       end
     end
   end

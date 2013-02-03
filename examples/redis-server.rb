@@ -1,7 +1,7 @@
-Cognizant.application("example1") do |app|
-  app.sockfile = "~/.cognizant/example1/example1.sock"
-  app.pids_dir = "~/.cognizant/example1/pids/"
-  app.logs_dir = "~/.cognizant/example1/logs/"
+Cognizant.application("redis-example") do |app|
+  app.sockfile = "~/.cognizant/redis-example/redis-example.sock"
+  app.pids_dir = "~/.cognizant/redis-example/pids/"
+  app.logs_dir = "~/.cognizant/redis-example/logs/"
 
   # 2 slave instances to master at port 6000.
   3.times do |i|

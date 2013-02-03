@@ -1,7 +1,7 @@
-# Cognizant.application "example2" do
-#   sockfile "~/.cognizant/example2/example2.sock"
-#   pids_dir "~/.cognizant/example2/pids/"
-#   logs_dir "~/.cognizant/example2/logs/"
+# Cognizant.application "redis-example" do
+#   sockfile "~/.cognizant/redis-example/redis-example.sock"
+#   pids_dir "~/.cognizant/redis-example/pids/"
+#   logs_dir "~/.cognizant/redis-example/logs/"
 # 
 #   monitor "redis-server-7000" do
 #     autostart!
@@ -13,10 +13,10 @@
 # end
 
 # Not using dsl for app to use some Ruby in the immediate block.
-Cognizant.application "example2" do |app|
-  app.sockfile = "~/.cognizant/example2/example2.sock"
-  app.pids_dir = "~/.cognizant/example2/pids/"
-  app.logs_dir = "~/.cognizant/example2/logs/"
+Cognizant.application "redis-example" do |app|
+  app.sockfile = "~/.cognizant/redis-example/redis-example.sock"
+  app.pids_dir = "~/.cognizant/redis-example/pids/"
+  app.logs_dir = "~/.cognizant/redis-example/logs/"
 
   # 2 slave instances to master at port 7000.
   3.times do |i|

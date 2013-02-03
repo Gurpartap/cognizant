@@ -13,9 +13,9 @@ separate concerns, they are serviced by separate applications, `cognizant` and
                                                  ___________   |
      ____________          ____________         |           |  |
     |            |        |            | -----> | Process A |  |
-    | Admin      |        | Monitoring |        |___________|  |
-    | Utility    | -----> | Daemon     |         ___________   | -- Managed Processes
-    | >_         |        |            |        |           |  |
+    | Admin      | -----> | Monitoring |        |___________|  |
+    | Utility    |        | Daemon     |         ___________   | -- Managed Processes
+    | >_         | <----- |            |        |           |  |
     |____________|        |____________| -----> | Process B |  |
      `cognizant`           `cognizantd`         |___________|  |
                                                           _____|
