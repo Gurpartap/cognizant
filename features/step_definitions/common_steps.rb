@@ -1,7 +1,7 @@
 require "aruba/api"
 
 # When /^I run (cognizant) `([^`]*)`$/ do |_, cmd|
-#   cmd = "cognizant #{cmd} --socket ./example"
+#   cmd = "cognizant #{cmd} --sockfile ./example"
 #   step "I run `#{cmd}`"
 # end
 

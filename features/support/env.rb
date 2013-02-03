@@ -33,7 +33,7 @@ end
 
 Before "@shell" do
   in_current_dir do
-    cmd = "cognizant shell --socket ./cognizant/cognizantd.sock"
+    cmd = "cognizant shell --sockfile ./cognizant/cognizantd.sock"
 
     Aruba.config.hooks.execute(:before_cmd, self, cmd)
     announcer.dir(Dir.pwd)
