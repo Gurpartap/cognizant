@@ -10,8 +10,8 @@ module Cognizant
       @daemon ||= Cognizant::Daemon.new
     end
 
-    def self.load_daemon(options = {})
-      self.daemon.load(options)
+    def self.start_daemon(options = {})
+      self.daemon.start(options)
     end
   end
 end

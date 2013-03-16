@@ -5,6 +5,7 @@ require "cognizant/log"
 require "cognizant/process"
 require "cognizant/application"
 require "cognizant/system"
+require "cognizant/util/transform_hash_keys"
 
 module Cognizant
   class Daemon
@@ -43,14 +44,33 @@ module Cognizant
     # @private
     attr_accessor :socket
 
-    def load(options = {})
+    def start(options = {})
       self.reset!
 
-      files = []
-      apps = {}
+      load_files = []
+      rb_files   = []
+      yml_files  = []
+      apps       = []
 
-      files = options.delete(:load) if options.has_key?(:load)
-      apps = options.delete(:applications) if options.has_key?(:applications)
+      load_files = [*options.delete(:load)] if options and options.has_key?(:load)
+      load_files.each do |include|
+        Dir[File.expand_path(include)].each do |file|
+          if file.end_with?(".yml")
+            yml_files << file
+          else
+            rb_files << file
+          end
+        end
+      end
+      apps << options.delete(:applications) if options and options.has_key?(:applications)
+
+      yml_files.each do |file|
+        file_opts = YAML.load_file(file)
+        if file_opts
+          file_opts.deep_symbolize_keys!
+          apps << file_opts.delete(:applications) if file_opts and file_opts.has_key?(:applications)
+        end
+      end
 
       # Attributes.
       options.each do |key, value|
@@ -73,12 +93,15 @@ module Cognizant
       EventMachine.run do
         # Applications.
         Log[self].info "Cognizant daemon running successfully."
-        apps.each do |key, value|
-          self.create_application(key, value)
+
+        apps.each do |app|
+          app.each do |key, value|
+            self.create_application(key, value)
+          end
         end
 
-        [*files].each do |file|
-          load_file(file)
+        [*rb_files].each do |rb_file|
+          load_file(rb_file)
         end
 
         EventMachine.start_unix_domain_server(self.sockfile, Cognizant::Interface)
@@ -90,10 +113,10 @@ module Cognizant
       end
     end
 
-    def load_file(file)
-      file = File.expand_path(file)
-      Log[self].info "Loading config from #{file}..."
-      Kernel.load(file) if File.exists?(file)
+    def load_file(rb_file)
+      rb_file = File.expand_path(rb_file)
+      Log[self].info "Loading config from #{rb_file}..."
+      Kernel.load(rb_file) if File.exists?(rb_file)
     end
 
     def reset!
@@ -171,7 +194,7 @@ module Cognizant
                 # Send the stop signal and wait for it to stop.
                 Cognizant::System.signal(stop_signal, previous_daemon_pid)
 
-                # Poll to see if it's stopped yet. Minimum 2 so that we check at least once again.
+                # Poll to see if it has stopped yet. Minimum 2 so that we check at least once again.
                 ([timeout / signals.size, 2].max).times do
                   throw :stopped unless Cognizant::System.pid_running?(previous_daemon_pid)
                   sleep 1

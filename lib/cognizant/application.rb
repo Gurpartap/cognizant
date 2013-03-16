@@ -15,10 +15,10 @@ module Cognizant
     attr_accessor :processes
 
     def initialize(name = nil, options = {}, &block)
-      self.load({ name: name }.merge(options), &block)
+      self.setup({ name: name }.merge(options), &block)
     end
 
-    def load(options = {}, &block)
+    def setup(options = {}, &block)
       self.reset!
 
       set_attributes(options)
@@ -108,7 +108,6 @@ module Cognizant
     end
 
     def setup_directories
-      # Create the require directories.
       Cognizant::System.mkdir(self.pids_dir, self.logs_dir)
     end
   end

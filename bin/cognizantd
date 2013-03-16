@@ -81,12 +81,12 @@ GLOBAL OPTIONS:
   config = config.merge(options)
   trace = config[:trace]
 
-  Cognizant::Controller.load_daemon(config)
+  Cognizant::Controller.start_daemon(config)
 rescue => exception
   if exception.instance_of?(SystemExit)
     raise
   else
-    $stderr.puts "ERROR: While executing #{$0} ... (#{exception.class})"
+    $stderr.puts "ERROR  While executing #{$0} ... (#{exception.class})"
     $stderr.puts "    #{exception.message}\n\n"
 
     if trace
