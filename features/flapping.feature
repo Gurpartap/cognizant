@@ -18,7 +18,7 @@ Feature: Flapping Check
 
   @daemon
   @shell
-  Scenario: Check flapping of for a process that restarts every 3 seconds
+  Scenario: Handle a process that restarts every 3 seconds
     Given the daemon is running
     And the shell is running
 

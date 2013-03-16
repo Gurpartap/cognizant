@@ -55,6 +55,7 @@ module Cognizant
       load_files = [*options.delete(:load)] if options and options.has_key?(:load)
       load_files.each do |include|
         Dir[File.expand_path(include)].each do |file|
+          Log[self].info "Including config from #{file}."
           if file.end_with?(".yml")
             yml_files << file
           else
@@ -115,7 +116,6 @@ module Cognizant
 
     def load_file(rb_file)
       rb_file = File.expand_path(rb_file)
-      Log[self].info "Loading config from #{rb_file}..."
       Kernel.load(rb_file) if File.exists?(rb_file)
     end
 

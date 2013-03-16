@@ -103,6 +103,7 @@ module Cognizant
       end
 
       raise "Process name is missing. Aborting." unless self.name
+      Log[self].info "Loading process #{self.name}..."
 
       # Let state_machine initialize as well.
       initialize_state_machines

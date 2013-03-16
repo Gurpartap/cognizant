@@ -33,6 +33,8 @@ module Cognizant
       end
 
       raise "Application name is missing. Aborting." unless self.name
+      Log[self].info "Loading application #{self.name}..."
+
       raise "Application processes are missing. Aborting." unless self.processes.keys.size > 0
 
       self.setup_directories

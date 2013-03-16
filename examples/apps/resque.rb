@@ -1,5 +1,5 @@
-5.times do |i|
-  Cognizant.application("my-web-app") do |app|
+Cognizant.application("my-web-app") do |app|
+  5.times do |i|
     app.monitor "resque-worker-#{i}" do |process|
       process.group         = "resque"
       process.uid           = "deploy"
