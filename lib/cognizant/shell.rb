@@ -113,6 +113,7 @@ EOF
     end
 
     def fetch_autocomplete_keywords
+      return unless @@is_shell
       @autocomplete_keywords = @client.command('command' => '_autocomplete_keywords', 'app' => @app)
     end
 
