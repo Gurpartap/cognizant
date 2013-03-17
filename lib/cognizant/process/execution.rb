@@ -29,7 +29,7 @@ module Cognizant
           if options[:daemonize]
             # Create a new session to detach from the controlling terminal.
             unless ::Process.setsid
-              Log[self].warn "Cannot detach #{options[:name]} from controlling terminal"
+              Log[self].error "Cannot detach #{options[:name]} from controlling terminal"
             end
 
             # TODO: Set pgroup: true so that the spawned process is the group leader, and it's death would kill all children as well.
@@ -114,7 +114,7 @@ module Cognizant
 
           # Collect and return stdout, stderr and exitcode.
           return ExecutionResult.new(
-            pid.read.to_i,
+            nil,
             out_r.read,
             err_r.read,
             status.exitstatus,
