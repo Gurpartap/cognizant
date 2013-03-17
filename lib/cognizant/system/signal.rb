@@ -15,7 +15,7 @@ module Cognizant
           return true unless pid_running?(pid)
 
           signals = options[:signals] || ["TERM", "INT", "KILL"]
-          timeout = options[:timeout] || 10
+          timeout = options[:timeout] || 30
 
           catch :stopped do
             signals.each do |stop_signal|

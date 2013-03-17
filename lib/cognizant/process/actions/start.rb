@@ -35,7 +35,7 @@ module Cognizant
         # Covers the time period for the input and start command. After the
         # timeout is over, the process is considered as not started and it
         # re-enters the auto start lifecycle based on conditions.
-        # @return [String] Defaults to 10
+        # @return [String] Defaults to 30
         attr_accessor :start_timeout
 
         # The command to run after the process is started.
@@ -61,7 +61,7 @@ module Cognizant
             input_file:    self.start_with_input_file,
             input_command: self.start_with_input_command,
             after:         self.start_after_command,
-            timeout:       self.start_timeout || 10
+            timeout:       self.start_timeout || 30
           )
         end
       end

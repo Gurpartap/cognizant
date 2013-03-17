@@ -29,7 +29,7 @@ module Cognizant
         # timeout is over, the process is checked for running status and if
         # not stopped, it re-enters the auto start lifecycle based on
         # conditions.
-        # @return [String] Defaults to 10
+        # @return [String] Defaults to 30
         attr_accessor :stop_timeout
 
         # The command to run after the process is stopped.
@@ -50,7 +50,7 @@ module Cognizant
             command: self.stop_command,
             signals: self.stop_signals,
             after:   self.stop_after_command,
-            timeout: self.stop_timeout || 10
+            timeout: self.stop_timeout || 30
           )
         end
       end

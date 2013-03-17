@@ -30,7 +30,7 @@ module Cognizant
         # signals. After the timeout is over, the process is checked for
         # running status and if not stopped, it re-enters the auto start
         # lifecycle based on conditions.
-        # @return [String] Defaults to 10
+        # @return [String] Defaults to 30
         attr_accessor :restart_timeout
 
         # The command to run after the process is restarted.
@@ -52,7 +52,7 @@ module Cognizant
             command: self.restart_command,
             signals: self.restart_signals,
             after:   self.restart_after_command,
-            timeout: self.restart_timeout || 10
+            timeout: self.restart_timeout || 30
           )
         end
       end
