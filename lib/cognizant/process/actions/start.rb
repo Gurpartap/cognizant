@@ -51,7 +51,7 @@ module Cognizant
           execute_action(
             result_handler,
             name:          self.name,
-            daemonize:     self.daemonize || true,
+            daemonize:     self.daemonize,
             env:           (self.env || {}).merge(self.start_env || {}),
             logfile:       self.logfile,
             errfile:       self.errfile,
