@@ -70,11 +70,12 @@ GLOBAL OPTIONS:
   if config_file == "-"
     config = YAML.load(ARGF.read)
 
-  elsif File.exists?(config_file)
-    config = YAML.load_file(config_file)
-
-  elsif File.exists?(default_config_file = "/etc/cognizant/cognizantd.yml")
-    config = YAML.load_file(default_config_file)
+  elsif config_file.to_s.size > 0
+    if File.exists?(config_file)
+      config = YAML.load_file(config_file)
+    elsif File.exists?(default_config_file = "/etc/cognizant/cognizantd.yml")
+      config = YAML.load_file(default_config_file)
+    end
   end
 
   config.deep_symbolize_keys!
