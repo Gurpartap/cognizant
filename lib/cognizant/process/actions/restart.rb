@@ -41,7 +41,7 @@ module Cognizant
           result_handler = Proc.new do |result|
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
-              unlink_pid unless pid_running?
+              unlink_pid unless pid_running? and self.daemonize
               # TODO: write_pid ?
             end
           end
@@ -52,7 +52,7 @@ module Cognizant
             command: self.restart_command,
             signals: self.restart_signals,
             after:   self.restart_after_command,
-            timeout: self.restart_timeout
+            timeout: self.restart_timeout || 10
           )
         end
       end

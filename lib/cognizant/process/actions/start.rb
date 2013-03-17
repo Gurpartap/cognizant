@@ -33,7 +33,7 @@ module Cognizant
 
         # The grace time period in seconds for the process to start within.
         # Covers the time period for the input and start command. After the
-        # timeout is over, the process the considered not started and it
+        # timeout is over, the process is considered as not started and it
         # re-enters the auto start lifecycle based on conditions.
         # @return [String] Defaults to 10
         attr_accessor :start_timeout
@@ -44,8 +44,8 @@ module Cognizant
 
         def start_process
           result_handler = Proc.new do |result|
-            if result.respond_to?(:succeeded?) and result.succeeded?
-              write_pid(result.pid) if result.pid != 0
+            if self.daemonize and result.respond_to?(:succeeded?) and result.succeeded? and result.pid != 0
+              write_pid(result.pid)
             end
           end
           execute_action(
@@ -61,7 +61,7 @@ module Cognizant
             input_file:    self.start_with_input_file,
             input_command: self.start_with_input_command,
             after:         self.start_after_command,
-            timeout:       self.start_timeout
+            timeout:       self.start_timeout || 10
           )
         end
       end

@@ -26,6 +26,7 @@ module Cognizant
 
         child = Cognizant::Process.new(nil, attributes, &@child_process_block)
         child.instance_variable_set(:@application, @application)
+        # TODO: Reset pidfile?
         child.write_pid(child_pid)
         @children << child
         child.monitor

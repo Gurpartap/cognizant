@@ -40,7 +40,7 @@ module Cognizant
           result_handler = Proc.new do |result|
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
-              unlink_pid unless pid_running?
+              unlink_pid if not pid_running? and self.daemonize
             end
           end
           execute_action(
@@ -50,7 +50,7 @@ module Cognizant
             command: self.stop_command,
             signals: self.stop_signals,
             after:   self.stop_after_command,
-            timeout: self.stop_timeout
+            timeout: self.stop_timeout || 10
           )
         end
       end

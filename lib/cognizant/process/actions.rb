@@ -17,7 +17,10 @@ module Cognizant
         command        = options[:command]
         after_command  = options[:after]
         signals        = options[:signals]
-        timeout        = options[:timeout] || 10
+        timeout        = options[:timeout]
+
+        # We skip so that we're not reinformed about the required transition by the tick.
+        skip_ticks_for(timeout)
 
         # TODO: Works well but can some refactoring make it more declarative?
         @action_thread = Thread.new do
@@ -53,9 +56,6 @@ module Cognizant
           # Action callback.
           result_handler.call(result) if result_handler.respond_to?(:call)
         end
-
-        # We skip so that we're not reinformed about the required transition by the tick.
-        skip_ticks_for(timeout)
       end
 
       def send_signals(options = {})
