@@ -34,9 +34,9 @@ Feature: Child Process
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'fork_machine' do
-          start_command 'ruby ./fork_machine.rb'
           autostart false
           daemonize!
+          start_command 'ruby ./fork_machine.rb'
           stop_signals ['TERM']
           monitor_children do
             check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => 3, :do => :stop

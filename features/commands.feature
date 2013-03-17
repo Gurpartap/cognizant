@@ -10,8 +10,9 @@ Feature: Commands
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'sleep_process' do
-          start_command 'sleep 60'
           autostart false
+          daemonize!
+          start_command 'sleep 60'
         end
       end
       """

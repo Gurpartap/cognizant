@@ -21,8 +21,9 @@ Feature: Memory Usage Condition
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'consume_memory' do
-          start_command 'ruby ./consume_memory.rb'
           autostart false
+          daemonize!
+          start_command 'ruby ./consume_memory.rb'
           check :memory_usage, :every => 2.seconds, :above => 10.megabytes, :times => [2, 3], :do => :stop
         end
       end

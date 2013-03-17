@@ -21,8 +21,9 @@ Feature: CPU Usage Condition
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'consume_cpu' do
-          start_command 'ruby ./consume_cpu.rb'
           autostart false
+          daemonize!
+          start_command 'ruby ./consume_cpu.rb'
           check :cpu_usage, :every => 2.seconds, :above => 60.percent, :times => [2, 3], :do => :stop
         end
       end

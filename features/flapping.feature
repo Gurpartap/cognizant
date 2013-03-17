@@ -9,8 +9,9 @@ Feature: Flapping Check
         pids_dir './cognizant/pids/'
         logs_dir './cognizant/logs/'
         monitor 'sleep_process' do
-          start_command 'sleep 5'
           autostart false
+          daemonize!
+          start_command 'sleep 5'
           check :flapping, times: 3, within: 30, retry_after: 15, retries: 0
         end
       end
