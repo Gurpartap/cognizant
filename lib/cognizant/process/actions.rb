@@ -39,10 +39,11 @@ module Cognizant
             Thread.exit
           end
 
-          timeout_left = timeout + 1
-          while (timeout_left -= 1) > 0 do
+          timeout_left = timeout
+          while timeout_left-- >= 0 do
             # If there is something in the queue, we have the required result.
-            if result = queue.pop
+            unless queue.empty?
+              result = queue.pop
               # Rollback the pending skips, since we finished before timeout.
               skip_ticks_for(-timeout_left)
               break
