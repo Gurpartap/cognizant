@@ -39,17 +39,20 @@ module Cognizant
             Thread.exit
           end
 
-          timeout_left = timeout
-          while timeout_left-- >= 0 do
+          time_left = timeout
+          while time_left >= 0 do
             # If there is something in the queue, we have the required result.
             unless queue.empty?
               result = queue.pop
               # Rollback the pending skips, since we finished before timeout.
-              skip_ticks_for(-timeout_left)
+              skip_ticks_for(-time_left)
               break
             end
             sleep 1
+            time_left -= 1
           end
+
+          # TODO: Unmonitor if timed out?
 
           # Kill the nested thread.
           thread.kill
