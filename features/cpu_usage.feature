@@ -23,7 +23,7 @@ Feature: CPU Usage Condition
         monitor 'consume_cpu' do
           start_command 'ruby ./consume_cpu.rb'
           autostart false
-          check :cpu_usage, :every => 2.seconds, :above => 60, :times => [2, 3], :do => :stop
+          check :cpu_usage, :every => 2.seconds, :above => 60.percent, :times => [2, 3], :do => :stop
         end
       end
       """

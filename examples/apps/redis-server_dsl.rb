@@ -43,7 +43,7 @@ Cognizant.application "redis-example-dsl" do |app|
 
       check :flapping, :times => 5, :within => 30.seconds, :retry_after => 7.seconds
 
-      check :cpu_usage, :every => 3.seconds, :above => 60, :times => 3, :do => :restart
+      check :cpu_usage, :every => 3.seconds, :above => 60.percent, :times => 3, :do => :restart
       check :memory_usage, :every => 5.seconds, :above => 100.megabytes, :times => [3, 5] do |p|
         # Send email or something.
         p.restart # Restart is the default anyways.
