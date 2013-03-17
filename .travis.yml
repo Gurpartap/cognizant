@@ -1,22 +1,15 @@
 ---
 language: ruby
-# before_script:
-#   - bundle exec cognizantd
-#   - bundle exec cognizant shutdown
 rvm:
   - 1.9.2
   - 1.9.3
   - 2.0.0
   - ruby-head
   - rbx-19mode
-  # - jruby-19mode
-  # - jruby-head
 matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: rbx-19mode
-    # - rvm: jruby-19mode
-    # - rvm: jruby-head
 branches:
   only:
     - master
