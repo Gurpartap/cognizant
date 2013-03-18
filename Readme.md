@@ -21,13 +21,13 @@ app_root = "/apps/acmecorp.com"
 servers = 5
 port = 4000
 
-Cognizant.application 'acmecorp.com' do |app|
+Cognizant.application "acmecorp.com" do |app|
   servers.times do |n|
     app.monitor "thin-#{n}" do
       autostart!      
-      group 'thin'
-      uid 'www-data'
-      gid 'www-data'
+      group "thin"
+      uid "www-data"
+      gid "www-data"
 
       env RACK_ENV: "production"
       chdir "#{app_root}/current"
