@@ -93,20 +93,22 @@ module Cognizant
 
       set_attributes(attributes)
 
-      if block
-        if block.arity == 0
-          dsl_proxy = Cognizant::Process::DSLProxy.new(self, &block)
-          set_attributes(dsl_proxy.attributes)
-        else
-          instance_exec(self, &block)
-        end
-      end
+      handle_initialize_block(&block) if block
 
       raise "Process name is missing. Aborting." unless self.name
       Log[self].info "Loading process #{self.name}..."
 
       # Let state_machine initialize as well.
       initialize_state_machines
+    end
+
+    def handle_initialize_block(&block)
+      if block.arity == 0
+        dsl_proxy = Cognizant::Process::DSLProxy.new(self, &block)
+        set_attributes(dsl_proxy.attributes)
+      else
+        instance_exec(self, &block)
+      end
     end
 
     def reset!
