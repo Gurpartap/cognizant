@@ -55,6 +55,13 @@ module Cognizant
           self.restart_expect_stopped = true
         end
 
+        def restart_expect_stopped
+          unless !!@restart_expect_stopped == @restart_expect_stopped
+            @restart_expect_stopped = !(self.restart_command.present? or self.restart_signals.present?)
+          end
+          @restart_expect_stopped
+        end
+
         def reset_attributes!
           self.restart_env = {}
           self.restart_before_command = nil
@@ -86,10 +93,6 @@ module Cognizant
           # If it is a boolean and value is true OR if it's an execution result and it succeeded.
           if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
             unlink_pid if not pid_running? and self.daemonize
-
-            unless !!self.restart_expect_stopped == self.restart_expect_stopped
-              self.restart_expect_stopped = !(self.restart_command.present? or self.restart_signals.present?)
-            end
 
             # We are not resetting @process_pid here to give process a second of grace period.
 

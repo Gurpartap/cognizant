@@ -36,7 +36,8 @@ module Cognizant
     def handle_initialize_block(&block)
       if block.arity == 0
         dsl_proxy = Cognizant::Application::DSLProxy.new(self, &block)
-        set_attributes(dsl_proxy.attributes)
+        attributes = dsl_proxy.attributes
+        set_attributes(attributes)
       else
         instance_exec(self, &block)
       end
