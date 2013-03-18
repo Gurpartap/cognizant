@@ -1,72 +1,80 @@
-# Cognizant: supervise your processes
-[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/github/Gurpartap/cognizant.png)](https://codeclimate.com/github/Gurpartap/cognizant)
+![Cognizant](http://f.cl.ly/items/1C1j1a2x2S3R3y442m0l/cognizant.png)
 
-Cognizant is a process management framework written in Ruby. In other words, it
-is a system utility that supervises your processes, monitoring and ensuring
-their state based on a customizable criteria.
+Simple and reliable process monitoring framework written in Ruby
 
-Since cognizant administration, and process monitoring and automation are two
-separate concerns, they are serviced by separate applications, `cognizant` and
-`cognizantd`, respectively.
-
-                                                          _____
-                                                 ___________   |
-     ____________          ____________         |           |  |
-    |            |        |            | -----> | Process A |  |
-    | Admin      | -----> | Monitoring |        |___________|  |
-    | Utility    |        | Daemon     |         ___________   | -- Managed Processes
-    | >_         | <----- |            |        |           |  |
-    |____________|        |____________| -----> | Process B |  |
-     `cognizant`           `cognizantd`         |___________|  |
-                                                          _____|
-
-
-## Monitoring and Automation
-
-The `cognizantd` daemon provides continuous process monitoring, automation
-through conditions and triggers, and a command socket for communication.
-
-The daemon starts with a run loop, polling the managed processes for their
-state and properties. It also provides a command socket to accept commands
-through the administration utility.
-
-### Conditions
-
-Conditions provide actions based on any properties or criteria of a process.
-For example, continuous usage of a high amount of system memory would restart
-the process.
-
-### Triggers
-
-Triggers provide actions based on changes in state of a process. For example,
-repeated restarting of a process, known as "flapping". Triggers can also be
-used to notify administrators when a state changes.
-
-## Administration
-
-Cognizant can be administered using the `cognizant` command line utility. This
-is an application for performing administration tasks like enabling monitoring,
-starting, stopping processes, loading process configurations, etc.
-
-The `cognizant` utility provides a command line interface and a shell to
-administer processes. It communicates with the daemon process through its
-command socket. That means the `cognizantd` daemon must already be running
-before you can use the `cognizant` administration utility.
+[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Gem Version](https://badge.fury.io/rb/cognizant.png)](http://badge.fury.io/rb/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/github/Gurpartap/cognizant.png)](https://codeclimate.com/github/Gurpartap/cognizant)
 
 ## Quick start
 
+###### Install Cognizant
 ```bash
 $ gem install cognizant
-$ cognizantd --help
-$ cognizant --help
 ```
 
-## Documentation
+###### Example thin configuration
+```bash
+$ vim /etc/cognizantd/apps/thin_cluster.cz
+```
 
-Cognizant has an
-[**extensively documented wiki**](https://github.com/Gurpartap/cognizant/wiki).
+```ruby
+app_root = "/apps/acmecorp.com"
+servers = 5
+port = 4000
+
+Cognizant.application 'acmecorp.com' do |app|
+  servers.times do |n|
+    app.monitor "thin-#{n}" do
+      autostart!      
+      group 'thin'
+      uid 'www-data'
+      gid 'www-data'
+
+      env RACK_ENV: "production"
+      chdir "#{app_root}/current"
+
+      daemonize false
+      pidfile "#{app_root}/shared/tmp/pids/thin.400#{n}.pid"
+
+      start_command   "bundle exec thin start   --only #{n} --servers #{servers} --port #{port}"
+      stop_command    "bundle exec thin stop    --only #{n} --servers #{servers} --port #{port}"
+      restart_command "bundle exec thin restart --only #{n} --servers #{servers} --port #{port}"
+
+      check :cpu_usage,    :above => 50.percent,    :every => 5.seconds, :times => 5,      :do => :restart
+      check :memory_usage, :above => 300.megabytes, :every => 5.seconds, :times => [3, 5], :do => :restart
+    end
+  end
+end
+```
+
+**YAML** version of this example is [available in the wiki](https://github.com/Gurpartap/cognizant/wiki/Thin-Server-Cluster).
+
+###### Start the daemon and load the configuration
+```bash
+$ cognizantd
+$ cognizant load thin_cluster.rb
+```
+
+###### View the status of managed processes
+```bash
+$ cognizant status
+```
+
+```
++---------+-------+-------------------------+-------+-------+--------+
+| Process | Group | State                   | PID   | % CPU | Memory |
++---------+-------+-------------------------+-------+-------+--------+
+| thin-0  | thin  | running since 2 minutes | 59825 | 0.0   | 47 MiB |
++---------+-------+-------------------------+-------+-------+--------+
+| thin-1  | thin  | running since 2 minutes | 59828 | 0.0   | 47 MiB |
++---------+-------+-------------------------+-------+-------+--------+
+| thin-2  | thin  | running since 2 minutes | 59829 | 0.0   | 47 MiB |
++---------+-------+-------------------------+-------+-------+--------+
+2013-03-18 10:00:29 +0530
+```
+
+## Further information
+Cognizant has an [**extensively documented wiki**](https://github.com/Gurpartap/cognizant/wiki) for that.
 
 ## About
 
-Cognizant is a project of [Gurpartap Singh](http://gurpartap.com/). Feel free
-to get in touch.
+Cognizant is a project of [Gurpartap Singh](http://gurpartap.com/). Feel free to get in touch.
