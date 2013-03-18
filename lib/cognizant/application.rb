@@ -23,7 +23,12 @@ module Cognizant
 
       set_attributes(options)
 
-      handle_initialize_block(&block) if block
+      if block.arity == 0
+        dsl_proxy = Cognizant::Application::DSLProxy.new(self, &block)
+        set_attributes(dsl_proxy.attributes)
+      else
+        instance_exec(self, &block)
+      end
 
       raise "Application name is missing. Aborting." unless self.name
       Log[self].info "Loading application #{self.name}..."
@@ -31,15 +36,6 @@ module Cognizant
       raise "Application processes are missing. Aborting." unless self.processes.keys.size > 0
 
       self.setup_directories
-    end
-
-    def handle_initialize_block(&block)
-      if block.arity == 0
-        dsl_proxy = Cognizant::Application::DSLProxy.new(self, &block)
-        set_attributes(dsl_proxy.attributes)
-      else
-        instance_exec(self, &block)
-      end
     end
 
     def set_attributes(attributes)
