@@ -14,7 +14,7 @@ module Cognizant
           # Return if the process is not running.
           return true unless pid_running?(pid)
 
-          signals = options[:signals] || ["TERM", "INT", "KILL"]
+          signals = options[:signals] || ["TERM", "INT"]
           timeout = options[:timeout] || 30
 
           catch :stopped do
