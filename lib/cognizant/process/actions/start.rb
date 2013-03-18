@@ -47,6 +47,8 @@ module Cognizant
           skip_ticks_for(self.start_timeout || 30)
 
           action_result_handler = Proc.new do |result, time_left|
+            time_left ||= 0
+
             if result.respond_to?(:succeeded?) and result.succeeded?
               write_pid(result.pid) if self.daemonize and result.pid != 0
             end

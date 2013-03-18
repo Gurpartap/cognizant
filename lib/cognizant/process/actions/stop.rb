@@ -41,6 +41,8 @@ module Cognizant
           skip_ticks_for(self.stop_timeout || 30)
 
           action_result_handler = Proc.new do |result, time_left|
+            time_left ||= 0
+
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid if not pid_running? and self.daemonize

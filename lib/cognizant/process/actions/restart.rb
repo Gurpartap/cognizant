@@ -1,5 +1,3 @@
-require 'timeout'
-
 module Cognizant
   class Process
     module Actions
@@ -54,50 +52,48 @@ module Cognizant
         attr_accessor :restart_after_command
 
         def restart_process
-          begin
-            Timeout.timeout(self.restart_timeout || 30) do
-              # We skip so that we're not reinformed about the required transition by the tick.
-              skip_ticks_for(self.restart_timeout || 30)
+          # We skip so that we're not reinformed about the required transition by the tick.
+          skip_ticks_for(self.restart_timeout || 30)
 
-              action_result_handler = Proc.new do |result, time_left|
-                # If it is a boolean and value is true OR if it's an execution result and it succeeded.
-                if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
-                  unlink_pid if not pid_running? and self.daemonize
+          action_result_handler = Proc.new do |result, time_left|
+            time_left ||= 0
 
-                  unless self.restart_expect_stopped.present?
-                    if self.restart_command.present? or self.restart_signals.present?
-                      self.restart_expect_stopped = false
-                    else
-                      self.restart_expect_stopped = true
-                    end
-                  end
+            # If it is a boolean and value is true OR if it's an execution result and it succeeded.
+            if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
+              unlink_pid if not pid_running? and self.daemonize
 
-                  # Reset cached pid to read from file or command.
-                  @process_pid = nil
-                  unless self.restart_expect_stopped
-                    until process_running? do
-                      sleep 1
-                      time_left -= 1
-                      @process_pid = nil
-                    end
-                  end
+              unless self.restart_expect_stopped.present?
+                if self.restart_command.present? or self.restart_signals.present?
+                  self.restart_expect_stopped = false
+                else
+                  self.restart_expect_stopped = true
                 end
-                # Rollback the pending skips.
-                skip_ticks_for(-time_left) if time_left > 0
               end
 
-              execute_action(
-                action_result_handler,
-                env:     (self.env || {}).merge(self.restart_env || {}),
-                before:  self.restart_before_command,
-                command: self.restart_command,
-                signals: self.restart_signals,
-                after:   self.restart_after_command,
-                timeout: self.restart_timeout || 30
-              )
+              # Reset cached pid to read from file or command.
+              @process_pid = nil
+              unless self.restart_expect_stopped
+                while (time_left >= 0 and not process_running?) do
+                  sleep 1
+                  time_left -= 1
+                  @process_pid = nil
+                end
+              end
             end
-          rescue Timeout::Error
+
+            # Rollback the pending skips.
+            skip_ticks_for(-time_left) if time_left > 0
           end
+
+          execute_action(
+            action_result_handler,
+            env:     (self.env || {}).merge(self.restart_env || {}),
+            before:  self.restart_before_command,
+            command: self.restart_command,
+            signals: self.restart_signals,
+            after:   self.restart_after_command,
+            timeout: self.restart_timeout || 30
+          )
         end
 
         def restart_expect_stopped!
