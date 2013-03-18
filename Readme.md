@@ -62,6 +62,8 @@ $ cognizant load thin_cluster.cz
 ###### Enter the Cognizant shell and view the status of managed processes
 ```bash
 $ cognizant
+```
+```
 Welcome Gurpartap! You are speaking to the Cognizant Monitoring Daemon.
 Enter 'help' if you're not sure what to do.
 
