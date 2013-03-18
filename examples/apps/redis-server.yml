@@ -1,36 +1,29 @@
-applications: {
-  example: {
-    monitor: {
-      redis-server-6666: {
-        autostart: false,
-        group: redis,
-        start_command: /usr/local/bin/redis-server -,
-        start_with_input: "daemonize no\nport 6666",
-        ping_command: redis-cli -p 6666 PING,
-        stop_signals: [TERM, INT],
-        checks: {
-          cpu_usage: {
-            every: 3,
-            above: 60,
-            times: 3,
-            do: restart
-          },
-          memory_usage: {
-            every: 5, # Seconds.
-            above: 1220608, # Bytes.
-            times: [3, 5], # Three out of five times.
-            do: stop # Defaults to restart.
-          }
-        }
-      },
-      redis-server-7777: {
-        autostart: false,
-        group: redis,
-        start_command: /usr/local/bin/redis-server -,
-        start_with_input: "daemonize no\nport 7777",
-        ping_command: redis-cli -p 7777 PING,
+defaults: &defaults
+  autostart: false
+  group: redis
+  start_command: /usr/local/bin/redis-server -
+  stop_signals: [TERM, INT]
+  checks:
+    cpu_usage:
+      every: 3
+      above: 60
+      times: 3
+      do: restart
+    memory_usage:
+      every: 5 # Seconds.
+      above: 1220608 # Bytes.
+      times: [3, 5] # Three out of five times.
+      do: stop # Defaults to restart.
+
+applications:
+  example:
+    monitor:
+      redis-server-6666:
+        <<: *defaults
+        start_with_input: "daemonize no\nport 6666"
+        ping_command: redis-cli -p 6666 PING
+      redis-server-7777:
+        <<: *defaults
+        start_with_input: "daemonize no\nport 7777"
+        ping_command: redis-cli -p 7777 PING
         stop_command: redis-cli -p 7777 SHUTDOWN
-      }
-    }
-  }
-}

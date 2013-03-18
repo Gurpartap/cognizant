@@ -6,22 +6,16 @@ load:
   - ./examples/apps/*.rb
   - ./examples/apps/*.yml
 
-applications: {
-  sleep-example: {
-    monitor: {
-      sleep: {
-        autostart: false,
-        start_command: sleep 3,
-        uid: nobody,
-        gid: nobody,
-        checks: {
-          flapping: {
-            times: 4,
-            within: 15, # Seconds.
-            retry_after: 30 # Seconds.
-          }
-        }
-      }
-    }
-  }
-}
+applications:
+  sleep-example:
+    monitor:
+      sleep:
+        autostart: false
+        start_command: sleep 3
+        uid: nobody
+        gid: nobody
+        checks:
+          flapping:
+            times: 4
+            within: 15 # seconds.
+            retry_after: 30 # seconds.
