@@ -24,8 +24,8 @@ module Cognizant
 
       # Note: Expected that this method is not called to overwrite pidfile if the process daemonizes itself (and hence manages the pidfile by itself).
       def write_pid(pid = nil)
-        @process_pid = pid if pid
-        File.open(self.pidfile, "w") { |f| f.write(@process_pid) } if self.pidfile and @process_pid
+        @process_pid = pid
+        File.open(self.pidfile, "w") { |f| f.write(@process_pid) } if self.pidfile and @process_pid and @process_pid != 0
       end
 
       # Note: Expected that this method is not called to unlink pidfile if the process daemonizes itself (and hence manages the pidfile by itself).
