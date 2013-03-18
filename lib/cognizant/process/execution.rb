@@ -1,3 +1,5 @@
+require 'cognizant/util/transform_hash_keys'
+
 module Cognizant
   class Process
     module Execution
@@ -70,7 +72,7 @@ module Cognizant
           })
 
           # Spawn a process to execute the command.
-          process_pid = ::Process.spawn(options[:env], command, spawn_options)
+          process_pid = ::Process.spawn(options[:env].deep_stringify_keys!, command, spawn_options)
           # Log[self].debug "process_pid: #{process_pid} (#{command})"
           pid_w.write(process_pid)
 

@@ -10,6 +10,13 @@ class Hash
     self
   end
 
+  # Destructively convert all keys to strings, as long as they respond
+  # to `to_s`. This includes the keys from the root hash and from all
+  # nested hashes.
+  def deep_stringify_keys!
+    deep_transform_keys!{ |key| key.to_s rescue key }
+  end
+
   # Destructively convert all keys to symbols, as long as they respond
   # to `to_sym`. This includes the keys from the root hash and from all
   # nested hashes.
