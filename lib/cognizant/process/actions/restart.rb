@@ -62,7 +62,7 @@ module Cognizant
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid if not pid_running? and self.daemonize
 
-              unless self.restart_expect_stopped.present?
+              unless !!self.restart_expect_stopped == self.restart_expect_stopped
                 if self.restart_command.present? or self.restart_signals.present?
                   self.restart_expect_stopped = false
                 else
@@ -72,6 +72,7 @@ module Cognizant
 
               # Reset cached pid to read from file or command.
               @process_pid = nil
+
               unless self.restart_expect_stopped
                 while (time_left >= 0 and not process_running?) do
                   sleep 1
@@ -79,6 +80,8 @@ module Cognizant
                   @process_pid = nil
                 end
               end
+            else
+              @process_pid = nil
             end
 
             # Rollback the pending skips.

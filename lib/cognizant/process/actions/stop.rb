@@ -46,6 +46,10 @@ module Cognizant
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid if not pid_running? and self.daemonize
+              # Reset cached pid to read from file or command.
+              @process_pid = nil
+            else
+              @process_pid = nil
             end
 
             # Rollback the pending skips.

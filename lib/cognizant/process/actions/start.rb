@@ -51,6 +51,10 @@ module Cognizant
 
             if result.respond_to?(:succeeded?) and result.succeeded?
               write_pid(result.pid) if self.daemonize and result.pid != 0
+              # Reset cached pid to read from file or command.
+              @process_pid = nil
+            else
+              @process_pid = nil
             end
             # Rollback the pending skips.
             skip_ticks_for(-time_left) if time_left > 0
