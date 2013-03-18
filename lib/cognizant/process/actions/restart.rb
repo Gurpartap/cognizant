@@ -55,6 +55,17 @@ module Cognizant
           self.restart_expect_stopped = true
         end
 
+        def reset_attributes!
+          self.restart_env = {}
+          self.restart_before_command = nil
+          self.restart_command = nil
+          self.restart_signals = nil
+          self.restart_expect_stopped = nil
+          self.restart_timeout = 30
+          self.restart_after_command = nil
+          super
+        end
+
         def restart_process
           # We skip so that we're not reinformed about the required transition by the tick.
           skip_ticks_for(self.restart_timeout)
@@ -70,17 +81,6 @@ module Cognizant
           handle_action('_restart_result_handler', options)
         end
 
-        def reset_attributes!
-          self.restart_env = {}
-          self.restart_before_command = nil
-          self.restart_command = nil
-          self.restart_signals = nil
-          self.restart_expect_stopped = nil
-          self.restart_timeout = 30
-          self.restart_after_command = nil
-          super
-        end
-
         # @private
         def _restart_result_handler(result, time_left = 0)
           # If it is a boolean and value is true OR if it's an execution result and it succeeded.
@@ -90,6 +90,8 @@ module Cognizant
             unless !!self.restart_expect_stopped == self.restart_expect_stopped
               self.restart_expect_stopped = !(self.restart_command.present? or self.restart_signals.present?)
             end
+
+            # We are not resetting @process_pid here to give process a second of grace period.
 
             unless self.restart_expect_stopped
               while (time_left >= 0 and not process_running?) do

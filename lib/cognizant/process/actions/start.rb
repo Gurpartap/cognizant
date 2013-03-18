@@ -42,6 +42,18 @@ module Cognizant
         # @return [String] Defaults to nil
         attr_accessor :start_after_command
 
+        def reset_attributes!
+          self.start_env = {}
+          self.start_before_command = nil
+          self.start_command = nil
+          self.start_with_input = nil
+          self.start_with_input_file = nil
+          self.start_with_input_command = nil
+          self.start_timeout = 30
+          self.start_after_command = nil
+          super
+        end
+
         def start_process
           # We skip so that we're not reinformed about the required transition by the tick.
           skip_ticks_for(self.start_timeout)
@@ -61,18 +73,6 @@ module Cognizant
             timeout:       self.start_timeout
           }
           handle_action('_start_result_handler', options)
-        end
-
-        def reset_attributes!
-          self.start_env = {}
-          self.start_before_command = nil
-          self.start_command = nil
-          self.start_with_input = nil
-          self.start_with_input_file = nil
-          self.start_with_input_command = nil
-          self.start_timeout = 30
-          self.start_after_command = nil
-          super
         end
 
         # @private

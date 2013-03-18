@@ -36,6 +36,16 @@ module Cognizant
         # @return [String] Defaults to nil
         attr_accessor :stop_after_command
 
+        def reset_attributes!
+          self.stop_env = {}
+          self.stop_before_command = nil
+          self.stop_command = nil
+          self.stop_signals = ["QUIT", "TERM", "INT"]
+          self.stop_timeout = 30
+          self.stop_after_command = nil
+          super
+        end
+
         def stop_process
           # We skip so that we're not reinformed about the required transition by the tick.
           skip_ticks_for(self.stop_timeout)
@@ -49,16 +59,6 @@ module Cognizant
             timeout:  self.stop_timeout
           }
           handle_action('_stop_result_handler', options)
-        end
-
-        def reset_attributes!
-          self.stop_env = {}
-          self.stop_before_command = nil
-          self.stop_command = nil
-          self.stop_signals = ["QUIT", "TERM", "INT"]
-          self.stop_timeout = 30
-          self.stop_after_command = nil
-          super
         end
 
         # @private
