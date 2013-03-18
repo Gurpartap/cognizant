@@ -11,9 +11,9 @@ Simple and reliable process monitoring framework written in Ruby
 $ gem install cognizant
 ```
 
-###### Example thin server configuration
+###### Example thin server cluster configuration
 ```bash
-$ vim /etc/cognizantd/apps/thin_cluster.cz
+$ vim thin_cluster.cz
 ```
 
 ```ruby
