@@ -38,19 +38,30 @@ module Cognizant
 
         def stop_process
           # We skip so that we're not reinformed about the required transition by the tick.
-          skip_ticks_for(self.stop_timeout || 30)
+          skip_ticks_for(self.stop_timeout)
 
-          execute_action(
-            :_stop_result_handler,
-            env:     (self.env || {}).merge(self.stop_env || {}),
-            before:  self.stop_before_command,
-            command: self.stop_command,
-            signals: self.stop_signals,
-            after:   self.stop_after_command,
-            timeout: self.stop_timeout || 30
-          )
+          options = {
+            env:      self.env.merge(self.stop_env),
+            before:   self.stop_before_command,
+            command:  self.stop_command,
+            signals:  self.stop_signals,
+            after:    self.stop_after_command,
+            timeout:  self.stop_timeout
+          }
+          handle_action('_stop_result_handler', options)
         end
 
+        def reset_attributes!
+          self.stop_env = {}
+          self.stop_before_command = nil
+          self.stop_command = nil
+          self.stop_signals = ["QUIT", "TERM", "INT"]
+          self.stop_timeout = 30
+          self.stop_after_command = nil
+          super
+        end
+
+        # @private
         def _stop_result_handler(result, time_left = 0)
           # If it is a boolean and value is true OR if it's an execution result and it succeeded.
           if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)

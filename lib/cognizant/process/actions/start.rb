@@ -44,13 +44,12 @@ module Cognizant
 
         def start_process
           # We skip so that we're not reinformed about the required transition by the tick.
-          skip_ticks_for(self.start_timeout || 30)
+          skip_ticks_for(self.start_timeout)
 
-          execute_action(
-            :_start_result_handler,
+          options = {
             name:          self.name,
             daemonize:     self.daemonize,
-            env:           (self.env || {}).merge(self.start_env || {}),
+            env:           self.env.merge(self.start_env),
             logfile:       self.logfile,
             errfile:       self.errfile,
             before:        self.start_before_command,
@@ -59,10 +58,24 @@ module Cognizant
             input_file:    self.start_with_input_file,
             input_command: self.start_with_input_command,
             after:         self.start_after_command,
-            timeout:       self.start_timeout || 30
-          )
+            timeout:       self.start_timeout
+          }
+          handle_action('_start_result_handler', options)
         end
 
+        def reset_attributes!
+          self.start_env = {}
+          self.start_before_command = nil
+          self.start_command = nil
+          self.start_with_input = nil
+          self.start_with_input_file = nil
+          self.start_with_input_command = nil
+          self.start_timeout = 30
+          self.start_after_command = nil
+          super
+        end
+
+        # @private
         def _start_result_handler(result, time_left = 0)
           if result.respond_to?(:succeeded?) and result.succeeded?
             write_pid(result.pid) if self.daemonize and result.pid != 0

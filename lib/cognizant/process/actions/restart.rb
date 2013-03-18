@@ -57,19 +57,31 @@ module Cognizant
 
         def restart_process
           # We skip so that we're not reinformed about the required transition by the tick.
-          skip_ticks_for(self.restart_timeout || 30)
+          skip_ticks_for(self.restart_timeout)
 
-          execute_action(
-            :_restart_result_handler,
-            env:     (self.env || {}).merge(self.restart_env || {}),
-            before:  self.restart_before_command,
-            command: self.restart_command,
-            signals: self.restart_signals,
-            after:   self.restart_after_command,
-            timeout: self.restart_timeout || 30
-          )
+          options = {
+            env:      self.env.merge(self.restart_env),
+            before:   self.restart_before_command,
+            command:  self.restart_command,
+            signals:  self.restart_signals || ["QUIT", "TERM", "INT"],
+            after:    self.restart_after_command,
+            timeout:  self.restart_timeout
+          }
+          handle_action('_restart_result_handler', options)
         end
 
+        def reset_attributes!
+          self.restart_env = {}
+          self.restart_before_command = nil
+          self.restart_command = nil
+          self.restart_signals = nil
+          self.restart_expect_stopped = nil
+          self.restart_timeout = 30
+          self.restart_after_command = nil
+          super
+        end
+
+        # @private
         def _restart_result_handler(result, time_left = 0)
           # If it is a boolean and value is true OR if it's an execution result and it succeeded.
           if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
@@ -78,9 +90,6 @@ module Cognizant
             unless !!self.restart_expect_stopped == self.restart_expect_stopped
               self.restart_expect_stopped = !(self.restart_command.present? or self.restart_signals.present?)
             end
-
-            # Reset cached pid to read from file or command.
-            @process_pid = nil
 
             unless self.restart_expect_stopped
               while (time_left >= 0 and not process_running?) do

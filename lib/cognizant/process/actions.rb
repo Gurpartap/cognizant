@@ -12,31 +12,13 @@ module Cognizant
 
       private
 
-      def execute_action(result_handler, options)
-        before_command = options[:before]
-        command        = options[:command]
-        after_command  = options[:after]
-        signals        = options[:signals]
-        timeout        = options[:timeout]
-
+      def handle_action(result_handler, options)
         # TODO: Works well but can some refactoring make it more declarative?
         @action_thread = Thread.new do
           result = false
-          queue = Queue.new
-          thread = Thread.new do
-            # If before_command succeeds, we move to the next command.
-            (before_command and not success = run(before_command).succeeded?) or
-            # If the command is available and it succeeds, we stop here.
-            (command and success = run(command, options) and success.succeeded?) or
-            # As a last try, check for signals. If the action has set signals, then it can handle its result.
-            (success = send_signals(signals: signals, timeout: timeout))
+          queue, thread = execute_action(options)
 
-            run(after_command) if success and after_command
-            queue.push(success)
-            Thread.exit
-          end
-
-          time_left = timeout
+          time_left = options[:timeout]
           while time_left >= 0 do
             # If there is something in the queue, we have the required result.
             unless queue.empty?
@@ -53,6 +35,29 @@ module Cognizant
           # Action callback.
           self.send(result_handler, result, time_left) if result_handler.present? and self.respond_to?(result_handler)
         end
+      end
+
+      def execute_action(options)
+        before_command = options[:before]
+        command        = options[:command]
+        after_command  = options[:after]
+        signals        = options[:signals]
+        timeout        = options[:timeout]
+
+        queue = Queue.new
+        thread = Thread.new do
+          # If before_command succeeds, we move to the next command.
+          (before_command and not success = run(before_command).succeeded?) or
+          # If the command is available and it succeeds, we stop here.
+          (command and success = run(command, options) and success.succeeded?) or
+          # As a last try, check for signals. If the action has set signals, then it can handle its result.
+          (success = send_signals(signals: signals, timeout: timeout))
+
+          run(after_command) if success and after_command
+          queue.push(success)
+          Thread.exit
+        end
+        return queue, thread
       end
 
       def send_signals(options = {})
