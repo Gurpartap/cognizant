@@ -96,27 +96,6 @@ EOF
       @@commands.keys.reject { |c| c =~ /^\_.+/ } + Cognizant::Controller.daemon.applications.keys + Cognizant::Controller.daemon.applications[request["app"].to_sym].processes.keys
     end
 
-    command 'help', 'Print out available commands' do
-"You are speaking to the Cognizant command socket. You can run the following commands:
-
-#{command_descriptions}
-"
-    end
-
-    command("load", "Loads the process information from specified Ruby file") do |connection, request|
-      request["args"].each do |file|
-        Cognizant::Controller.daemon.load_file(file)
-      end
-      "OK"
-    end
-
-    command('help', 'Print out available commands') do
-"You are speaking to the Cognizant command socket. You can run the following commands:
-
-#{command_descriptions}
-"
-    end
-
     # command('reload', 'Reload Cognizant') do |connection, _|
     #   # TODO: make reload actually work (command socket reopening is
     #   # an issue). Would also be nice if user got a confirmation that
@@ -131,57 +110,6 @@ EOF
     #   # Reload should not return
     #   raise "Not reachable"
     # end
-
-    command("status", "Display status of managed process(es) or group(s)") do |connection, request|
-      if request.has_key?("app") and request["app"].to_s.size > 0 and Cognizant::Controller.daemon.applications.has_key?(request["app"].to_sym)
-        send_process_or_group_status(request["app"], request["args"])
-      else
-        %Q{No such application: "#{request['app']}"}
-      end
-    end
-
-    [
-      ["monitor",   "Monitor the specified process or group"],
-      ["unmonitor", "Unmonitor the specified process or group"],
-      ["start",     "Start the specified process or group"],
-      ["stop",      "Stop the specified process or group"],
-      ["restart",   "Restart the specified process or group"]
-    ].each do |(name, description)|
-      command(name, description) do |connection, request|
-        args = request["args"]
-        unless args.size > 0
-          raise("Missing process name")
-          return
-        end
-        output_processes = []
-        output_processes = processes_for_name_or_group(request["app"], args)
-        if output_processes.size == 0
-          raise("No such process")
-        else
-          output_processes.each do |process|
-            process.handle_user_command(name)
-          end
-        end
-        # send_process_or_group_status(request["app"], args)
-        "OK"
-      end
-    end
-
-    command("use", "Switch the current application for use with process maintenance commands") do |connection, request|
-      puts "Cognizant::Controller.daemon.applications.keys: #{Cognizant::Controller.daemon.applications.keys}"
-      if request["args"].size > 0 and request["args"].first.to_s.size > 0 and Cognizant::Controller.daemon.applications.has_key?(request["args"].first.to_sym)
-        app = request["args"].first
-        message = "OK"
-      else
-        app = request["app"]
-        message = %Q{No such application: "#{request['args'].first}"}
-      end
-      { "use" => app, "message" => message }
-    end
-
-    command("shutdown", "Stop the monitoring daemon without affecting managed processes") do |connection, _|
-      Cognizant::Controller.daemon.shutdown!
-    end
 
     def self.processes_for_name_or_group(app, args)
       processes = []
@@ -221,3 +149,10 @@ EOF
     end
   end
 end
+
+require "cognizant/commands/actions"
+require "cognizant/commands/help"
+require "cognizant/commands/load"
+require "cognizant/commands/shutdown"
+require "cognizant/commands/status"
+require "cognizant/commands/use"
