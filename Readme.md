@@ -39,8 +39,13 @@ Cognizant.application 'acmecorp.com' do |app|
       stop_command    "bundle exec thin stop    --only #{n} --servers #{servers} --port #{port}"
       restart_command "bundle exec thin restart --only #{n} --servers #{servers} --port #{port}"
 
-      check :cpu_usage,    :above => 50.percent,    :every => 5.seconds, :times => 5,      :do => :restart
-      check :memory_usage, :above => 300.megabytes, :every => 5.seconds, :times => [3, 5], :do => :restart
+	  check :flapping, times: 3, within: 1.minute, retry_after: 15.seconds, retries: 10
+      check :transition, from: :running, to: :stopped do |process|
+        `say a thin server has stopped` # send an email, etc.
+      end
+
+      check :cpu_usage,    above: 50.percent,    every: 5.seconds, times: 5,      do: :restart
+      check :memory_usage, above: 300.megabytes, every: 5.seconds, times: [3, 5], do: :restart
     end
   end
 end
