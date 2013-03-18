@@ -19,9 +19,6 @@ module Cognizant
         signals        = options[:signals]
         timeout        = options[:timeout]
 
-        # We skip so that we're not reinformed about the required transition by the tick.
-        skip_ticks_for(timeout)
-
         # TODO: Works well but can some refactoring make it more declarative?
         @action_thread = Thread.new do
           result = false
@@ -44,8 +41,6 @@ module Cognizant
             # If there is something in the queue, we have the required result.
             unless queue.empty?
               result = queue.pop
-              # Rollback the pending skips, since we finished before timeout.
-              skip_ticks_for(-time_left)
               break
             end
             sleep 1
@@ -58,7 +53,7 @@ module Cognizant
           thread.kill
 
           # Action callback.
-          result_handler.call(result) if result_handler.respond_to?(:call)
+          result_handler.call(result, time_left) if result_handler.respond_to?(:call)
         end
       end
 

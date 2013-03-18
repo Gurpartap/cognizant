@@ -37,14 +37,20 @@ module Cognizant
         attr_accessor :stop_after_command
 
         def stop_process
-          result_handler = Proc.new do |result|
+          # We skip so that we're not reinformed about the required transition by the tick.
+          skip_ticks_for(self.stop_timeout || 30)
+
+          action_result_handler = Proc.new do |result, time_left|
             # If it is a boolean and value is true OR if it's an execution result and it succeeded.
             if (!!result == result and result) or (result.respond_to?(:succeeded?) and result.succeeded?)
               unlink_pid if not pid_running? and self.daemonize
             end
+
+            # Rollback the pending skips.
+            skip_ticks_for(-time_left) if time_left > 0
           end
           execute_action(
-            result_handler,
+            action_result_handler,
             env:     (self.env || {}).merge(self.stop_env || {}),
             before:  self.stop_before_command,
             command: self.stop_command,

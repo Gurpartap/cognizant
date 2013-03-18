@@ -30,6 +30,8 @@ Feature: Flapping Check
     When I run "start sleep_process" successfully in the shell
     # Give 3 seconds grace time for process states to be realized by daemon.
     Then the status of "sleep_process" should be "running" for 5 seconds
+    # TODO: The process goes through another stopped -> running cycle
+    # before being unmonitored. Add step to handle this.
     Then the status of "sleep_process" should be "unmonitored" for 12 seconds
     Then the status of "sleep_process" should be "running" for 5 seconds
 

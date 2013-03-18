@@ -44,7 +44,7 @@ module Cognizant
 
     def self.run_command(connection, request, command, command_name)
       if command_spec = @@commands[command_name]
-        Log[self].debug("Received command: #{command.inspect}")
+        # Log[self].debug("Received command: #{command.inspect}")
         begin
           return command_spec[:block].call(connection, request)
         rescue StandardError => e

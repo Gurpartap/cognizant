@@ -43,13 +43,18 @@ module Cognizant
         attr_accessor :start_after_command
 
         def start_process
-          result_handler = Proc.new do |result|
-            if self.daemonize and result.respond_to?(:succeeded?) and result.succeeded? and result.pid != 0
-              write_pid(result.pid)
+          # We skip so that we're not reinformed about the required transition by the tick.
+          skip_ticks_for(self.start_timeout || 30)
+
+          action_result_handler = Proc.new do |result, time_left|
+            if result.respond_to?(:succeeded?) and result.succeeded?
+              write_pid(result.pid) if self.daemonize and result.pid != 0
             end
+            # Rollback the pending skips.
+            skip_ticks_for(-time_left) if time_left > 0
           end
           execute_action(
-            result_handler,
+            action_result_handler,
             name:          self.name,
             daemonize:     self.daemonize,
             env:           (self.env || {}).merge(self.start_env || {}),
