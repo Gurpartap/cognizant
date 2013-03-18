@@ -11,7 +11,7 @@ Simple and reliable process monitoring framework written in Ruby
 $ gem install cognizant
 ```
 
-###### Example thin configuration
+###### Example thin server configuration
 ```bash
 $ vim /etc/cognizantd/apps/thin_cluster.cz
 ```
@@ -51,24 +51,31 @@ end
 ###### Start the daemon and load the configuration
 ```bash
 $ cognizantd
-$ cognizant load thin_cluster.rb
+$ cognizant load thin_cluster.cz
 ```
 
-###### View the status of managed processes
+###### Enter the Cognizant shell and view the status of managed processes
 ```bash
-$ cognizant status
+$ cognizant
+Welcome Gurpartap! You are speaking to the Cognizant Monitoring Daemon.
+Enter 'help' if you're not sure what to do.
+
+Type 'quit' or 'exit' to quit at any time.
+> use acmecorp.com
+OK
 ```
 
 ```
-+---------+-------+-------------------------+-------+-------+--------+
-| Process | Group | State                   | PID   | % CPU | Memory |
-+---------+-------+-------------------------+-------+-------+--------+
-| thin-0  | thin  | running since 2 minutes | 59825 | 0.0   | 47 MiB |
-+---------+-------+-------------------------+-------+-------+--------+
-| thin-1  | thin  | running since 2 minutes | 59828 | 0.0   | 47 MiB |
-+---------+-------+-------------------------+-------+-------+--------+
-| thin-2  | thin  | running since 2 minutes | 59829 | 0.0   | 47 MiB |
-+---------+-------+-------------------------+-------+-------+--------+
+(acmecorp.com)> status
++---------+-------+------------------------+-------+-------+--------+
+| Process | Group | State                  | PID   | % CPU | Memory |
++---------+-------+------------------------+-------+-------+--------+
+| thin-0  | thin  | running since 1 minute | 59825 | 0.0   | 47 MiB |
++---------+-------+------------------------+-------+-------+--------+
+| thin-1  | thin  | running since 1 minute | 59828 | 0.0   | 47 MiB |
++---------+-------+------------------------+-------+-------+--------+
+| thin-2  | thin  | running since 1 minute | 59829 | 0.0   | 47 MiB |
++---------+-------+------------------------+-------+-------+--------+
 2013-03-18 10:00:29 +0530
 ```
 
