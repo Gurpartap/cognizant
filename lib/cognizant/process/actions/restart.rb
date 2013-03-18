@@ -24,7 +24,7 @@ module Cognizant
         # "KILL" to never force kill the process.
         # Also see restart_expect variable.
         # e.g. ["TERM", "INT"]
-        # @return [Array] Defaults to ["TERM", "INT", "KILL"]
+        # @return [Array] Defaults to ["QUIT", "TERM", "INT"]
         attr_accessor :restart_signals
 
         # Whether or not the process is expected to stop itself after the

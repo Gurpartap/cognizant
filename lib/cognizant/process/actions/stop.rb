@@ -21,7 +21,7 @@ module Cognizant
         # divided intervals (min. 2 seconds). Override with signals without
         # "KILL" to never force kill the process.
         # e.g. ["TERM", "INT"]
-        # @return [Array] Defaults to ["TERM", "INT", "KILL"]
+        # @return [Array] Defaults to ["QUIT", "TERM", "INT"]
         attr_accessor :stop_signals
 
         # The grace time period in seconds for the process to stop within.
