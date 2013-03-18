@@ -1,4 +1,4 @@
-![Cognizant](http://f.cl.ly/items/1C1j1a2x2S3R3y442m0l/cognizant.png)
+![Cognizant](http://f.cl.ly/items/442w3l1n0i3V41220g0z/cognizant.png)
 
 Simple and reliable process monitoring framework written in Ruby
 
