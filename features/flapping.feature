@@ -11,8 +11,8 @@ Feature: Flapping Check
         monitor 'sleep_process' do
           autostart false
           daemonize!
-          start_command 'sleep 5'
-          check :flapping, times: 3, within: 30, retry_after: 15, retries: 0
+          start_command 'sleep 8'
+          check :flapping, times: 3, within: 1.minute, retry_after: 15.seconds, retries: 0
         end
       end
       """
@@ -28,9 +28,10 @@ Feature: Flapping Check
     Then the status of "sleep_process" should be "stopped"
 
     When I run "start sleep_process" successfully in the shell
-    Then the status of "sleep_process" should be "running"
-    Then the status of "sleep_process" should be "unmonitored" for 10 seconds
-    Then the status of "sleep_process" should be "running"
+    # Give 3 seconds grace time for process states to be realized by daemon.
+    Then the status of "sleep_process" should be "running" for 5 seconds
+    Then the status of "sleep_process" should be "unmonitored" for 12 seconds
+    Then the status of "sleep_process" should be "running" for 5 seconds
 
     When I run "stop sleep_process" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
