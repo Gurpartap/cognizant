@@ -46,21 +46,8 @@ module Cognizant
           # We skip so that we're not reinformed about the required transition by the tick.
           skip_ticks_for(self.start_timeout || 30)
 
-          action_result_handler = Proc.new do |result, time_left|
-            time_left ||= 0
-
-            if result.respond_to?(:succeeded?) and result.succeeded?
-              write_pid(result.pid) if self.daemonize and result.pid != 0
-              # Reset cached pid to read from file or command.
-              @process_pid = nil
-            else
-              @process_pid = nil
-            end
-            # Rollback the pending skips.
-            skip_ticks_for(-time_left) if time_left > 0
-          end
           execute_action(
-            action_result_handler,
+            :_start_result_handler,
             name:          self.name,
             daemonize:     self.daemonize,
             env:           (self.env || {}).merge(self.start_env || {}),
@@ -74,6 +61,18 @@ module Cognizant
             after:         self.start_after_command,
             timeout:       self.start_timeout || 30
           )
+        end
+
+        def _start_result_handler(result, time_left = 0)
+          if result.respond_to?(:succeeded?) and result.succeeded?
+            write_pid(result.pid) if self.daemonize and result.pid != 0
+          end
+
+          # Reset cached pid to read from file or command.
+          @process_pid = nil
+
+          # Rollback the pending skips.
+          skip_ticks_for(-time_left) if time_left > 0
         end
       end
     end

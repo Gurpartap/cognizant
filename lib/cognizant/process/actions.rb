@@ -28,7 +28,7 @@ module Cognizant
             (before_command and not success = run(before_command).succeeded?) or
             # If the command is available and it succeeds, we stop here.
             (command and success = run(command, options) and success.succeeded?) or
-            # As a last try, check for signals. If the action has set signals, then it can handle it's result.
+            # As a last try, check for signals. If the action has set signals, then it can handle its result.
             (success = send_signals(signals: signals, timeout: timeout))
 
             run(after_command) if success and after_command
@@ -47,13 +47,11 @@ module Cognizant
             time_left -= 1
           end
 
-          # TODO: Unmonitor if timed out?
-
           # Kill the nested thread.
           thread.kill
 
           # Action callback.
-          result_handler.call(result, time_left) if result_handler.respond_to?(:call)
+          self.send(result_handler, result, time_left) if result_handler.present? and self.respond_to?(result_handler)
         end
       end
 
