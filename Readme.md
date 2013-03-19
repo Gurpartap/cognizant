@@ -2,7 +2,8 @@
 
 Simple and reliable process monitoring framework written in Ruby
 
-[![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant) [![Gem Version](https://badge.fury.io/rb/cognizant.png)](http://badge.fury.io/rb/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/github/Gurpartap/cognizant.png)](https://codeclimate.com/github/Gurpartap/cognizant)
+[![Gem Version](https://badge.fury.io/rb/cognizant.png)](http://badge.fury.io/rb/cognizant) [![Dependency Status](https://gemnasium.com/Gurpartap/cognizant.png)](https://gemnasium.com/Gurpartap/cognizant) [![Code Climate](https://codeclimate.com/github/Gurpartap/cognizant.png)](https://codeclimate.com/github/Gurpartap/cognizant) [![Coverage Status](https://coveralls.io/repos/Gurpartap/cognizant/badge.png?branch=master)](https://coveralls.io/r/Gurpartap/cognizant) [![Build Status](https://travis-ci.org/Gurpartap/cognizant.png?branch=master)](https://travis-ci.org/Gurpartap/cognizant)
+
 
 ## Quick start
 
