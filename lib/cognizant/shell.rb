@@ -49,13 +49,17 @@ module Cognizant
         end
       end
 
-      while line = Readline.readline("(#{@app})> ", true).to_s.strip
+      while line = Readline.readline(prompt, true).to_s.strip
         if line.size > 0
           command, args = parse_command(line)
           return emit("Goodbye!") if ['quit', 'exit'].include?(command)
           run_command(command, args, &block)
         end
       end
+    end
+
+    def prompt
+      @app.to_s.size > 0 ? "(#{@app})> " : "> "
     end
 
     def run_command(command, args, &block)
