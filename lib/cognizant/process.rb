@@ -259,7 +259,7 @@ module Cognizant
         thread.join
         thread[:actions].each do |action|
           action_name = action.respond_to?(:call) ? "call to custom block" : action
-          Log[self].debug "Dispatching #{action_name} to #{name} for #{condition.to_s}."
+          Log[self].debug "Dispatching #{action_name} to #{name} for #{condition.to_s.strip}."
           actions << [action, condition.to_s]
         end
         actions

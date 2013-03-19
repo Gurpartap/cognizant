@@ -69,7 +69,7 @@ module Cognizant
         file_opts = YAML.load_file(file)
         if file_opts
           file_opts.deep_symbolize_keys!
-          apps << file_opts.delete(:applications) if file_opts and file_opts.has_key?(:applications)
+          apps << file_opts.delete(:applications) if file_opts.has_key?(:applications)
         end
       end
 
@@ -114,9 +114,18 @@ module Cognizant
       end
     end
 
-    def load_file(rb_file)
-      rb_file = File.expand_path(rb_file)
-      Kernel.load(rb_file) if File.exists?(rb_file)
+    def load_file(file)
+      if file.end_with?(".yml")
+        yml_config = YAML.load_file(file)
+        if yml_config
+          yml_config.deep_symbolize_keys!
+          yml_config_apps = yml_config.delete(:applications) if yml_config.has_key?(:applications)
+          yml_config_apps.each { |key, value| self.create_application(key, value) }
+        end
+      else
+        rb_file = File.expand_path(file)
+        Kernel.load(rb_file) if File.exists?(rb_file)
+      end
     end
 
     def reset!
@@ -163,10 +172,12 @@ module Cognizant
     def shutdown!
       Log[self].info "Shutting down Cognizant daemon..."
       EventMachine.next_tick do
+        EventMachine.add_shutdown_hook do
+          self.applications.values.each(&:shutdown!)
+          unlink_pid
+          # TODO: Close logger?
+        end
         EventMachine.stop
-        self.applications.values.each(&:shutdown!)
-        unlink_pid
-        # TODO: Close logger?
       end
     end
 
