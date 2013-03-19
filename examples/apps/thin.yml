@@ -1,0 +1,48 @@
+thin: &thin
+  # autostart: true
+  group: thin
+  uid: www-data
+  gid: www-data
+  env: 
+    RACK_ENV: production
+  chdir: /apps/acmecorp.com/current
+  daemonize: false
+  checks:
+    flapping:
+      times: 3
+      within: 1
+      retry_after: 15
+      retries: 10
+    # transition trigger is not useful in YAML config as blocks are not possible
+    cpu_usage:
+      above: 50
+      every: 5
+      times: 5
+      do: stop
+    memory_usage:
+      above: 314572800 # 300 megabytes in bytes
+      every: 5
+      times: [3, 5]
+      do: stop
+
+applications:
+  acmecorp.com:
+    monitor:
+      thin-0:
+        <<: *thin
+        start_command:   bundle exec thin start   --only 0 --servers 3 --port 5000
+        stop_command:    bundle exec thin stop    --only 0 --servers 3 --port 5000
+        restart_command: bundle exec thin restart --only 0 --servers 3 --port 5000
+        pidfile: /apps/acmecorp.com/shared/tmp/pids/thin.5000.pid
+      thin-1:
+        <<: *thin
+        start_command:   bundle exec thin start   --only 1 --servers 3 --port 5000
+        stop_command:    bundle exec thin stop    --only 1 --servers 3 --port 5000
+        restart_command: bundle exec thin restart --only 1 --servers 3 --port 5000
+        pidfile: /apps/acmecorp.com/shared/tmp/pids/thin.5001.pid
+      thin-2:
+        <<: *thin
+        start_command:   bundle exec thin start   --only 2 --servers 3 --port 5000
+        stop_command:    bundle exec thin stop    --only 2 --servers 3 --port 5000
+        restart_command: bundle exec thin restart --only 2 --servers 3 --port 5000
+        pidfile: /apps/acmecorp.com/shared/tmp/pids/thin.5002.pid
