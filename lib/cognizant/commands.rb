@@ -93,7 +93,11 @@ EOF
 
     # Used by cognizant shell.
     command '_autocomplete_keywords' do |conn, request|
-      @@commands.keys.reject { |c| c =~ /^\_.+/ } + Cognizant::Controller.daemon.applications.keys + Cognizant::Controller.daemon.applications[request["app"].to_sym].processes.keys
+      keywords = []
+      keywords += @@commands.keys.reject { |c| c =~ /^\_.+/ }
+      keywords += Cognizant::Controller.daemon.applications.keys
+      keywords += Cognizant::Controller.daemon.applications[request["app"].to_sym].processes.keys if request.has_key?("app") and request["app"].to_s.size > 0
+      keywords
     end
 
     # command('reload', 'Reload Cognizant') do |connection, _|
@@ -113,8 +117,10 @@ EOF
 
     def self.processes_for_name_or_group(app, args)
       processes = []
-      Cognizant::Controller.daemon.applications[app.to_sym].processes.values.each do |process|
-        processes << process if args.include?(process.name) or args.include?(process.group)
+      if app.to_s.size > 0
+        Cognizant::Controller.daemon.applications[app.to_sym].processes.values.each do |process|
+          processes << process if args.include?(process.name) or args.include?(process.group)
+        end
       end
       processes
     end
@@ -123,7 +129,7 @@ EOF
       output_processes = []
       if args.size > 0
         output_processes = processes_for_name_or_group(app, args)
-        raise "No such process" if output_processes.size == 0
+        return %Q{No such process or group: #{args.join(', ')}} if output_processes.size == 0
       else
         output_processes = Cognizant::Controller.daemon.applications[app.to_sym].processes.values
       end
