@@ -1,3 +1,6 @@
+require 'coveralls'
+Coveralls.wear!
+
 require "aruba/cucumber"
 require "aruba/api"
 require "open3"
