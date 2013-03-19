@@ -13,6 +13,7 @@ Cognizant.application("redis-example") do |app|
       process.start_command = "redis-server -"
       process.ping_command = "redis-cli -p 600#{i} PING"
 
+      process.daemonize!
       slaveof = i == 0 ? "" : "slaveof 127.0.0.1 6000"
       process.start_with_input = <<-heredoc
         daemonize no

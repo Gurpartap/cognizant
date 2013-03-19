@@ -93,7 +93,7 @@ module Cognizant
       def reset_attributes!
         self.name = nil
         self.group = nil
-        self.daemonize = false
+        self.daemonize = true
         self.autostart = false
         self.ping_command = nil
         self.pid_command = nil

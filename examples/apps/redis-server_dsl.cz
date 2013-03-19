@@ -27,6 +27,7 @@ Cognizant.application "redis-example-dsl" do |app|
       start_command "redis-server -"
       ping_command "redis-cli -p 700#{i} PING"
 
+      daemonize!
       start_with_input <<-heredoc
         daemonize no
         port 700#{i}
