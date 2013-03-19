@@ -3,7 +3,7 @@ Feature: Flapping Check
   Here I want to test proper handling of flapping check.
 
   Background:
-    Given a file named "monitor.rb" with:
+    Given a file named "monitor.cz" with:
       """ruby
       Cognizant.application 'sleep_app' do
         pids_dir './cognizant/pids/'
@@ -23,7 +23,7 @@ Feature: Flapping Check
     Given the daemon is running
     And the shell is running
 
-    When I run "load monitor.rb" successfully in the shell
+    When I run "load monitor.cz" successfully in the shell
     And I run "use sleep_app" successfully in the shell
     Then the status of "sleep_process" should be "stopped"
 

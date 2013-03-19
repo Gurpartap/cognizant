@@ -3,7 +3,7 @@ daemonize: false
 loglevel: debug
 
 load:
-  - ./examples/apps/*.rb
+  - ./examples/apps/*.cz
   - ./examples/apps/*.yml
 
 applications:

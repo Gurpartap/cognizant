@@ -28,7 +28,7 @@ Feature: Child Process
       end
       Process.waitall
       """
-    Given a file named "monitor.rb" with:
+    Given a file named "monitor.cz" with:
       """ruby
       Cognizant.application 'child_process_app' do
         pids_dir './cognizant/pids/'
@@ -52,7 +52,7 @@ Feature: Child Process
     Given the daemon is running
     And the shell is running
 
-    When I run "load monitor.rb" successfully in the shell
+    When I run "load monitor.cz" successfully in the shell
     And I run "use child_process_app" successfully in the shell
     Then the status of "fork_machine" should be "stopped"
 

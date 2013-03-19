@@ -4,7 +4,7 @@ Feature: Commands
   process as a part of its maintenance.
 
   Background:
-    Given a file named "sleep_process.rb" with:
+    Given a file named "sleep_process.cz" with:
       """ruby
       Cognizant.application 'sleep_app' do
         pids_dir './cognizant/pids/'
@@ -23,7 +23,7 @@ Feature: Commands
     Given the daemon is running
     And the shell is running
 
-    When I run "load sleep_process.rb" successfully in the shell
+    When I run "load sleep_process.cz" successfully in the shell
     And I run "use sleep_app" successfully in the shell
     Then the status of "sleep_process" is "stopped"
 

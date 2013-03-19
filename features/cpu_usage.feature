@@ -15,7 +15,7 @@ Feature: CPU Usage Condition
       end
       data = nil
       """
-    Given a file named "monitor.rb" with:
+    Given a file named "monitor.cz" with:
       """ruby
       Cognizant.application 'cpu_usage_app' do
         pids_dir './cognizant/pids/'
@@ -35,7 +35,7 @@ Feature: CPU Usage Condition
     Given the daemon is running
     And the shell is running
 
-    When I run "load monitor.rb" successfully in the shell
+    When I run "load monitor.cz" successfully in the shell
     And I run "use cpu_usage_app" successfully in the shell
     Then the status of "consume_cpu" should be "stopped"
 
