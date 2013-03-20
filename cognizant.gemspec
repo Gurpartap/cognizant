@@ -4,8 +4,8 @@ require File.expand_path('../lib/cognizant/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Gurpartap Singh"]
   gem.email         = ["contact@gurpartap.com"]
-  gem.description   = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
-  gem.summary       = "Cognizant is a process management system utility that supervises your processes, ensuring their state based on a flexible criteria."
+  gem.description   = "Cognizant is a process management framework inspired from God and Bluepill. It supervises your processes, ensuring their state based on a flexible criteria."
+  gem.summary       = "Cognizant is a process management framework inspired from God and Bluepill. It supervises your processes, ensuring their state based on a flexible criteria."
   gem.homepage      = "http://github.com/Gurpartap/cognizant"
   gem.license       = "MIT"
 
@@ -17,12 +17,9 @@ Gem::Specification.new do |gem|
   gem.version       = Cognizant::VERSION
 
   gem.add_development_dependency "rake"
-
-  # Documentation.
+  gem.add_development_dependency "ruby-graphviz"
   gem.add_development_dependency "yard"
   gem.add_development_dependency "kramdown"
-
-  # Testing.
   gem.add_development_dependency "aruba"
 
   # cognizantd
